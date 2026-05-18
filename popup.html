@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>翻訳 設定</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --ink: #0a0a0a;
+    --paper: #fff;
+    --line: 1.5px;
+    --shadow: 2px 2px 0 var(--ink);
+  }
+  html, body {
+    font-family: "Yu Gothic", "Hiragino Sans", "Noto Sans JP",
+                 "Microsoft JhengHei", -apple-system, sans-serif;
+    color: var(--ink);
+    background: var(--paper);
+  }
+  body { width: 260px; }
+
+  /* ============ 頂部標題 ============ */
+  .hdr {
+    position: relative;
+    padding: 8px 10px 7px;
+    background: var(--ink);
+    color: var(--paper);
+    border-bottom: 2px solid var(--ink);
+    overflow: hidden;
+  }
+  .hdr::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1px) 0 0 / 8px 8px;
+    pointer-events: none;
+  }
+  .hdr-row {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .hdr-title {
+    font-size: 16px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    line-height: 1;
+  }
+  .hdr-sub {
+    font-size: 7px;
+    letter-spacing: 3px;
+    font-weight: 700;
+    opacity: 0.7;
+    margin-top: 3px;
+    text-transform: uppercase;
+  }
+  .hdr-side {
+    writing-mode: vertical-rl;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    border-left: 2px solid var(--paper);
+    padding: 2px 3px 2px 5px;
+    opacity: 0.85;
+  }
+
+  /* halftone divider */
+  .divider {
+    height: 5px;
+    background:
+      repeating-linear-gradient(
+        90deg,
+        var(--ink) 0 5px,
+        transparent 5px 10px
+      );
+    border-bottom: var(--line) solid var(--ink);
+  }
+
+  /* ============ 主內容 ============ */
+  .main { padding: 10px; }
+
+  .row { margin-bottom: 8px; }
+  .row-label {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-size: 9px;
+    letter-spacing: 2px;
+    font-weight: 800;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+  .row-label .jp {
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--ink);
+    border-bottom: var(--line) solid var(--ink);
+    padding: 0 1px 2px;
+  }
+
+  input[type="text"], input[type="password"], select {
+    width: 100%;
+    border: var(--line) solid var(--ink);
+    padding: 5px 7px;
+    font-size: 11px;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: inherit;
+    border-radius: 0;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  input:focus, select:focus {
+    outline: none;
+    box-shadow: var(--shadow);
+  }
+  select {
+    background:
+      linear-gradient(45deg, transparent 50%, var(--ink) 50%) calc(100% - 12px) 50% / 6px 6px no-repeat,
+      var(--paper);
+    padding-right: 26px;
+  }
+
+  /* ============ 開關 ============ */
+  .toggle-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0 7px;
+    margin-bottom: 4px;
+    border-top: var(--line) solid var(--ink);
+  }
+  .toggle-label {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .toggle-jp { font-size: 11px; font-weight: 900; letter-spacing: 1px; }
+  .toggle-en { font-size: 8px; font-weight: 700; letter-spacing: 3px; opacity: 0.6; text-transform: uppercase; }
+
+  .switch {
+    width: 40px;
+    height: 20px;
+    border: var(--line) solid var(--ink);
+    background: var(--paper);
+    position: relative;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s ease;
+  }
+  .switch::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 13px;
+    height: 13px;
+    background: var(--ink);
+    transition: left 0.15s ease, background 0.15s ease;
+  }
+  .switch.on { background: var(--ink); }
+  .switch.on::after { left: 21px; background: var(--paper); }
+
+  /* ============ 按鈕 ============ */
+  .btn {
+    width: 100%;
+    border: 2px solid var(--ink);
+    background: var(--paper);
+    color: var(--ink);
+    padding: 7px;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 3px;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    font-family: inherit;
+    transition: transform 0.08s, box-shadow 0.08s, background 0.12s, color 0.12s;
+    text-transform: uppercase;
+  }
+  .btn:hover { background: var(--ink); color: var(--paper); }
+  .btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: none;
+  }
+
+  .status {
+    font-size: 9px;
+    letter-spacing: 3px;
+    font-weight: 800;
+    text-align: center;
+    margin-top: 8px;
+    min-height: 12px;
+    text-transform: uppercase;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .status.show { opacity: 1; }
+
+  /* ============ Quota ============ */
+  .quota {
+    margin-top: 8px;
+    padding: 6px 8px;
+    border: var(--line) solid var(--ink);
+    background: var(--paper);
+  }
+  .quota-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+  }
+  .quota-label {
+    font-size: 9px;
+    letter-spacing: 3px;
+    font-weight: 800;
+    text-transform: uppercase;
+    padding: 0;
+  }
+  .quota-value {
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    background: var(--paper);
+    padding: 0 4px;
+  }
+  .quota-bar {
+    height: 7px;
+    border: var(--line) solid var(--ink);
+    background: var(--paper);
+    position: relative;
+  }
+  .quota-bar-inner {
+    height: 100%;
+    background: var(--ink);
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+
+  /* ============ 底部 hanko ============ */
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 10px;
+    border-top: var(--line) solid var(--ink);
+    font-size: 8px;
+    letter-spacing: 3px;
+    font-weight: 700;
+    text-transform: uppercase;
+    opacity: 0.8;
+  }
+  .hanko {
+    display: inline-block;
+    border: var(--line) solid var(--ink);
+    padding: 1px 4px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    font-size: 9px;
+  }
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-row">
+    <div>
+      <div class="hdr-title">翻訳</div>
+      <div class="hdr-sub">HONYAKU ・ TRANSLATOR</div>
+    </div>
+    <div class="hdr-side">設 定 ・ SETTING</div>
+  </div>
+</div>
+<div class="divider"></div>
+
+<div class="main">
+
+  <!-- 開關 -->
+  <div class="toggle-row">
+    <div class="toggle-label">
+      <span class="toggle-jp">起動 / ENABLE</span>
+      <span class="toggle-en">turn on selection translator</span>
+    </div>
+    <div class="switch" id="toggle-switch" role="switch" tabindex="0"></div>
+  </div>
+
+  <!-- Provider -->
+  <div class="row">
+    <div class="row-label"><span class="jp">模型</span><span>PROVIDER</span></div>
+    <select id="provider-select">
+      <option value="gemini">Gemini ・ Google</option>
+      <option value="minimax">MiniMax ・ 海螺</option>
+      <option value="kimi">Kimi ・ Moonshot</option>
+      <option value="openai">OpenAI ・ ChatGPT</option>
+      <option value="deepseek">DeepSeek ・ 深度求索</option>
+      <option value="claude">Claude ・ Anthropic</option>
+    </select>
+  </div>
+
+  <!-- API Key -->
+  <div class="row">
+    <div class="row-label"><span class="jp">鍵</span><span>API KEY</span></div>
+    <input type="password" id="api-key" placeholder="sk-..." autocomplete="off" spellcheck="false">
+  </div>
+
+  <!-- 目標語言 -->
+  <div class="row">
+    <div class="row-label"><span class="jp">訳先</span><span>TARGET LANGUAGE</span></div>
+    <select id="lang-select">
+      <option value="zh-TW">繁體中文 ・ Traditional Chinese</option>
+      <option value="zh-CN">简体中文 ・ Simplified Chinese</option>
+      <option value="ja">日本語 ・ Japanese</option>
+      <option value="en">English</option>
+      <option value="ko">한국어 ・ Korean</option>
+      <option value="fr">Français ・ French</option>
+      <option value="de">Deutsch ・ German</option>
+      <option value="es">Español ・ Spanish</option>
+    </select>
+  </div>
+
+  <button class="btn" id="save-btn">保存 ・ SAVE</button>
+  <div class="status" id="status-msg"></div>
+
+  <div class="quota">
+    <div class="quota-top">
+      <span class="quota-label">使用量 ・ Quota</span>
+      <span class="quota-value" id="quota-text">0%</span>
+    </div>
+    <div class="quota-bar"><div class="quota-bar-inner" id="quota-bar-inner"></div></div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <span>翻 ・ 訳 ・ アプリ</span>
+  <span class="hanko" id="footer-stamp">承</span>
+</div>
+
+<script src="popup.js"></script>
+</body>
+</html>
