@@ -31,8 +31,12 @@ const PROVIDERS = {
   },
   deepseek: {
     name: "DeepSeek",
-    model: "deepseek-chat",
-    endpoint: () => "https://api.deepseek.com/v1/chat/completions",
+    model: "deepseek-v4-flash",
+    endpoint: () => "https://api.deepseek.com/chat/completions",
+    requestOptions: {
+      thinking: { type: "disabled" },
+      max_tokens: 1024,
+    },
   },
   claude: {
     name: "Claude",
@@ -392,7 +396,11 @@ async function callMiniMaxAt(endpoint, apiKey, prompt, model) {
   return text;
 }
 
-async function callOpenAICompat({ model, endpoint }, apiKey, prompt) {
+async function callOpenAICompat(
+  { model, endpoint, requestOptions = {} },
+  apiKey,
+  prompt
+) {
   const res = await fetchWithTimeout(
     endpoint(),
     {
@@ -405,6 +413,7 @@ async function callOpenAICompat({ model, endpoint }, apiKey, prompt) {
         model,
         messages: [{ role: "user", content: prompt }],
         temperature: 0.2,
+        ...requestOptions,
       }),
     },
     15000

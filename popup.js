@@ -16,7 +16,7 @@ const PROVIDER_META = {
   minimax: { model: "MiniMax M2.5", placeholder: "輸入 MiniMax API 金鑰" },
   kimi: { model: "Moonshot v1 8K", placeholder: "輸入 Moonshot API 金鑰" },
   openai: { model: "GPT-4o mini", placeholder: "輸入 OpenAI API 金鑰" },
-  deepseek: { model: "DeepSeek Chat", placeholder: "輸入 DeepSeek API 金鑰" },
+  deepseek: { model: "V4 Flash · 快速省錢", placeholder: "輸入 DeepSeek API 金鑰" },
   claude: { model: "Claude Haiku 4.5", placeholder: "輸入 Anthropic API 金鑰" },
 };
 

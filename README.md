@@ -14,7 +14,7 @@
   - MiniMax（`MiniMax-M2.5`）
   - Kimi / Moonshot（`moonshot-v1-8k`）
   - OpenAI（`gpt-4o-mini`）
-  - DeepSeek（`deepseek-chat`）
+  - DeepSeek V4 Flash（`deepseek-v4-flash`，關閉思考模式以降低延遲與用量）
   - Claude / Anthropic（`claude-haiku-4-5`）
 - **多種譯文語言**：繁體中文、簡體中文、英文、韓文、法文、德文與西班牙文。
 - **操作便利**：一鍵複製譯文、`Esc` 關閉、開關即時保存，以及每日使用量統計。
