@@ -2,341 +2,308 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<title>翻訳 設定</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>隨選翻譯設定</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  * { box-sizing: border-box; }
+
   :root {
-    --ink: #0a0a0a;
-    --paper: #fff;
-    --line: 1.5px;
-    --shadow: 2px 2px 0 var(--ink);
+    color-scheme: light;
+    --page: #f2ede5;
+    --surface: #fffdf8;
+    --ink: #26211d;
+    --muted: #746b61;
+    --border: #d8cfc3;
+    --border-strong: #a99d8e;
+    --clay: #b45309;
+    --clay-dark: #8f3f08;
+    --clay-soft: #f6e8d6;
+    --danger: #9a3525;
   }
+
   html, body {
-    font-family: "Yu Gothic", "Hiragino Sans", "Noto Sans JP",
-                 "Microsoft JhengHei", -apple-system, sans-serif;
+    margin: 0;
+    min-height: 100%;
+    font-family: "Avenir Next", "PingFang TC", "Microsoft JhengHei", sans-serif;
     color: var(--ink);
-    background: var(--paper);
+    background: var(--page);
   }
-  body { width: 260px; }
 
-  /* ============ 頂部標題 ============ */
-  .hdr {
-    position: relative;
-    padding: 8px 10px 7px;
-    background: var(--ink);
-    color: var(--paper);
-    border-bottom: 2px solid var(--ink);
-    overflow: hidden;
+  body {
+    width: 360px;
+    border: 1px solid #3b342e;
   }
-  .hdr::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background:
-      radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1px) 0 0 / 8px 8px;
-    pointer-events: none;
-  }
-  .hdr-row {
-    position: relative;
+  button, input, select { font: inherit; }
+
+  .app-header {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-  }
-  .hdr-title {
-    font-size: 16px;
-    font-weight: 900;
-    letter-spacing: 2px;
-    line-height: 1;
-  }
-  .hdr-sub {
-    font-size: 7px;
-    letter-spacing: 3px;
-    font-weight: 700;
-    opacity: 0.7;
-    margin-top: 3px;
-    text-transform: uppercase;
-  }
-  .hdr-side {
-    writing-mode: vertical-rl;
-    font-size: 8px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    border-left: 2px solid var(--paper);
-    padding: 2px 3px 2px 5px;
-    opacity: 0.85;
-  }
-
-  /* halftone divider */
-  .divider {
-    height: 5px;
-    background:
-      repeating-linear-gradient(
-        90deg,
-        var(--ink) 0 5px,
-        transparent 5px 10px
-      );
-    border-bottom: var(--line) solid var(--ink);
-  }
-
-  /* ============ 主內容 ============ */
-  .main { padding: 10px; }
-
-  .row { margin-bottom: 8px; }
-  .row-label {
-    display: flex;
-    align-items: baseline;
-    gap: 6px;
-    font-size: 9px;
-    letter-spacing: 2px;
-    font-weight: 800;
-    margin-bottom: 4px;
-    text-transform: uppercase;
-  }
-  .row-label .jp {
-    font-size: 10px;
-    letter-spacing: 1px;
-    color: var(--ink);
-    border-bottom: var(--line) solid var(--ink);
-    padding: 0 1px 2px;
-  }
-
-  input[type="text"], input[type="password"], select {
-    width: 100%;
-    border: var(--line) solid var(--ink);
-    padding: 5px 7px;
-    font-size: 11px;
-    background: var(--paper);
-    color: var(--ink);
-    font-family: inherit;
-    border-radius: 0;
-    appearance: none;
-    -webkit-appearance: none;
-  }
-  input:focus, select:focus {
-    outline: none;
-    box-shadow: var(--shadow);
-  }
-  select {
-    background:
-      linear-gradient(45deg, transparent 50%, var(--ink) 50%) calc(100% - 12px) 50% / 6px 6px no-repeat,
-      var(--paper);
-    padding-right: 26px;
-  }
-
-  /* ============ 開關 ============ */
-  .toggle-row {
-    display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 8px 0 7px;
-    margin-bottom: 4px;
-    border-top: var(--line) solid var(--ink);
+    justify-content: space-between;
+    min-height: 68px;
+    padding: 13px 18px 12px;
+    color: #fffaf2;
+    background: #26211d;
+    border-bottom: 3px solid var(--clay);
   }
-  .toggle-label {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+
+  .app-title {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    line-height: 1.3;
   }
-  .toggle-jp { font-size: 11px; font-weight: 900; letter-spacing: 1px; }
-  .toggle-en { font-size: 8px; font-weight: 700; letter-spacing: 3px; opacity: 0.6; text-transform: uppercase; }
+
+  .app-state {
+    margin: 2px 0 0;
+    color: #c7bdb1;
+    font-size: 11px;
+  }
 
   .switch {
-    width: 40px;
-    height: 20px;
-    border: var(--line) solid var(--ink);
-    background: var(--paper);
     position: relative;
+    width: 42px;
+    height: 24px;
+    flex: 0 0 auto;
+    padding: 0;
+    background: #5e564e;
+    border: 1px solid #756b61;
+    border-radius: 12px;
     cursor: pointer;
-    flex-shrink: 0;
-    transition: background 0.15s ease;
   }
+
   .switch::after {
     content: "";
     position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 13px;
-    height: 13px;
-    background: var(--ink);
-    transition: left 0.15s ease, background 0.15s ease;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    border-radius: 50%;
+    transition: left 140ms ease;
   }
-  .switch.on { background: var(--ink); }
-  .switch.on::after { left: 21px; background: var(--paper); }
 
-  /* ============ 按鈕 ============ */
-  .btn {
-    width: 100%;
-    border: 2px solid var(--ink);
-    background: var(--paper);
-    color: var(--ink);
-    padding: 7px;
+  .switch.on {
+    background: var(--clay);
+    border-color: #d07735;
+  }
+  .switch.on::after { left: 21px; }
+
+  .main {
+    padding: 19px 18px 16px;
+    background: var(--page);
+  }
+
+  .field + .field { margin-top: 16px; }
+
+  .field-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 7px;
+  }
+
+  label {
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .field-meta {
+    color: var(--muted);
     font-size: 10px;
-    font-weight: 900;
-    letter-spacing: 3px;
+  }
+
+  input, select {
+    width: 100%;
+    height: 40px;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 4px;
+    font-size: 12px;
+  }
+
+  input { padding: 0 40px 0 11px; }
+
+  select {
+    padding: 0 10px;
     cursor: pointer;
-    box-shadow: var(--shadow);
-    font-family: inherit;
-    transition: transform 0.08s, box-shadow 0.08s, background 0.12s, color 0.12s;
-    text-transform: uppercase;
   }
-  .btn:hover { background: var(--ink); color: var(--paper); }
-  .btn:active {
-    transform: translate(2px, 2px);
-    box-shadow: none;
+
+  input:hover, select:hover { border-color: #766a5e; }
+
+  input:focus, select:focus,
+  button:focus-visible {
+    outline: 2px solid rgba(180, 83, 9, 0.25);
+    outline-offset: 1px;
   }
+
+  input:focus, select:focus {
+    border-color: var(--clay);
+  }
+
+  .secret-wrap { position: relative; }
+
+  .key-toggle {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    color: var(--muted);
+    background: transparent;
+    border: 0;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+
+  .key-toggle:hover { color: var(--ink); background: #eee6dc; }
+
+  .key-toggle::before {
+    content: "";
+    display: block;
+    width: 14px;
+    height: 8px;
+    margin: auto;
+    border: 1.5px solid currentColor;
+    border-radius: 70% 20%;
+    transform: rotate(45deg);
+  }
+
+  .field-help {
+    margin: 6px 0 0;
+    color: var(--muted);
+    font-size: 10px;
+    line-height: 1.5;
+  }
+
+  .builtin-info {
+    margin-top: 8px;
+    padding: 9px 10px;
+    color: #4b3728;
+    background: var(--clay-soft);
+    border-left: 3px solid var(--clay);
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  [hidden] { display: none !important; }
+
+  .usage-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 18px;
+    padding: 11px 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+  }
+
+  .usage-label { color: var(--muted); }
+  .usage-value { font-weight: 650; }
+
+  .save-button {
+    width: 100%;
+    height: 40px;
+    margin-top: 16px;
+    color: #fffaf2;
+    background: var(--clay);
+    border: 1px solid var(--clay-dark);
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 650;
+    cursor: pointer;
+    transition: background 140ms ease;
+  }
+
+  .save-button:hover { background: var(--clay-dark); }
+  .save-button:disabled { cursor: wait; opacity: 0.65; }
 
   .status {
-    font-size: 9px;
-    letter-spacing: 3px;
-    font-weight: 800;
+    min-height: 17px;
+    margin: 8px 0 0;
+    color: var(--clay-dark);
+    font-size: 11px;
     text-align: center;
-    margin-top: 8px;
-    min-height: 12px;
-    text-transform: uppercase;
     opacity: 0;
-    transition: opacity 0.15s;
   }
+
+  .status.warning { color: var(--danger); }
   .status.show { opacity: 1; }
 
-  /* ============ Quota ============ */
-  .quota {
-    margin-top: 8px;
-    padding: 6px 8px;
-    border: var(--line) solid var(--ink);
-    background: var(--paper);
-  }
-  .quota-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: 6px;
-  }
-  .quota-label {
-    font-size: 9px;
-    letter-spacing: 3px;
-    font-weight: 800;
-    text-transform: uppercase;
-    padding: 0;
-  }
-  .quota-value {
-    font-size: 13px;
-    font-weight: 900;
-    letter-spacing: 1px;
-    background: var(--paper);
-    padding: 0 4px;
-  }
-  .quota-bar {
-    height: 7px;
-    border: var(--line) solid var(--ink);
-    background: var(--paper);
-    position: relative;
-  }
-  .quota-bar-inner {
-    height: 100%;
-    background: var(--ink);
-    width: 0%;
-    transition: width 0.3s ease;
-  }
-
-  /* ============ 底部 hanko ============ */
-  .footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 5px 10px;
-    border-top: var(--line) solid var(--ink);
-    font-size: 8px;
-    letter-spacing: 3px;
-    font-weight: 700;
-    text-transform: uppercase;
-    opacity: 0.8;
-  }
-  .hanko {
-    display: inline-block;
-    border: var(--line) solid var(--ink);
-    padding: 1px 4px;
-    font-weight: 900;
-    letter-spacing: 1px;
-    font-size: 9px;
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; }
   }
 </style>
 </head>
 <body>
-
-<div class="hdr">
-  <div class="hdr-row">
+  <header class="app-header">
     <div>
-      <div class="hdr-title">翻訳</div>
-      <div class="hdr-sub">HONYAKU ・ TRANSLATOR</div>
+      <h1 class="app-title">隨選翻譯</h1>
+      <p class="app-state" id="app-state">選字翻譯已開啟</p>
     </div>
-    <div class="hdr-side">設 定 ・ SETTING</div>
-  </div>
-</div>
-<div class="divider"></div>
+    <button class="switch" id="toggle-switch" type="button" role="switch" aria-checked="true" aria-label="暫停選字翻譯"></button>
+  </header>
 
-<div class="main">
-
-  <!-- 開關 -->
-  <div class="toggle-row">
-    <div class="toggle-label">
-      <span class="toggle-jp">起動 / ENABLE</span>
-      <span class="toggle-en">turn on selection translator</span>
+  <main class="main">
+    <div class="field">
+      <div class="field-header">
+        <label for="provider-select">翻譯方式</label>
+        <span class="field-meta" id="model-note">免金鑰，本機處理</span>
+      </div>
+      <select id="provider-select">
+        <option value="builtin">Chrome 內建翻譯（免金鑰）</option>
+        <option value="gemini">Gemini · Google</option>
+        <option value="minimax">MiniMax</option>
+        <option value="kimi">Kimi · Moonshot</option>
+        <option value="openai">OpenAI</option>
+        <option value="deepseek">DeepSeek</option>
+        <option value="claude">Claude · Anthropic</option>
+      </select>
+      <div class="builtin-info" id="builtin-info">文字留在裝置上處理。第一次翻譯時，Chrome 可能需要下載語言套件。</div>
     </div>
-    <div class="switch" id="toggle-switch" role="switch" tabindex="0"></div>
-  </div>
 
-  <!-- Provider -->
-  <div class="row">
-    <div class="row-label"><span class="jp">模型</span><span>PROVIDER</span></div>
-    <select id="provider-select">
-      <option value="gemini">Gemini ・ Google</option>
-      <option value="minimax">MiniMax ・ 海螺</option>
-      <option value="kimi">Kimi ・ Moonshot</option>
-      <option value="openai">OpenAI ・ ChatGPT</option>
-      <option value="deepseek">DeepSeek ・ 深度求索</option>
-      <option value="claude">Claude ・ Anthropic</option>
-    </select>
-  </div>
-
-  <!-- API Key -->
-  <div class="row">
-    <div class="row-label"><span class="jp">鍵</span><span>API KEY</span></div>
-    <input type="password" id="api-key" placeholder="sk-..." autocomplete="off" spellcheck="false">
-  </div>
-
-  <!-- 目標語言 -->
-  <div class="row">
-    <div class="row-label"><span class="jp">訳先</span><span>TARGET LANGUAGE</span></div>
-    <select id="lang-select">
-      <option value="zh-TW">繁體中文 ・ Traditional Chinese</option>
-      <option value="zh-CN">简体中文 ・ Simplified Chinese</option>
-      <option value="ja">日本語 ・ Japanese</option>
-      <option value="en">English</option>
-      <option value="ko">한국어 ・ Korean</option>
-      <option value="fr">Français ・ French</option>
-      <option value="de">Deutsch ・ German</option>
-      <option value="es">Español ・ Spanish</option>
-    </select>
-  </div>
-
-  <button class="btn" id="save-btn">保存 ・ SAVE</button>
-  <div class="status" id="status-msg"></div>
-
-  <div class="quota">
-    <div class="quota-top">
-      <span class="quota-label">使用量 ・ Quota</span>
-      <span class="quota-value" id="quota-text">0%</span>
+    <div class="field" id="api-key-field" hidden>
+      <div class="field-header">
+        <label for="api-key">API 金鑰</label>
+        <span class="field-meta">每個模型分開保存</span>
+      </div>
+      <div class="secret-wrap">
+        <input type="password" id="api-key" placeholder="輸入 API 金鑰" autocomplete="off" spellcheck="false">
+        <button class="key-toggle" id="key-visibility" type="button" aria-label="顯示 API 金鑰" aria-pressed="false"></button>
+      </div>
+      <p class="field-help">金鑰只會儲存在 Chrome 同步空間。</p>
     </div>
-    <div class="quota-bar"><div class="quota-bar-inner" id="quota-bar-inner"></div></div>
-  </div>
 
-</div>
+    <div class="field">
+      <div class="field-header">
+        <label for="lang-select">譯文語言</label>
+        <span class="field-meta">翻譯結果的顯示語言</span>
+      </div>
+      <select id="lang-select">
+        <option value="zh-TW">繁體中文</option>
+        <option value="zh-CN">简体中文</option>
+        <option value="en">English</option>
+        <option value="ko">한국어</option>
+        <option value="fr">Français</option>
+        <option value="de">Deutsch</option>
+        <option value="es">Español</option>
+      </select>
+    </div>
 
-<div class="footer">
-  <span>翻 ・ 訳 ・ アプリ</span>
-  <span class="hanko" id="footer-stamp">承</span>
-</div>
+    <div class="usage-row" aria-label="今日翻譯用量">
+      <span class="usage-label">今日翻譯用量</span>
+      <span class="usage-value" id="quota-text">0 / 100 次</span>
+    </div>
 
-<script src="popup.js"></script>
+    <button class="save-button" id="save-btn" type="button">儲存設定</button>
+    <p class="status" id="status-msg" role="status" aria-live="polite"></p>
+  </main>
+
+  <script src="popup.js"></script>
 </body>
 </html>

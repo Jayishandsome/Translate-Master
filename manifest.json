@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "翻訳 — Contextual Translator",
-  "version": "2.0.0",
-  "description": "黑白動漫風的網頁翻譯擴充功能，支援 Gemini / MiniMax / Kimi / OpenAI / DeepSeek / Claude 等多家模型。",
+  "name": "隨選翻譯 — Context Translator",
+  "version": "2.2.1",
+  "description": "選取網頁文字即可翻譯；預設使用 Chrome 內建模型，免 API 金鑰並在裝置上處理。",
   "permissions": [
     "storage",
     "activeTab",
@@ -23,6 +23,6 @@
   ],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "翻訳 設定"
+    "default_title": "隨選翻譯設定"
   }
 }

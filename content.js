@@ -1,7 +1,4 @@
-// ============================================================================
-// 翻訳 — Content Script
-// 黑白動漫風選字翻譯浮窗，支援拖拉
-// ============================================================================
+// 隨選翻譯 — 網頁選字與翻譯浮窗
 
 (() => {
   const IDS = {
@@ -13,208 +10,202 @@
   // 清掉舊版殘留節點 (避免擴充更新後重複)
   Object.values(IDS).forEach((id) => document.getElementById(id)?.remove());
 
-  // ----------------------------------------------------------------------
-  // 樣式：黑白動漫/漫畫氣泡風
-  // ----------------------------------------------------------------------
+  // 與設定視窗一致的暖紙張、深墨色編輯工具風格。
   const style = document.createElement("style");
   style.id = IDS.style;
   style.textContent = `
     #${IDS.btn}, #${IDS.pop} {
-      font-family: "Yu Gothic", "Hiragino Sans", "Noto Sans JP",
-                   "Microsoft JhengHei", -apple-system, BlinkMacSystemFont, sans-serif;
-      color: #0a0a0a;
+      font-family: "Avenir Next", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      color: #26211d;
       box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
     }
     #${IDS.btn} *, #${IDS.pop} * { box-sizing: border-box; }
 
-    /* ========================= 浮動翻譯按鈕 ========================= */
     #${IDS.btn} {
       position: fixed;
       z-index: 2147483647;
       display: none;
       align-items: center;
-      gap: 4px;
-      padding: 3px 7px 3px 5px;
-      background: #fff;
-      border: 2px solid #0a0a0a;
-      border-radius: 0;
-      box-shadow: 2px 2px 0 #0a0a0a;
+      min-height: 34px;
+      padding: 0 11px;
+      color: #fffaf2;
+      background: #26211d;
+      border: 1px solid #26211d;
+      border-left: 3px solid #c15b2f;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(38, 33, 29, 0.18);
       cursor: pointer;
-      font-size: 9px;
-      font-weight: 800;
-      letter-spacing: 0.8px;
+      font-size: 12px;
+      font-weight: 650;
+      line-height: 1;
       user-select: none;
-      transition: transform 0.08s ease, box-shadow 0.08s ease;
+      transition: background 140ms ease;
     }
     #${IDS.btn}:hover {
-      background: #0a0a0a;
-      color: #fff;
+      background: #3a332d;
     }
-    #${IDS.btn}:active {
-      transform: translate(2px, 2px);
-      box-shadow: 0 0 0 #0a0a0a;
+    #${IDS.btn}:focus-visible {
+      outline: 3px solid rgba(180, 83, 9, 0.28);
+      outline-offset: 3px;
     }
-    #${IDS.btn} .ctx-btn-kanji {
-      font-size: 11px;
-      font-weight: 900;
-      writing-mode: vertical-rl;
-      line-height: 1;
-      padding: 0 1px;
-      border-right: 1.5px solid currentColor;
-      margin-right: 3px;
-    }
-
-    /* ========================= 翻譯氣泡視窗 ========================= */
     #${IDS.pop} {
       position: fixed;
       z-index: 2147483647;
-      width: 248px;
-      max-width: 88vw;
-      background: #fff;
-      border: 2px solid #0a0a0a;
-      box-shadow: 4px 4px 0 #0a0a0a;
       display: none;
-      font-size: 12px;
+      width: 332px;
+      max-width: calc(100vw - 16px);
+      background: #fffdf8;
+      border: 1px solid #50483f;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(38, 33, 29, 0.18);
+      font-size: 13px;
       overflow: hidden;
     }
-
-    /* 漫畫式對話框裝飾線（已移除右下角折角） */
 
     .ctx-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 4px 8px;
-      background: #0a0a0a;
-      color: #fff;
+      gap: 10px;
+      min-height: 46px;
+      padding: 8px 9px 8px 13px;
+      background: #26211d;
+      color: #fffaf2;
+      border-bottom: 3px solid #b45309;
       cursor: grab;
       user-select: none;
-      border-bottom: 2px solid #0a0a0a;
     }
     .ctx-header:active { cursor: grabbing; }
 
     .ctx-title-group {
       display: flex;
-      align-items: baseline;
-      gap: 5px;
+      align-items: center;
       overflow: hidden;
     }
-    .ctx-title-kanji {
-      font-size: 10px;
-      font-weight: 900;
-      letter-spacing: 0.5px;
+    .ctx-title-copy { min-width: 0; }
+    .ctx-title-main {
+      display: block;
+      font-size: 13px;
+      font-weight: 650;
+      line-height: 1.25;
     }
     .ctx-title-sub {
-      font-size: 7px;
-      font-weight: 700;
-      letter-spacing: 2px;
-      opacity: 0.65;
-      text-transform: uppercase;
+      display: block;
+      margin-top: 1px;
+      font-size: 10px;
+      font-weight: 500;
+      opacity: 0.72;
     }
 
-    .ctx-header-actions { display: flex; gap: 3px; }
+    .ctx-header-actions { display: flex; gap: 4px; }
     .ctx-icon-btn {
-      width: 17px;
-      height: 17px;
+      width: 30px;
+      height: 30px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      background: #fff;
-      color: #0a0a0a;
-      border: 1.5px solid #fff;
+      color: #fffaf2;
+      background: transparent;
+      border: 0;
+      border-radius: 3px;
       cursor: pointer;
-      font-size: 10px;
-      font-weight: 900;
+      font-size: 14px;
+      font-weight: 650;
       line-height: 1;
       padding: 0;
       font-family: inherit;
+      transition: background 140ms ease;
     }
-    .ctx-icon-btn:hover { background: #0a0a0a; color: #fff; }
-
-    /* 標題下的雙線裝飾 (manga panel divider) */
-    .ctx-divider {
-      height: 4px;
-      background:
-        repeating-linear-gradient(
-          90deg,
-          #0a0a0a 0 4px,
-          transparent 4px 8px
-        );
-      border-bottom: 1.5px solid #0a0a0a;
+    .ctx-icon-btn:hover { background: rgba(255, 250, 242, 0.12); }
+    .ctx-icon-btn:focus-visible {
+      outline: 2px solid rgba(255, 255, 255, 0.72);
+      outline-offset: 1px;
     }
 
     .ctx-body {
-      padding: 8px 10px;
-      max-height: 200px;
+      padding: 15px 16px 16px;
+      max-height: min(320px, calc(100vh - 84px));
       overflow-y: auto;
-      line-height: 1.7;
+      color: #26211d;
+      line-height: 1.72;
       white-space: pre-wrap;
       word-wrap: break-word;
-      background: #fff;
+      background: #fffdf8;
     }
-    .ctx-body::-webkit-scrollbar { width: 8px; }
-    .ctx-body::-webkit-scrollbar-track { background: #fff; border-left: 1.5px solid #0a0a0a; }
-    .ctx-body::-webkit-scrollbar-thumb { background: #0a0a0a; }
+    .ctx-body::-webkit-scrollbar { width: 7px; }
+    .ctx-body::-webkit-scrollbar-track { background: #f1ebe2; }
+    .ctx-body::-webkit-scrollbar-thumb { background: #b7aa9a; border-radius: 4px; }
 
     .ctx-result {
-      background: transparent;
-      padding: 4px 0;
-      border: none;
-      box-shadow: none;
-      font-size: 12px;
-      font-weight: 800;
-      line-height: 1.65;
-      letter-spacing: 0.2px;
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1.75;
     }
-    .ctx-result.ctx-result-word {
-      font-weight: 600;
-    }
+    .ctx-result.ctx-result-word { font-weight: 500; }
     .ctx-result.ctx-result-word .ctx-line-trans {
       display: block;
-      font-weight: 800;
-      margin-bottom: 6px;
+      margin-bottom: 12px;
+      padding: 2px 0 10px 11px;
+      color: #7c350b;
+      background: transparent;
+      border-left: 3px solid #b45309;
+      font-size: 15px;
+      font-weight: 650;
     }
     .ctx-result.ctx-result-word .ctx-line-ctx {
       display: block;
       font-weight: 500;
-      font-size: 11px;
-      line-height: 1.6;
-      opacity: 0.92;
+      font-size: 12px;
+      line-height: 1.7;
+      color: #655c53;
+    }
+    .ctx-line-label {
+      display: block;
+      margin-bottom: 4px;
+      color: #85796d;
+      font-size: 10px;
+      font-weight: 650;
     }
 
     .ctx-error {
-      padding: 6px 8px;
-      background: #fff;
-      border: 1.5px solid #0a0a0a;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 1px;
+      padding: 11px 12px;
+      color: #8d2f22;
+      background: #fff1e9;
+      border: 1px solid #e6b9a8;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.6;
     }
     .ctx-error::before {
-      content: "⚠ エラー ";
-      font-weight: 900;
-      margin-right: 4px;
+      content: "提示：";
+      font-weight: 650;
     }
 
     .ctx-loading {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 4px 2px;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 1.5px;
+      gap: 10px;
+      min-height: 44px;
+      color: #655c53;
+      font-size: 12px;
+      font-weight: 500;
     }
     .ctx-spinner {
-      width: 13px;
-      height: 13px;
-      border: 2.5px solid #0a0a0a;
-      border-top-color: transparent;
+      width: 18px;
+      height: 18px;
+      border: 2.5px solid #d8c4ad;
+      border-top-color: #b45309;
       border-radius: 50%;
-      animation: ctxSpin 0.7s linear infinite;
+      animation: ctxSpin 0.75s linear infinite;
       flex-shrink: 0;
     }
     @keyframes ctxSpin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) {
+      #${IDS.btn}, #${IDS.btn} *, #${IDS.pop}, #${IDS.pop} * { transition: none !important; }
+      .ctx-spinner { animation-duration: 1.5s; }
+    }
   `;
   document.head.appendChild(style);
 
@@ -224,24 +215,29 @@
   const btn = document.createElement("button");
   btn.id = IDS.btn;
   btn.type = "button";
-  btn.innerHTML = `<span class="ctx-btn-kanji">訳</span><span>TRANSLATE</span>`;
+  btn.setAttribute("aria-label", "翻譯選取內容");
+  btn.textContent = "翻譯選取內容";
   document.documentElement.appendChild(btn);
 
   const pop = document.createElement("div");
   pop.id = IDS.pop;
+  pop.setAttribute("role", "dialog");
+  pop.setAttribute("aria-label", "翻譯結果");
+  pop.setAttribute("aria-hidden", "true");
   pop.innerHTML = `
     <div class="ctx-header" id="ctx-drag-handle">
       <div class="ctx-title-group">
-        <span class="ctx-title-kanji">翻訳</span>
-        <span class="ctx-title-sub">honyaku</span>
+        <span class="ctx-title-copy">
+          <span class="ctx-title-main">隨選翻譯</span>
+          <span class="ctx-title-sub" id="ctx-mode-label">翻譯結果</span>
+        </span>
       </div>
       <div class="ctx-header-actions">
-        <button type="button" class="ctx-icon-btn" id="ctx-copy-btn" title="複製">⧉</button>
-        <button type="button" class="ctx-icon-btn" id="ctx-close-btn" title="關閉">×</button>
+        <button type="button" class="ctx-icon-btn" id="ctx-copy-btn" title="複製譯文" aria-label="複製譯文">⧉</button>
+        <button type="button" class="ctx-icon-btn" id="ctx-close-btn" title="關閉翻譯結果" aria-label="關閉翻譯結果">×</button>
       </div>
     </div>
-    <div class="ctx-divider"></div>
-    <div class="ctx-body" id="ctx-body"></div>
+    <div class="ctx-body" id="ctx-body" aria-live="polite"></div>
   `;
   document.documentElement.appendChild(pop);
 
@@ -249,6 +245,7 @@
   const closeBtn = pop.querySelector("#ctx-close-btn");
   const copyBtn = pop.querySelector("#ctx-copy-btn");
   const handle = pop.querySelector("#ctx-drag-handle");
+  const modeLabel = pop.querySelector("#ctx-mode-label");
 
   // ----------------------------------------------------------------------
   // 狀態
@@ -257,8 +254,20 @@
   let currentContext = "";
   let savedRange = null;
   let isFeatureEnabled = true;
+  let activeProvider = "builtin";
+  let activeTargetLanguage = "zh-TW";
   let currentResult = "";
   let isTranslating = false;
+
+  const BUILTIN_TARGETS = {
+    "zh-TW": "zh-Hant",
+    "zh-CN": "zh",
+    en: "en",
+    ko: "ko",
+    fr: "fr",
+    de: "de",
+    es: "es",
+  };
 
   const BLOCK_SELECTOR =
     "p, li, td, th, dd, dt, blockquote, figcaption, h1, h2, h3, h4, h5, h6, article, section, main, pre, div[class], div[id]";
@@ -329,25 +338,142 @@
       .replace(/'/g, "&#039;");
   }
 
-  function safeChrome(fn, fallback) {
+  function normalizeLanguageCode(code) {
+    const value = String(code || "").trim();
+    if (!value) return "";
+    if (/^zh-(tw|hk|mo|hant)/i.test(value)) return "zh-Hant";
+    if (/^zh/i.test(value)) return "zh";
+    if (/^he/i.test(value)) return "he";
+    return value.split("-")[0].toLowerCase();
+  }
+
+  function pageLanguage() {
+    return normalizeLanguageCode(document.documentElement.lang || "");
+  }
+
+  async function incrementBuiltinUsage() {
+    const today = new Date().toISOString().slice(0, 10);
+    const data = await chrome.storage.sync.get(["usageDate", "usageCount"]);
+    const next = data.usageDate === today ? (Number(data.usageCount) || 0) + 1 : 1;
+    await chrome.storage.sync.set({ usageDate: today, usageCount: next });
+  }
+
+  async function translateWithBuiltin(text, context, targetCode) {
+    if (!("Translator" in globalThis) || !("LanguageDetector" in globalThis)) {
+      throw new Error("此版本的 Chrome 尚未提供內建翻譯。請更新桌面版 Chrome，或在設定中選擇其他翻譯方式。");
+    }
+
+    const targetLanguage = BUILTIN_TARGETS[targetCode] || "zh-Hant";
+    let detector;
+    let translator;
+
     try {
-      return fn();
-    } catch (_) {
-      return fallback;
+      updateLoading("正在偵測原文語言…");
+      const detectorAvailability = await LanguageDetector.availability();
+      if (detectorAvailability === "unavailable") {
+        throw new Error("Chrome 無法使用本機語言偵測，請在設定中選擇其他翻譯方式。");
+      }
+
+      detector = await LanguageDetector.create({
+        monitor(monitor) {
+          monitor.addEventListener("downloadprogress", (event) => {
+            updateLoading(`正在準備語言偵測 ${Math.round(event.loaded * 100)}%`);
+          });
+        },
+      });
+
+      const detectionSample = String(context || text).slice(0, 1200);
+      const candidates = await detector.detect(detectionSample);
+      const topCandidate = candidates?.[0];
+      const fallbackLanguage = pageLanguage();
+      const sourceLanguage = normalizeLanguageCode(
+        topCandidate?.confidence >= 0.35
+          ? topCandidate.detectedLanguage
+          : fallbackLanguage || topCandidate?.detectedLanguage
+      );
+
+      if (!sourceLanguage) {
+        throw new Error("無法判斷原文語言，請選取較完整的句子後再試。");
+      }
+
+      if (sourceLanguage === targetLanguage) return text;
+
+      const translatorOptions = { sourceLanguage, targetLanguage };
+      const translatorAvailability = await Translator.availability(translatorOptions);
+      if (translatorAvailability === "unavailable") {
+        throw new Error("Chrome 尚未支援這組語言，請在設定中選擇其他翻譯方式。");
+      }
+
+      if (translatorAvailability !== "available") {
+        updateLoading("正在下載本機語言套件…");
+      } else {
+        updateLoading("正在本機翻譯…");
+      }
+
+      translator = await Translator.create({
+        ...translatorOptions,
+        monitor(monitor) {
+          monitor.addEventListener("downloadprogress", (event) => {
+            updateLoading(`正在下載本機語言套件 ${Math.round(event.loaded * 100)}%`);
+          });
+        },
+      });
+
+      updateLoading("正在本機翻譯…");
+      const result = await translator.translate(text);
+      return String(result || "").trim();
+    } catch (error) {
+      if (error?.name === "NotSupportedError") {
+        throw new Error("Chrome 尚未支援這組語言，請在設定中選擇其他翻譯方式。");
+      }
+      if (error?.name === "NetworkError") {
+        throw new Error("語言套件下載失敗，請檢查網路後再試。");
+      }
+      throw error;
+    } finally {
+      translator?.destroy?.();
+      detector?.destroy?.();
     }
   }
 
   async function refreshState() {
     try {
       if (chrome?.storage?.sync) {
-        const s = await chrome.storage.sync.get(["isEnabled"]);
+        const s = await chrome.storage.sync.get(["isEnabled", "apiProvider", "apiKeys", "targetLang"]);
         isFeatureEnabled = s.isEnabled !== false;
+        const storedProvider = s.apiProvider || "builtin";
+        activeProvider = storedProvider === "builtin" || s.apiKeys?.[storedProvider]
+          ? storedProvider
+          : "builtin";
+        if (activeProvider !== s.apiProvider) {
+          chrome.storage.sync.set({ apiProvider: activeProvider }).catch(() => {});
+        }
+        activeTargetLanguage = BUILTIN_TARGETS[s.targetLang] ? s.targetLang : "zh-TW";
       }
     } catch (_) {
       isFeatureEnabled = true;
     }
   }
   refreshState();
+
+  if (globalThis.chrome?.storage?.onChanged) {
+    chrome.storage.onChanged.addListener((changes, areaName) => {
+      if (areaName !== "sync") return;
+      if (changes.apiProvider) activeProvider = changes.apiProvider.newValue || "builtin";
+      if (changes.targetLang) {
+        activeTargetLanguage = BUILTIN_TARGETS[changes.targetLang.newValue]
+          ? changes.targetLang.newValue
+          : "zh-TW";
+      }
+      if (changes.isEnabled) {
+        isFeatureEnabled = changes.isEnabled.newValue !== false;
+      }
+      if (changes.isEnabled && !isFeatureEnabled) {
+        hideButton();
+        hidePopover();
+      }
+    });
+  }
 
   // ----------------------------------------------------------------------
   // 拖拉 (位置一律使用 fixed 座標，避免 scroll 問題)
@@ -408,6 +534,7 @@
   // ----------------------------------------------------------------------
   function hidePopover() {
     pop.style.display = "none";
+    pop.setAttribute("aria-hidden", "true");
   }
 
   function hideButton() {
@@ -416,6 +543,7 @@
 
   function showPopoverAt(clientX, clientY) {
     pop.style.display = "block";
+    pop.setAttribute("aria-hidden", "false");
     // 先放到接近選取的位置
     pop.style.left = `${clientX}px`;
     pop.style.top = `${clientY + 12}px`;
@@ -434,18 +562,24 @@
     body.innerHTML = html;
   }
 
-  function showLoading() {
+  function showLoading(message = "正在翻譯…") {
     revealPopover();
     setBody(`
       <div class="ctx-loading">
         <div class="ctx-spinner"></div>
-        <span>翻訳中・・・</span>
+        <span id="ctx-loading-text">${escapeHtml(message)}</span>
       </div>
     `);
   }
 
+  function updateLoading(message) {
+    const element = body.querySelector("#ctx-loading-text");
+    if (element) element.textContent = message;
+  }
+
   function revealPopover() {
     pop.style.display = "block";
+    pop.setAttribute("aria-hidden", "false");
   }
 
   function isWordLookup(text) {
@@ -460,10 +594,10 @@
   function formatWordResult(text) {
     const raw = String(text || "").trim();
     const transMatch = raw.match(
-      /【(?:翻譯|译|訳|Translation)】\s*([\s\S]*?)(?=\n*【|$)/i
+      /【(?:翻譯|译|Translation)】\s*([\s\S]*?)(?=\n*【|$)/i
     );
     const ctxMatch = raw.match(
-      /【(?:上下文|文脈|解釋|Context)】\s*([\s\S]*)/i
+      /【(?:上下文|解釋|Context)】\s*([\s\S]*)/i
     );
     const trans = (transMatch?.[1] || "").trim();
     const ctxLine = (ctxMatch?.[1] || "").trim();
@@ -471,10 +605,10 @@
     if (trans || ctxLine) {
       let html = '<div class="ctx-result ctx-result-word">';
       if (trans) {
-        html += `<span class="ctx-line-trans">【翻譯】${escapeHtml(trans)}</span>`;
+        html += `<span class="ctx-line-trans"><span class="ctx-line-label">譯文</span>${escapeHtml(trans)}</span>`;
       }
       if (ctxLine) {
-        html += `<span class="ctx-line-ctx">【上下文】${escapeHtml(ctxLine)}</span>`;
+        html += `<span class="ctx-line-ctx"><span class="ctx-line-label">上下文說明</span>${escapeHtml(ctxLine)}</span>`;
       }
       html += "</div>";
       return html;
@@ -537,6 +671,13 @@
     btn.style.display = "inline-flex";
     btn.style.left = `${baseX + 6}px`;
     btn.style.top = `${baseY + 6}px`;
+    requestAnimationFrame(() => {
+      const buttonRect = btn.getBoundingClientRect();
+      const left = Math.max(6, Math.min(buttonRect.left, window.innerWidth - buttonRect.width - 6));
+      const top = Math.max(6, Math.min(buttonRect.top, window.innerHeight - buttonRect.height - 6));
+      btn.style.left = `${left}px`;
+      btn.style.top = `${top}px`;
+    });
     hidePopover();
   });
 
@@ -564,8 +705,9 @@
 
     hideButton();
     showPopoverAt(e.clientX, e.clientY);
-    showLoading();
-    refreshState();
+    const provider = activeProvider;
+    modeLabel.textContent = provider === "builtin" ? "Chrome 內建翻譯" : "進階上下文翻譯";
+    showLoading(provider === "builtin" ? "正在準備本機翻譯…" : "正在理解上下文並翻譯…");
 
     // 點擊翻譯時選取可能已消失，用儲存的 Range 重新擷取上下文
     if (savedRange) {
@@ -584,9 +726,26 @@
 
     const timeoutId = setTimeout(() => {
       finish(() => showError("逾時 — 請稍後再試"));
-    }, 18000);
+    }, provider === "builtin" ? 300000 : 18000);
 
     try {
+      if (provider === "builtin") {
+        const text = await translateWithBuiltin(
+          currentSelection,
+          currentContext,
+          activeTargetLanguage
+        );
+        clearTimeout(timeoutId);
+
+        if (!text) {
+          finish(() => showError("翻譯結果為空，請換一段文字後再試"));
+        } else {
+          incrementBuiltinUsage().catch(() => {});
+          finish(() => showResult(text));
+        }
+        return;
+      }
+
       const response = await chrome.runtime.sendMessage({
         action: "translate",
         text: currentSelection,
@@ -603,7 +762,7 @@
       if (response.success) {
         const text = String(response.data ?? "").trim();
         if (!text) {
-          finish(() => showError("翻譯結果為空，請換一段文字或檢查 API 設定"));
+          finish(() => showError("翻譯結果為空，請換一段文字或檢查模型設定"));
         } else {
           finish(() => showResult(text));
         }
@@ -639,7 +798,11 @@
       await navigator.clipboard.writeText(currentResult);
       const old = copyBtn.textContent;
       copyBtn.textContent = "✓";
-      setTimeout(() => (copyBtn.textContent = old), 900);
+      copyBtn.setAttribute("aria-label", "譯文已複製");
+      setTimeout(() => {
+        copyBtn.textContent = old;
+        copyBtn.setAttribute("aria-label", "複製譯文");
+      }, 1100);
     } catch (_) {}
   });
 

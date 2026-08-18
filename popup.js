@@ -1,6 +1,4 @@
-// ============================================================================
-// 翻訳 — Popup Settings
-// ============================================================================
+// 隨選翻譯 — 設定視窗
 
 const KEYS = [
   "apiProvider",
@@ -12,33 +10,49 @@ const KEYS = [
   "usageLimit",
 ];
 
+const PROVIDER_META = {
+  builtin: { model: "免金鑰，本機處理", placeholder: "" },
+  gemini: { model: "Gemini 2.0 Flash", placeholder: "輸入 Google AI API 金鑰" },
+  minimax: { model: "MiniMax M2.5", placeholder: "輸入 MiniMax API 金鑰" },
+  kimi: { model: "Moonshot v1 8K", placeholder: "輸入 Moonshot API 金鑰" },
+  openai: { model: "GPT-4o mini", placeholder: "輸入 OpenAI API 金鑰" },
+  deepseek: { model: "DeepSeek Chat", placeholder: "輸入 DeepSeek API 金鑰" },
+  claude: { model: "Claude Haiku 4.5", placeholder: "輸入 Anthropic API 金鑰" },
+};
+
 const storage = {
   get(keys) {
     return new Promise((resolve) => {
-      if (chrome?.storage?.sync) {
-        chrome.storage.sync.get(keys, (r) => resolve(r || {}));
-      } else {
-        const result = {};
-        keys.forEach((k) => {
-          const v = localStorage.getItem(k);
-          if (v !== null) {
-            try { result[k] = JSON.parse(v); } catch { result[k] = v; }
-          }
-        });
-        resolve(result);
+      if (globalThis.chrome?.storage?.sync) {
+        chrome.storage.sync.get(keys, (result) => resolve(result || {}));
+        return;
       }
+
+      const result = {};
+      keys.forEach((key) => {
+        const value = localStorage.getItem(key);
+        if (value === null) return;
+        try {
+          result[key] = JSON.parse(value);
+        } catch {
+          result[key] = value;
+        }
+      });
+      resolve(result);
     });
   },
+
   set(data) {
     return new Promise((resolve) => {
-      if (chrome?.storage?.sync) {
-        chrome.storage.sync.set(data, () => resolve());
-      } else {
-        Object.entries(data).forEach(([k, v]) =>
-          localStorage.setItem(k, JSON.stringify(v))
-        );
-        resolve();
+      if (globalThis.chrome?.storage?.sync) {
+        chrome.storage.sync.set(data, resolve);
+        return;
       }
+
+      Object.entries(data).forEach(([key, value]) => {
+        localStorage.setItem(key, JSON.stringify(value));
+      });
+      resolve();
     });
   },
 };
@@ -47,93 +61,139 @@ function today() {
   return new Date().toISOString().slice(0, 10);
 }
 
-function showStatus(msg) {
-  const el = document.getElementById("status-msg");
-  el.textContent = msg;
-  el.classList.add("show");
-  clearTimeout(showStatus._t);
-  showStatus._t = setTimeout(() => el.classList.remove("show"), 1600);
+function showStatus(message, tone = "success") {
+  const element = document.getElementById("status-msg");
+  element.textContent = message;
+  element.classList.toggle("warning", tone === "warning");
+  element.classList.add("show");
+  clearTimeout(showStatus.timeout);
+  showStatus.timeout = setTimeout(() => element.classList.remove("show"), 2200);
 }
 
 function renderQuota(used, limit) {
-  const pct = limit > 0 ? Math.min(100, Math.round((used / limit) * 100)) : 0;
-  document.getElementById("quota-text").textContent = pct + "%";
-  document.getElementById("quota-bar-inner").style.width = pct + "%";
+  const safeLimit = limit > 0 ? limit : 100;
+  const safeUsed = Math.max(0, used);
+  document.getElementById("quota-text").textContent = `${safeUsed} / ${safeLimit} 次`;
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
   const apiKeyInput = document.getElementById("api-key");
+  const apiKeyField = document.getElementById("api-key-field");
+  const builtinInfo = document.getElementById("builtin-info");
   const providerSelect = document.getElementById("provider-select");
-  const langSelect = document.getElementById("lang-select");
+  const languageSelect = document.getElementById("lang-select");
   const toggleSwitch = document.getElementById("toggle-switch");
-  const saveBtn = document.getElementById("save-btn");
-  const footerStamp = document.getElementById("footer-stamp");
+  const appState = document.getElementById("app-state");
+  const saveButton = document.getElementById("save-btn");
+  const visibilityButton = document.getElementById("key-visibility");
+  const modelNote = document.getElementById("model-note");
 
   let isEnabled = true;
-  let currentProvider = "gemini";
+  let currentProvider = "builtin";
   let apiKeys = {};
 
-  const setToggleUI = () => {
-    toggleSwitch.classList.toggle("on", isEnabled);
-    toggleSwitch.setAttribute("aria-checked", String(isEnabled));
+  const renderProvider = () => {
+    const meta = PROVIDER_META[currentProvider] || PROVIDER_META.builtin;
+    const usesBuiltin = currentProvider === "builtin";
+
+    modelNote.textContent = meta.model;
+    apiKeyInput.placeholder = meta.placeholder;
+    apiKeyField.hidden = usesBuiltin;
+    builtinInfo.hidden = !usesBuiltin;
   };
 
-  toggleSwitch.addEventListener("click", () => {
+  const renderToggle = () => {
+    toggleSwitch.classList.toggle("on", isEnabled);
+    toggleSwitch.setAttribute("aria-checked", String(isEnabled));
+    toggleSwitch.setAttribute("aria-label", isEnabled ? "暫停選字翻譯" : "開啟選字翻譯");
+    appState.textContent = isEnabled ? "選字翻譯已開啟" : "選字翻譯已暫停";
+  };
+
+  toggleSwitch.addEventListener("click", async () => {
     isEnabled = !isEnabled;
-    setToggleUI();
-  });
-  toggleSwitch.addEventListener("keydown", (e) => {
-    if (e.key === " " || e.key === "Enter") {
-      e.preventDefault();
-      isEnabled = !isEnabled;
-      setToggleUI();
-    }
+    renderToggle();
+    await storage.set({ isEnabled });
+    showStatus(isEnabled ? "選字翻譯已開啟" : "選字翻譯已暫停");
   });
 
-  // 載入既有設定
+  visibilityButton.addEventListener("click", () => {
+    const shouldShow = apiKeyInput.type === "password";
+    apiKeyInput.type = shouldShow ? "text" : "password";
+    visibilityButton.setAttribute("aria-pressed", String(shouldShow));
+    visibilityButton.setAttribute("aria-label", shouldShow ? "隱藏 API 金鑰" : "顯示 API 金鑰");
+  });
+
   const result = await storage.get(KEYS);
 
-  currentProvider = result.apiProvider || "gemini";
   apiKeys = result.apiKeys || {};
+  const storedProvider = PROVIDER_META[result.apiProvider] ? result.apiProvider : "builtin";
+  currentProvider = storedProvider === "builtin" || apiKeys[storedProvider]
+    ? storedProvider
+    : "builtin";
+  if (currentProvider !== result.apiProvider) {
+    await storage.set({ apiProvider: currentProvider });
+  }
   providerSelect.value = currentProvider;
-  langSelect.value = result.targetLang || "zh-TW";
   apiKeyInput.value = apiKeys[currentProvider] || "";
 
+  const supportedLanguages = [...languageSelect.options].map((option) => option.value);
+  const storedLanguage = supportedLanguages.includes(result.targetLang)
+    ? result.targetLang
+    : "zh-TW";
+  languageSelect.value = storedLanguage;
+  if (storedLanguage !== result.targetLang && result.targetLang) {
+    await storage.set({ targetLang: storedLanguage });
+  }
+
   isEnabled = result.isEnabled !== false;
-  setToggleUI();
+  renderToggle();
+  renderProvider();
 
   let usage = Number(result.usageCount) || 0;
   if (result.usageDate !== today()) usage = 0;
   renderQuota(usage, Number(result.usageLimit) || 100);
 
-  footerStamp.textContent = isEnabled ? "承" : "停";
-
-  // 切換 provider → 顯示對應已存的 key
   providerSelect.addEventListener("change", async () => {
     currentProvider = providerSelect.value;
-    const r = await storage.get(["apiKeys"]);
-    apiKeys = r.apiKeys || {};
+    const latest = await storage.get(["apiKeys"]);
+    apiKeys = latest.apiKeys || {};
     apiKeyInput.value = apiKeys[currentProvider] || "";
+    apiKeyInput.type = "password";
+    visibilityButton.setAttribute("aria-pressed", "false");
+    visibilityButton.setAttribute("aria-label", "顯示 API 金鑰");
+    renderProvider();
   });
 
-  // 儲存
-  saveBtn.addEventListener("click", async () => {
+  saveButton.addEventListener("click", async () => {
     const provider = providerSelect.value;
     const apiKey = apiKeyInput.value.trim();
-    const targetLang = langSelect.value;
+    const targetLang = languageSelect.value;
 
-    const r = await storage.get(["apiKeys"]);
-    apiKeys = r.apiKeys || {};
-    apiKeys[provider] = apiKey;
+    saveButton.disabled = true;
+    saveButton.textContent = "正在儲存…";
+    saveButton.setAttribute("aria-busy", "true");
 
-    await storage.set({
-      apiProvider: provider,
-      apiKeys,
-      targetLang,
-      isEnabled,
-    });
+    try {
+      const latest = await storage.get(["apiKeys"]);
+      apiKeys = latest.apiKeys || {};
+      if (provider !== "builtin") apiKeys[provider] = apiKey;
 
-    footerStamp.textContent = isEnabled ? "承" : "停";
-    showStatus(apiKey ? "保存しました ・ SAVED" : "鍵が空 ・ KEY EMPTY");
+      await storage.set({
+        apiProvider: provider,
+        apiKeys,
+        targetLang,
+        isEnabled,
+      });
+
+      const needsKey = provider !== "builtin" && !apiKey;
+      showStatus(
+        needsKey ? "設定已儲存，使用此模型前仍需填入 API 金鑰" : "設定已儲存",
+        needsKey ? "warning" : "success"
+      );
+    } finally {
+      saveButton.disabled = false;
+      saveButton.textContent = "儲存設定";
+      saveButton.removeAttribute("aria-busy");
+    }
   });
 });

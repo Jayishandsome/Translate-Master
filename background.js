@@ -1,9 +1,10 @@
-// ============================================================================
-// 翻訳 — Background Service Worker
-// 路由不同的模型 API (Gemini / MiniMax / Kimi / OpenAI / DeepSeek / Claude)
-// ============================================================================
+// 隨選翻譯 — 模型 API 路由
 
 const PROVIDERS = {
+  builtin: {
+    name: "Chrome 內建翻譯",
+    model: "Translator API",
+  },
   gemini: {
     name: "Gemini",
     model: "gemini-2.0-flash",
@@ -43,7 +44,6 @@ const PROVIDERS = {
 const LANGUAGES = {
   "zh-TW": "Traditional Chinese (繁體中文)",
   "zh-CN": "Simplified Chinese (简体中文)",
-  ja: "Japanese (日本語)",
   en: "English",
   ko: "Korean (한국어)",
   fr: "French",
@@ -107,12 +107,20 @@ async function handleTranslation(selectedText, context) {
     "targetLang",
   ]);
 
-  const provider = data.apiProvider || "gemini";
+  const provider = data.apiProvider || "builtin";
   const apiKeys = data.apiKeys || {};
   const apiKey = apiKeys[provider];
-  const targetLang = data.targetLang || "zh-TW";
+  const targetLang = LANGUAGES[data.targetLang] ? data.targetLang : "zh-TW";
+
+  if (targetLang !== data.targetLang && data.targetLang) {
+    chrome.storage.sync.set({ targetLang }).catch(() => {});
+  }
 
   console.log("handleTranslation:", { provider, apiKey: apiKey ? "***" : "empty", targetLang });
+
+  if (provider === "builtin") {
+    throw new Error("請重新整理目前網頁，以啟用 Chrome 內建翻譯。");
+  }
 
   if (!apiKey) {
     const name = PROVIDERS[provider]?.name || provider;
