@@ -10,13 +10,32 @@
   // 清掉舊版殘留節點 (避免擴充更新後重複)
   Object.values(IDS).forEach((id) => document.getElementById(id)?.remove());
 
-  // 與設定視窗一致的暖紙張、深墨色編輯工具風格。
+  // 與設定視窗一致的系統自適應、內容優先介面。
   const style = document.createElement("style");
   style.id = IDS.style;
   style.textContent = `
     #${IDS.btn}, #${IDS.pop} {
-      font-family: "Avenir Next", "PingFang TC", "Microsoft JhengHei", sans-serif;
-      color: #26211d;
+      --ctx-surface: #ffffff;
+      --ctx-surface-secondary: #f5f5f7;
+      --ctx-glass: rgba(255, 255, 255, 0.58);
+      --ctx-body-material: rgba(255, 255, 255, 0.78);
+      --ctx-glass-border: rgba(255, 255, 255, 0.62);
+      --ctx-glass-highlight: rgba(255, 255, 255, 0.82);
+      --ctx-shadow: rgba(15, 23, 42, 0.22);
+      --ctx-control: rgba(118, 118, 128, 0.12);
+      --ctx-text: #1d1d1f;
+      --ctx-secondary: #6e6e73;
+      --ctx-border: rgba(60, 60, 67, 0.24);
+      --ctx-accent: #007aff;
+      --ctx-accent-hover: #0066d6;
+      --ctx-accent-glass: rgba(0, 122, 255, 0.86);
+      --ctx-accent-foreground: #ffffff;
+      --ctx-focus: rgba(0, 122, 255, 0.3);
+      --ctx-danger: #c9342f;
+      --ctx-danger-bg: #fff2f1;
+      --ctx-danger-border: rgba(201, 52, 47, 0.26);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      color: var(--ctx-text);
       box-sizing: border-box;
       -webkit-font-smoothing: antialiased;
     }
@@ -27,40 +46,44 @@
       z-index: 2147483647;
       display: none;
       align-items: center;
-      min-height: 34px;
-      padding: 0 11px;
-      color: #fffaf2;
-      background: #26211d;
-      border: 1px solid #26211d;
-      border-left: 3px solid #c15b2f;
-      border-radius: 4px;
-      box-shadow: 0 2px 8px rgba(38, 33, 29, 0.18);
+      min-height: 44px;
+      padding: 0 14px;
+      color: var(--ctx-accent-foreground);
+      background: var(--ctx-accent-glass);
+      border: 1px solid var(--ctx-glass-border);
+      border-radius: 14px;
+      box-shadow: inset 0 1px 0 var(--ctx-glass-highlight), 0 2px 8px var(--ctx-shadow);
       cursor: pointer;
-      font-size: 12px;
-      font-weight: 650;
+      font-size: 13px;
+      font-weight: 600;
       line-height: 1;
       user-select: none;
-      transition: background 140ms ease;
+      transition: background 140ms ease, opacity 140ms ease;
+      -webkit-backdrop-filter: saturate(180%) blur(18px);
+      backdrop-filter: saturate(180%) blur(18px);
     }
     #${IDS.btn}:hover {
-      background: #3a332d;
+      background: var(--ctx-accent-hover);
     }
+    #${IDS.btn}:active { opacity: 0.82; }
     #${IDS.btn}:focus-visible {
-      outline: 3px solid rgba(180, 83, 9, 0.28);
+      outline: 3px solid var(--ctx-focus);
       outline-offset: 3px;
     }
     #${IDS.pop} {
       position: fixed;
       z-index: 2147483647;
       display: none;
-      width: 332px;
+      width: 352px;
       max-width: calc(100vw - 16px);
-      background: #fffdf8;
-      border: 1px solid #50483f;
-      border-radius: 6px;
-      box-shadow: 0 2px 8px rgba(38, 33, 29, 0.18);
+      background: var(--ctx-body-material);
+      border: 1px solid var(--ctx-glass-border);
+      border-radius: 16px;
+      box-shadow: inset 0 1px 0 var(--ctx-glass-highlight), 0 2px 8px var(--ctx-shadow);
       font-size: 13px;
       overflow: hidden;
+      -webkit-backdrop-filter: saturate(180%) blur(28px);
+      backdrop-filter: saturate(180%) blur(28px);
     }
 
     .ctx-header {
@@ -68,13 +91,17 @@
       justify-content: space-between;
       align-items: center;
       gap: 10px;
-      min-height: 46px;
-      padding: 8px 9px 8px 13px;
-      background: #26211d;
-      color: #fffaf2;
-      border-bottom: 3px solid #b45309;
+      min-height: 58px;
+      padding: 6px 6px 6px 16px;
+      background: var(--ctx-glass);
+      color: var(--ctx-text);
+      border-bottom: 1px solid var(--ctx-glass-border);
+      box-shadow: inset 0 1px 0 var(--ctx-glass-highlight);
       cursor: grab;
+      touch-action: none;
       user-select: none;
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      backdrop-filter: saturate(180%) blur(20px);
     }
     .ctx-header:active { cursor: grabbing; }
 
@@ -86,101 +113,124 @@
     .ctx-title-copy { min-width: 0; }
     .ctx-title-main {
       display: block;
-      font-size: 13px;
-      font-weight: 650;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
       line-height: 1.25;
     }
     .ctx-title-sub {
       display: block;
       margin-top: 1px;
-      font-size: 10px;
-      font-weight: 500;
-      opacity: 0.72;
+      color: var(--ctx-secondary);
+      font-size: 11px;
+      font-weight: 400;
     }
 
-    .ctx-header-actions { display: flex; gap: 4px; }
+    .ctx-header-actions {
+      display: flex;
+      gap: 0;
+      padding: 2px;
+      background: var(--ctx-control);
+      border: 1px solid var(--ctx-glass-border);
+      border-radius: 12px;
+      box-shadow: inset 0 1px 0 var(--ctx-glass-highlight);
+      -webkit-backdrop-filter: saturate(160%) blur(14px);
+      backdrop-filter: saturate(160%) blur(14px);
+    }
     .ctx-icon-btn {
-      width: 30px;
-      height: 30px;
+      width: 40px;
+      height: 40px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      color: #fffaf2;
+      color: var(--ctx-secondary);
       background: transparent;
       border: 0;
-      border-radius: 3px;
+      border-radius: 10px;
       cursor: pointer;
-      font-size: 14px;
-      font-weight: 650;
+      font-size: 16px;
+      font-weight: 600;
       line-height: 1;
       padding: 0;
       font-family: inherit;
       transition: background 140ms ease;
     }
-    .ctx-icon-btn:hover { background: rgba(255, 250, 242, 0.12); }
+    .ctx-icon-btn:hover {
+      color: var(--ctx-text);
+      background: var(--ctx-glass);
+    }
     .ctx-icon-btn:focus-visible {
-      outline: 2px solid rgba(255, 255, 255, 0.72);
-      outline-offset: 1px;
+      outline: 3px solid var(--ctx-focus);
+      outline-offset: -2px;
+    }
+    .ctx-icon-btn svg {
+      width: 16px;
+      height: 16px;
+      fill: none;
+      stroke: currentColor;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 1.8;
     }
 
     .ctx-body {
-      padding: 15px 16px 16px;
-      max-height: min(320px, calc(100vh - 84px));
+      padding: 16px;
+      max-height: min(340px, calc(100vh - 84px));
       overflow-y: auto;
-      color: #26211d;
-      line-height: 1.72;
+      color: var(--ctx-text);
+      line-height: 1.65;
       white-space: pre-wrap;
       word-wrap: break-word;
-      background: #fffdf8;
+      background: var(--ctx-body-material);
     }
     .ctx-body::-webkit-scrollbar { width: 7px; }
-    .ctx-body::-webkit-scrollbar-track { background: #f1ebe2; }
-    .ctx-body::-webkit-scrollbar-thumb { background: #b7aa9a; border-radius: 4px; }
+    .ctx-body::-webkit-scrollbar-track { background: var(--ctx-surface-secondary); }
+    .ctx-body::-webkit-scrollbar-thumb { background: var(--ctx-border); border-radius: 4px; }
 
     .ctx-result {
       font-size: 14px;
-      font-weight: 500;
-      line-height: 1.75;
+      font-weight: 400;
+      line-height: 1.65;
     }
-    .ctx-result.ctx-result-word { font-weight: 500; }
+    .ctx-result.ctx-result-word { font-weight: 400; }
     .ctx-result.ctx-result-word .ctx-line-trans {
       display: block;
       margin-bottom: 12px;
-      padding: 2px 0 10px 11px;
-      color: #7c350b;
+      padding: 0 0 12px;
+      color: var(--ctx-text);
       background: transparent;
-      border-left: 3px solid #b45309;
-      font-size: 15px;
+      border-bottom: 1px solid var(--ctx-border);
+      font-size: 16px;
       font-weight: 650;
     }
     .ctx-result.ctx-result-word .ctx-line-ctx {
       display: block;
-      font-weight: 500;
+      font-weight: 400;
       font-size: 12px;
       line-height: 1.7;
-      color: #655c53;
+      color: var(--ctx-secondary);
     }
     .ctx-line-label {
       display: block;
       margin-bottom: 4px;
-      color: #85796d;
-      font-size: 10px;
-      font-weight: 650;
+      color: var(--ctx-secondary);
+      font-size: 11px;
+      font-weight: 600;
     }
 
     .ctx-error {
       padding: 11px 12px;
-      color: #8d2f22;
-      background: #fff1e9;
-      border: 1px solid #e6b9a8;
-      border-radius: 4px;
+      color: var(--ctx-danger);
+      background: var(--ctx-danger-bg);
+      border: 1px solid var(--ctx-danger-border);
+      border-radius: 8px;
       font-size: 12px;
-      font-weight: 500;
+      font-weight: 400;
       line-height: 1.6;
     }
     .ctx-error::before {
       content: "提示：";
-      font-weight: 650;
+      font-weight: 600;
     }
 
     .ctx-loading {
@@ -188,20 +238,57 @@
       align-items: center;
       gap: 10px;
       min-height: 44px;
-      color: #655c53;
+      color: var(--ctx-secondary);
       font-size: 12px;
-      font-weight: 500;
+      font-weight: 400;
     }
     .ctx-spinner {
       width: 18px;
       height: 18px;
-      border: 2.5px solid #d8c4ad;
-      border-top-color: #b45309;
+      border: 2.5px solid var(--ctx-border);
+      border-top-color: var(--ctx-accent);
       border-radius: 50%;
       animation: ctxSpin 0.75s linear infinite;
       flex-shrink: 0;
     }
     @keyframes ctxSpin { to { transform: rotate(360deg); } }
+    @media (prefers-color-scheme: dark) {
+      #${IDS.btn}, #${IDS.pop} {
+        --ctx-surface: #1c1c1e;
+        --ctx-surface-secondary: #3a3a3c;
+        --ctx-glass: rgba(31, 41, 55, 0.62);
+        --ctx-body-material: rgba(28, 28, 30, 0.78);
+        --ctx-glass-border: rgba(255, 255, 255, 0.16);
+        --ctx-glass-highlight: rgba(255, 255, 255, 0.2);
+        --ctx-shadow: rgba(0, 0, 0, 0.34);
+        --ctx-control: rgba(118, 118, 128, 0.24);
+        --ctx-text: #f5f5f7;
+        --ctx-secondary: #aeaeb2;
+        --ctx-border: rgba(142, 142, 147, 0.52);
+        --ctx-accent: #0a84ff;
+        --ctx-accent-hover: #409cff;
+        --ctx-accent-glass: rgba(10, 132, 255, 0.86);
+        --ctx-accent-foreground: #ffffff;
+        --ctx-focus: rgba(10, 132, 255, 0.38);
+        --ctx-danger: #ff6961;
+        --ctx-danger-bg: rgba(255, 105, 97, 0.1);
+        --ctx-danger-border: rgba(255, 105, 97, 0.32);
+      }
+    }
+    @media (prefers-contrast: more) {
+      #${IDS.btn}, #${IDS.pop} { --ctx-border: rgba(60, 60, 67, 0.62); }
+    }
+    @media (prefers-color-scheme: dark) and (prefers-contrast: more) {
+      #${IDS.btn}, #${IDS.pop} { --ctx-border: rgba(235, 235, 245, 0.72); }
+    }
+    @media (prefers-reduced-transparency: reduce) {
+      #${IDS.btn}, #${IDS.pop}, .ctx-header, .ctx-header-actions {
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+      }
+      #${IDS.btn} { background: var(--ctx-accent); }
+      #${IDS.pop}, .ctx-header, .ctx-body { background: var(--ctx-surface); }
+    }
     @media (prefers-reduced-motion: reduce) {
       #${IDS.btn}, #${IDS.btn} *, #${IDS.pop}, #${IDS.pop} * { transition: none !important; }
       .ctx-spinner { animation-duration: 1.5s; }
@@ -216,7 +303,7 @@
   btn.id = IDS.btn;
   btn.type = "button";
   btn.setAttribute("aria-label", "翻譯選取內容");
-  btn.textContent = "翻譯選取內容";
+  btn.textContent = "翻譯";
   document.documentElement.appendChild(btn);
 
   const pop = document.createElement("div");
@@ -233,8 +320,12 @@
         </span>
       </div>
       <div class="ctx-header-actions">
-        <button type="button" class="ctx-icon-btn" id="ctx-copy-btn" title="複製譯文" aria-label="複製譯文">⧉</button>
-        <button type="button" class="ctx-icon-btn" id="ctx-close-btn" title="關閉翻譯結果" aria-label="關閉翻譯結果">×</button>
+        <button type="button" class="ctx-icon-btn" id="ctx-copy-btn" title="複製譯文" aria-label="複製譯文">
+          <svg viewBox="0 0 18 18" aria-hidden="true"><rect x="6" y="5" width="9" height="10" rx="2"></rect><path d="M4 12H3.5A1.5 1.5 0 0 1 2 10.5v-7A1.5 1.5 0 0 1 3.5 2h7A1.5 1.5 0 0 1 12 3.5V4"></path></svg>
+        </button>
+        <button type="button" class="ctx-icon-btn" id="ctx-close-btn" title="關閉翻譯結果" aria-label="關閉翻譯結果">
+          <svg viewBox="0 0 18 18" aria-hidden="true"><path d="M4.5 4.5 13.5 13.5M13.5 4.5 4.5 13.5"></path></svg>
+        </button>
       </div>
     </div>
     <div class="ctx-body" id="ctx-body" aria-live="polite"></div>
@@ -491,10 +582,10 @@
   }
 
   function onDragMove(e) {
-    if (!drag) return;
+    if (!drag || e.pointerId !== drag.pointerId) return;
     e.preventDefault();
-    const x = (e.touches ? e.touches[0].clientX : e.clientX) - drag.offsetX;
-    const y = (e.touches ? e.touches[0].clientY : e.clientY) - drag.offsetY;
+    const x = e.clientX - drag.offsetX;
+    const y = e.clientY - drag.offsetY;
     const { left, top } = clampToViewport(x, y);
     pop.style.left = `${left}px`;
     pop.style.top = `${top}px`;
@@ -502,37 +593,39 @@
     pop.style.bottom = "auto";
   }
 
-  function onDragEnd() {
+  function onDragEnd(e) {
+    if (!drag || (e && e.pointerId !== drag.pointerId)) return;
+    const pointerId = drag.pointerId;
     drag = null;
-    document.removeEventListener("mousemove", onDragMove);
-    document.removeEventListener("mouseup", onDragEnd);
-    document.removeEventListener("touchmove", onDragMove);
-    document.removeEventListener("touchend", onDragEnd);
+    if (handle.hasPointerCapture?.(pointerId)) {
+      handle.releasePointerCapture(pointerId);
+    }
   }
 
   function onDragStart(e) {
     // 點到關閉/複製按鈕時不啟動拖拉
-    if (e.target.closest(".ctx-icon-btn")) return;
+    if (e.button !== 0 || e.target.closest(".ctx-icon-btn")) return;
     const rect = pop.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     drag = {
-      offsetX: clientX - rect.left,
-      offsetY: clientY - rect.top,
+      pointerId: e.pointerId,
+      offsetX: e.clientX - rect.left,
+      offsetY: e.clientY - rect.top,
     };
-    document.addEventListener("mousemove", onDragMove);
-    document.addEventListener("mouseup", onDragEnd);
-    document.addEventListener("touchmove", onDragMove, { passive: false });
-    document.addEventListener("touchend", onDragEnd);
+    handle.setPointerCapture(e.pointerId);
+    e.preventDefault();
   }
 
-  handle.addEventListener("mousedown", onDragStart);
-  handle.addEventListener("touchstart", onDragStart, { passive: true });
+  handle.addEventListener("pointerdown", onDragStart);
+  handle.addEventListener("pointermove", onDragMove);
+  handle.addEventListener("pointerup", onDragEnd);
+  handle.addEventListener("pointercancel", onDragEnd);
+  handle.addEventListener("lostpointercapture", onDragEnd);
 
   // ----------------------------------------------------------------------
   // 顯示與隱藏
   // ----------------------------------------------------------------------
   function hidePopover() {
+    onDragEnd();
     pop.style.display = "none";
     pop.setAttribute("aria-hidden", "true");
   }
@@ -560,7 +653,18 @@
 
   function setBody(html) {
     body.innerHTML = html;
+    requestAnimationFrame(keepPopoverInViewport);
   }
+
+  function keepPopoverInViewport() {
+    if (pop.getAttribute("aria-hidden") !== "false" || drag) return;
+    const rect = pop.getBoundingClientRect();
+    const { left, top } = clampToViewport(rect.left, rect.top);
+    pop.style.left = `${left}px`;
+    pop.style.top = `${top}px`;
+  }
+
+  window.addEventListener("resize", keepPopoverInViewport);
 
   function showLoading(message = "正在翻譯…") {
     revealPopover();

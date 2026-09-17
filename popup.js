@@ -7,7 +7,6 @@ const KEYS = [
   "isEnabled",
   "usageDate",
   "usageCount",
-  "usageLimit",
 ];
 
 const PROVIDER_META = {
@@ -70,10 +69,9 @@ function showStatus(message, tone = "success") {
   showStatus.timeout = setTimeout(() => element.classList.remove("show"), 2200);
 }
 
-function renderQuota(used, limit) {
-  const safeLimit = limit > 0 ? limit : 100;
+function renderUsage(used) {
   const safeUsed = Math.max(0, used);
-  document.getElementById("quota-text").textContent = `${safeUsed} / ${safeLimit} 次`;
+  document.getElementById("quota-text").textContent = `${safeUsed} 次`;
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -121,6 +119,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     apiKeyInput.type = shouldShow ? "text" : "password";
     visibilityButton.setAttribute("aria-pressed", String(shouldShow));
     visibilityButton.setAttribute("aria-label", shouldShow ? "隱藏 API 金鑰" : "顯示 API 金鑰");
+    visibilityButton.textContent = shouldShow ? "隱藏" : "顯示";
   });
 
   const result = await storage.get(KEYS);
@@ -151,7 +150,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   let usage = Number(result.usageCount) || 0;
   if (result.usageDate !== today()) usage = 0;
-  renderQuota(usage, Number(result.usageLimit) || 100);
+  renderUsage(usage);
 
   providerSelect.addEventListener("change", async () => {
     currentProvider = providerSelect.value;
@@ -161,6 +160,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     apiKeyInput.type = "password";
     visibilityButton.setAttribute("aria-pressed", "false");
     visibilityButton.setAttribute("aria-label", "顯示 API 金鑰");
+    visibilityButton.textContent = "顯示";
     renderProvider();
   });
 
