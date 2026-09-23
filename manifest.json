@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "隨選翻譯 — Context Translator",
-  "version": "2.3.3",
+  "version": "2.4.0",
   "description": "選取網頁文字即可翻譯；預設使用 Chrome 內建模型，免 API 金鑰並在裝置上處理。",
   "permissions": [
     "storage",

@@ -17,11 +17,10 @@
     #${IDS.btn}, #${IDS.pop} {
       --ctx-surface: #ffffff;
       --ctx-surface-secondary: #f5f5f7;
-      --ctx-glass: rgba(255, 255, 255, 0.58);
-      --ctx-body-material: rgba(255, 255, 255, 0.78);
-      --ctx-glass-border: rgba(255, 255, 255, 0.62);
+      --ctx-material: rgba(248, 249, 251, 0.86);
+      --ctx-glass-border: rgba(255, 255, 255, 0.72);
       --ctx-glass-highlight: rgba(255, 255, 255, 0.82);
-      --ctx-shadow: rgba(15, 23, 42, 0.22);
+      --ctx-shadow: rgba(15, 23, 42, 0.18);
       --ctx-control: rgba(118, 118, 128, 0.12);
       --ctx-text: #1d1d1f;
       --ctx-secondary: #6e6e73;
@@ -34,9 +33,11 @@
       --ctx-danger: #c9342f;
       --ctx-danger-bg: #fff2f1;
       --ctx-danger-border: rgba(201, 52, 47, 0.26);
+      --ctx-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang TC", "Microsoft JhengHei", sans-serif;
       color: var(--ctx-text);
       box-sizing: border-box;
+      font-optical-sizing: auto;
       -webkit-font-smoothing: antialiased;
     }
     #${IDS.btn} *, #${IDS.pop} * { box-sizing: border-box; }
@@ -51,21 +52,18 @@
       color: var(--ctx-accent-foreground);
       background: var(--ctx-accent-glass);
       border: 1px solid var(--ctx-glass-border);
-      border-radius: 14px;
+      border-radius: 12px;
       box-shadow: inset 0 1px 0 var(--ctx-glass-highlight), 0 2px 8px var(--ctx-shadow);
       cursor: pointer;
       font-size: 13px;
       font-weight: 600;
       line-height: 1;
       user-select: none;
-      transition: background 140ms ease, opacity 140ms ease;
+      transition: background 140ms ease, opacity 140ms ease, transform 120ms var(--ctx-ease-out);
       -webkit-backdrop-filter: saturate(180%) blur(18px);
       backdrop-filter: saturate(180%) blur(18px);
     }
-    #${IDS.btn}:hover {
-      background: var(--ctx-accent-hover);
-    }
-    #${IDS.btn}:active { opacity: 0.82; }
+    #${IDS.btn}:active { transform: scale(0.97); }
     #${IDS.btn}:focus-visible {
       outline: 3px solid var(--ctx-focus);
       outline-offset: 3px;
@@ -76,12 +74,13 @@
       display: none;
       width: 352px;
       max-width: calc(100vw - 16px);
-      background: var(--ctx-body-material);
+      background: var(--ctx-material);
       border: 1px solid var(--ctx-glass-border);
-      border-radius: 16px;
+      border-radius: 14px;
       box-shadow: inset 0 1px 0 var(--ctx-glass-highlight), 0 2px 8px var(--ctx-shadow);
       font-size: 13px;
       overflow: hidden;
+      transform-origin: var(--ctx-origin-x, 50%) var(--ctx-origin-y, 0%);
       -webkit-backdrop-filter: saturate(180%) blur(28px);
       backdrop-filter: saturate(180%) blur(28px);
     }
@@ -93,15 +92,13 @@
       gap: 10px;
       min-height: 58px;
       padding: 6px 6px 6px 16px;
-      background: var(--ctx-glass);
+      background: rgba(255, 255, 255, 0.2);
       color: var(--ctx-text);
       border-bottom: 1px solid var(--ctx-glass-border);
       box-shadow: inset 0 1px 0 var(--ctx-glass-highlight);
       cursor: grab;
       touch-action: none;
       user-select: none;
-      -webkit-backdrop-filter: saturate(180%) blur(20px);
-      backdrop-filter: saturate(180%) blur(20px);
     }
     .ctx-header:active { cursor: grabbing; }
 
@@ -134,8 +131,6 @@
       border: 1px solid var(--ctx-glass-border);
       border-radius: 12px;
       box-shadow: inset 0 1px 0 var(--ctx-glass-highlight);
-      -webkit-backdrop-filter: saturate(160%) blur(14px);
-      backdrop-filter: saturate(160%) blur(14px);
     }
     .ctx-icon-btn {
       width: 40px;
@@ -153,12 +148,10 @@
       line-height: 1;
       padding: 0;
       font-family: inherit;
-      transition: background 140ms ease;
+      transition: background 140ms ease, color 140ms ease, transform 120ms var(--ctx-ease-out);
     }
-    .ctx-icon-btn:hover {
-      color: var(--ctx-text);
-      background: var(--ctx-glass);
-    }
+    .ctx-icon-btn:active { transform: scale(0.96); }
+    .ctx-icon-btn[data-state="success"] { color: var(--ctx-accent); }
     .ctx-icon-btn:focus-visible {
       outline: 3px solid var(--ctx-focus);
       outline-offset: -2px;
@@ -181,7 +174,7 @@
       line-height: 1.65;
       white-space: pre-wrap;
       word-wrap: break-word;
-      background: var(--ctx-body-material);
+      background: transparent;
     }
     .ctx-body::-webkit-scrollbar { width: 7px; }
     .ctx-body::-webkit-scrollbar-track { background: var(--ctx-surface-secondary); }
@@ -256,8 +249,7 @@
       #${IDS.btn}, #${IDS.pop} {
         --ctx-surface: #1c1c1e;
         --ctx-surface-secondary: #3a3a3c;
-        --ctx-glass: rgba(31, 41, 55, 0.62);
-        --ctx-body-material: rgba(28, 28, 30, 0.78);
+        --ctx-material: rgba(28, 28, 30, 0.88);
         --ctx-glass-border: rgba(255, 255, 255, 0.16);
         --ctx-glass-highlight: rgba(255, 255, 255, 0.2);
         --ctx-shadow: rgba(0, 0, 0, 0.34);
@@ -274,23 +266,41 @@
         --ctx-danger-bg: rgba(255, 105, 97, 0.1);
         --ctx-danger-border: rgba(255, 105, 97, 0.32);
       }
+
+      .ctx-header { background: rgba(255, 255, 255, 0.04); }
     }
     @media (prefers-contrast: more) {
-      #${IDS.btn}, #${IDS.pop} { --ctx-border: rgba(60, 60, 67, 0.62); }
+      #${IDS.btn}, #${IDS.pop} {
+        --ctx-material: var(--ctx-surface);
+        --ctx-border: rgba(60, 60, 67, 0.62);
+        --ctx-glass-border: rgba(60, 60, 67, 0.72);
+      }
     }
     @media (prefers-color-scheme: dark) and (prefers-contrast: more) {
-      #${IDS.btn}, #${IDS.pop} { --ctx-border: rgba(235, 235, 245, 0.72); }
+      #${IDS.btn}, #${IDS.pop} {
+        --ctx-border: rgba(235, 235, 245, 0.72);
+        --ctx-glass-border: rgba(235, 235, 245, 0.72);
+      }
+    }
+    @media (hover: hover) and (pointer: fine) {
+      #${IDS.btn}:hover { background: var(--ctx-accent-hover); }
+      .ctx-icon-btn:hover {
+        color: var(--ctx-text);
+        background: var(--ctx-control);
+      }
     }
     @media (prefers-reduced-transparency: reduce) {
-      #${IDS.btn}, #${IDS.pop}, .ctx-header, .ctx-header-actions {
+      #${IDS.btn}, #${IDS.pop} {
         -webkit-backdrop-filter: none;
         backdrop-filter: none;
       }
       #${IDS.btn} { background: var(--ctx-accent); }
-      #${IDS.pop}, .ctx-header, .ctx-body { background: var(--ctx-surface); }
+      #${IDS.pop} { background: var(--ctx-surface); }
+      .ctx-header, .ctx-body { background: transparent; }
     }
     @media (prefers-reduced-motion: reduce) {
-      #${IDS.btn}, #${IDS.btn} *, #${IDS.pop}, #${IDS.pop} * { transition: none !important; }
+      #${IDS.btn}, .ctx-icon-btn { transition-duration: 0.01ms; }
+      #${IDS.btn}:active, .ctx-icon-btn:active { transform: none; }
       .ctx-spinner { animation-duration: 1.5s; }
     }
   `;
@@ -337,6 +347,7 @@
   const copyBtn = pop.querySelector("#ctx-copy-btn");
   const handle = pop.querySelector("#ctx-drag-handle");
   const modeLabel = pop.querySelector("#ctx-mode-label");
+  const copyIconMarkup = copyBtn.innerHTML;
 
   // ----------------------------------------------------------------------
   // 狀態
@@ -349,6 +360,8 @@
   let activeTargetLanguage = "zh-TW";
   let currentResult = "";
   let isTranslating = false;
+  let popoverAnimation = null;
+  let copyResetTimer = null;
 
   const BUILTIN_TARGETS = {
     "zh-TW": "zh-Hant",
@@ -604,7 +617,7 @@
 
   function onDragStart(e) {
     // 點到關閉/複製按鈕時不啟動拖拉
-    if (e.button !== 0 || e.target.closest(".ctx-icon-btn")) return;
+    if (drag || e.button !== 0 || e.target.closest(".ctx-icon-btn")) return;
     const rect = pop.getBoundingClientRect();
     drag = {
       pointerId: e.pointerId,
@@ -626,6 +639,8 @@
   // ----------------------------------------------------------------------
   function hidePopover() {
     onDragEnd();
+    popoverAnimation?.cancel();
+    popoverAnimation = null;
     pop.style.display = "none";
     pop.setAttribute("aria-hidden", "true");
   }
@@ -648,7 +663,35 @@
       const { left, top } = clampToViewport(rect.left, rect.top);
       pop.style.left = `${left}px`;
       pop.style.top = `${top}px`;
+      animatePopoverFrom(clientX, clientY);
     });
+  }
+
+  function animatePopoverFrom(clientX, clientY) {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches || !pop.animate) return;
+
+    const rect = pop.getBoundingClientRect();
+    const originX = Math.max(12, Math.min(clientX - rect.left, rect.width - 12));
+    const originY = Math.max(0, Math.min(clientY - rect.top, rect.height));
+    pop.style.setProperty("--ctx-origin-x", `${originX}px`);
+    pop.style.setProperty("--ctx-origin-y", `${originY}px`);
+
+    popoverAnimation?.cancel();
+    popoverAnimation = pop.animate(
+      [
+        { opacity: 0, transform: "scale(0.97)" },
+        { opacity: 1, transform: "scale(1)" },
+      ],
+      {
+        duration: 160,
+        easing: "cubic-bezier(0.23, 1, 0.32, 1)",
+      }
+    );
+    popoverAnimation.addEventListener(
+      "finish",
+      () => { popoverAnimation = null; },
+      { once: true }
+    );
   }
 
   function setBody(html) {
@@ -900,11 +943,15 @@
     if (!currentResult) return;
     try {
       await navigator.clipboard.writeText(currentResult);
-      const old = copyBtn.textContent;
-      copyBtn.textContent = "✓";
+      clearTimeout(copyResetTimer);
+      copyBtn.innerHTML = '<svg viewBox="0 0 18 18" aria-hidden="true"><path d="m3.5 9.5 3.4 3.4 7.6-7.8"></path></svg>';
+      copyBtn.dataset.state = "success";
+      copyBtn.title = "譯文已複製";
       copyBtn.setAttribute("aria-label", "譯文已複製");
-      setTimeout(() => {
-        copyBtn.textContent = old;
+      copyResetTimer = setTimeout(() => {
+        copyBtn.innerHTML = copyIconMarkup;
+        delete copyBtn.dataset.state;
+        copyBtn.title = "複製譯文";
         copyBtn.setAttribute("aria-label", "複製譯文");
       }, 1100);
     } catch (_) {}

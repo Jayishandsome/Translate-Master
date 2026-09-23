@@ -9,27 +9,27 @@
 
   :root {
     color-scheme: light dark;
-    --page: #dfe8f5;
-    --surface: rgba(255, 255, 255, 0.68);
+    --page: #edf0f4;
+    --surface: #ffffff;
     --surface-solid: #ffffff;
-    --glass: rgba(255, 255, 255, 0.52);
-    --glass-border: rgba(255, 255, 255, 0.72);
-    --glass-highlight: rgba(255, 255, 255, 0.88);
-    --glass-shadow: rgba(43, 66, 97, 0.16);
-    --control: rgba(255, 255, 255, 0.52);
+    --glass: rgba(255, 255, 255, 0.68);
+    --glass-border: rgba(255, 255, 255, 0.78);
+    --glass-highlight: rgba(255, 255, 255, 0.92);
+    --glass-shadow: rgba(15, 23, 42, 0.12);
+    --control: #f2f2f7;
     --control-solid: #f2f2f7;
-    --control-hover: rgba(255, 255, 255, 0.72);
+    --control-hover: #e8e8ed;
     --text: #1d1d1f;
     --secondary: #6e6e73;
     --separator: rgba(60, 60, 67, 0.18);
-    --border: rgba(60, 60, 67, 0.28);
+    --border: rgba(60, 60, 67, 0.22);
     --accent: #007aff;
     --accent-hover: #0066d6;
-    --accent-glass: rgba(0, 122, 255, 0.84);
     --accent-foreground: #ffffff;
     --accent-soft: rgba(0, 122, 255, 0.12);
     --focus: rgba(0, 122, 255, 0.28);
     --danger: #c9342f;
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   }
 
   html, body {
@@ -38,6 +38,7 @@
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang TC", "Microsoft JhengHei", sans-serif;
     color: var(--text);
     background: var(--page);
+    font-optical-sizing: auto;
     -webkit-font-smoothing: antialiased;
   }
 
@@ -54,8 +55,8 @@
     min-height: 76px;
     padding: 14px 16px 13px 18px;
     background: var(--glass);
-    border-bottom: 1px solid var(--glass-border);
-    box-shadow: inset 0 1px 0 var(--glass-highlight), 0 2px 8px var(--glass-shadow);
+    border-bottom: 1px solid rgba(60, 60, 67, 0.1);
+    box-shadow: inset 0 1px 0 var(--glass-highlight), 0 1px 6px var(--glass-shadow);
     -webkit-backdrop-filter: saturate(180%) blur(20px);
     backdrop-filter: saturate(180%) blur(20px);
   }
@@ -84,13 +85,14 @@
     background: transparent;
     border: 0;
     cursor: pointer;
+    transition: transform 120ms var(--ease-out);
   }
 
   .switch::before,
   .switch::after {
     content: "";
     position: absolute;
-    transition: background 160ms ease, left 160ms ease;
+    transition: background 180ms ease, transform 180ms var(--ease-out);
   }
 
   .switch::before {
@@ -110,21 +112,21 @@
     background: #fff;
     border-radius: 50%;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
+    transform: translateX(0);
   }
 
   .switch.on::before { background: var(--accent); }
-  .switch.on::after { left: 21px; }
+  .switch.on::after { transform: translateX(16px); }
+  .switch:active { transform: scale(0.97); }
 
-  .main { padding: 14px 14px 16px; }
+  .main { padding: 16px; }
 
   .settings-group {
     overflow: hidden;
     background: var(--surface);
-    border: 1px solid var(--glass-border);
+    border: 1px solid rgba(60, 60, 67, 0.12);
     border-radius: 12px;
-    box-shadow: inset 0 1px 0 var(--glass-highlight), 0 2px 8px var(--glass-shadow);
-    -webkit-backdrop-filter: saturate(160%) blur(18px);
-    backdrop-filter: saturate(160%) blur(18px);
+    box-shadow: 0 2px 8px var(--glass-shadow);
   }
 
   .field { padding: 14px 15px 15px; }
@@ -154,12 +156,10 @@
     height: 44px;
     color: var(--text);
     background: var(--control);
-    border: 1px solid transparent;
+    border: 1px solid var(--border);
     border-radius: 10px;
     font-size: 13px;
-    box-shadow: inset 0 1px 0 var(--glass-highlight);
-    -webkit-backdrop-filter: saturate(150%) blur(12px);
-    backdrop-filter: saturate(150%) blur(12px);
+    transition: background 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
   }
 
   input { padding: 0 58px 0 12px; }
@@ -168,8 +168,6 @@
     padding: 0 11px;
     cursor: pointer;
   }
-
-  input:hover, select:hover { background: var(--control-hover); }
 
   input:focus, select:focus,
   button:focus-visible {
@@ -198,9 +196,10 @@
     cursor: pointer;
     font-size: 12px;
     font-weight: 600;
+    transition: background 140ms ease, transform 120ms var(--ease-out);
   }
 
-  .key-toggle:hover { background: var(--accent-soft); }
+  .key-toggle:active { transform: scale(0.96); }
 
   .field-help {
     margin: 7px 0 0;
@@ -238,21 +237,19 @@
     height: 44px;
     margin-top: 14px;
     color: var(--accent-foreground);
-    background: var(--accent-glass);
-    border: 1px solid rgba(255, 255, 255, 0.38);
+    background: var(--accent);
+    border: 1px solid transparent;
     border-radius: 10px;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 2px 6px var(--glass-shadow);
+    box-shadow: 0 2px 6px var(--glass-shadow);
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
-    transition: background 140ms ease, opacity 140ms ease;
-    -webkit-backdrop-filter: saturate(160%) blur(14px);
-    backdrop-filter: saturate(160%) blur(14px);
+    transition: background 140ms ease, opacity 140ms ease, transform 120ms var(--ease-out);
   }
 
-  .save-button:hover { background: var(--accent-hover); }
-  .save-button:active { opacity: 0.82; }
+  .save-button:active { transform: scale(0.97); }
   .save-button:disabled { cursor: wait; opacity: 0.65; }
+  .save-button:disabled:active { transform: none; }
 
   .status {
     min-height: 18px;
@@ -261,34 +258,57 @@
     font-size: 12px;
     text-align: center;
     opacity: 0;
+    transform: translateY(2px);
+    transition: opacity 160ms var(--ease-out), transform 160ms var(--ease-out);
   }
 
   .status.warning { color: var(--danger); }
-  .status.show { opacity: 1; }
+  .status.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    input:hover, select:hover { background: var(--control-hover); }
+    .key-toggle:hover { background: var(--accent-soft); }
+    .save-button:hover { background: var(--accent-hover); }
+  }
 
   @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { transition: none !important; }
+    .switch,
+    .switch::before,
+    .switch::after,
+    .key-toggle,
+    .save-button { transition-duration: 0.01ms; }
+
+    .switch:active,
+    .key-toggle:active,
+    .save-button:active { transform: none; }
+
+    .status {
+      transform: none;
+      transition: opacity 120ms ease;
+    }
   }
 
   @media (prefers-color-scheme: dark) {
     :root {
-      --page: #07111f;
-      --surface: rgba(28, 28, 30, 0.72);
+      --page: #111214;
+      --surface: #1c1c1e;
       --surface-solid: #1c1c1e;
-      --glass: rgba(31, 41, 55, 0.6);
+      --glass: rgba(28, 28, 30, 0.72);
       --glass-border: rgba(255, 255, 255, 0.16);
       --glass-highlight: rgba(255, 255, 255, 0.22);
-      --glass-shadow: rgba(0, 0, 0, 0.3);
-      --control: rgba(118, 118, 128, 0.22);
+      --glass-shadow: rgba(0, 0, 0, 0.28);
+      --control: #2c2c2e;
       --control-solid: #3a3a3c;
-      --control-hover: rgba(118, 118, 128, 0.34);
+      --control-hover: #3a3a3c;
       --text: #f5f5f7;
       --secondary: #aeaeb2;
-      --separator: rgba(84, 84, 88, 0.68);
-      --border: rgba(142, 142, 147, 0.55);
+      --separator: rgba(84, 84, 88, 0.56);
+      --border: rgba(142, 142, 147, 0.42);
       --accent: #0a84ff;
       --accent-hover: #409cff;
-      --accent-glass: rgba(10, 132, 255, 0.82);
       --accent-foreground: #ffffff;
       --accent-soft: rgba(10, 132, 255, 0.16);
       --focus: rgba(10, 132, 255, 0.38);
@@ -302,7 +322,10 @@
     :root {
       --separator: rgba(60, 60, 67, 0.45);
       --border: rgba(60, 60, 67, 0.68);
+      --surface: var(--surface-solid);
     }
+
+    .settings-group { border-color: var(--border); }
   }
 
   @media (prefers-color-scheme: dark) and (prefers-contrast: more) {
@@ -313,19 +336,12 @@
   }
 
   @media (prefers-reduced-transparency: reduce) {
-    .app-header,
-    .settings-group,
-    input,
-    select,
-    .save-button {
+    .app-header {
       -webkit-backdrop-filter: none;
       backdrop-filter: none;
     }
 
-    .app-header,
-    .settings-group { background: var(--surface-solid); }
-    input, select { background: var(--control-solid); }
-    .save-button { background: var(--accent); }
+    .app-header { background: var(--surface-solid); }
   }
 </style>
 </head>
