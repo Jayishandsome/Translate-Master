@@ -28,6 +28,7 @@
 | `background.js` | 模型 API 路由與提示詞 |
 | `content.js` | 網頁選字、翻譯按鈕、結果浮窗與拖曳互動 |
 | `popup.html` / `popup.js` | 模型、API 金鑰、譯文語言與功能開關設定 |
+| `icons/` | 擴充功能與工具列圖示（16、32、48、128px） |
 
 ## 安裝
 
