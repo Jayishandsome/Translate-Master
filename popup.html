@@ -9,407 +9,666 @@
 
   :root {
     color-scheme: light dark;
-    --page: #edf0f4;
-    --surface: #ffffff;
-    --surface-solid: #ffffff;
-    --glass: rgba(255, 255, 255, 0.68);
-    --glass-border: rgba(255, 255, 255, 0.78);
-    --glass-highlight: rgba(255, 255, 255, 0.92);
-    --glass-shadow: rgba(15, 23, 42, 0.12);
-    --control: #f2f2f7;
-    --control-solid: #f2f2f7;
-    --control-hover: #e8e8ed;
-    --text: #1d1d1f;
-    --secondary: #6e6e73;
-    --separator: rgba(60, 60, 67, 0.18);
-    --border: rgba(60, 60, 67, 0.22);
-    --accent: #007aff;
-    --accent-hover: #0066d6;
-    --accent-foreground: #ffffff;
-    --accent-soft: rgba(0, 122, 255, 0.12);
-    --focus: rgba(0, 122, 255, 0.28);
-    --danger: #c9342f;
+
+    /* 紙與墨 */
+    --paper: #f7f3ea;
+    --sheet: #fbf8f1;
+    --paper-2: #efe9dc;
+    --paper-3: #e6decd;
+    --ink: #1b1a17;
+    --ink-2: #5c574d;
+    --ink-3: #8c8577;
+    --hair: rgba(27, 26, 23, 0.14);
+    --dots: rgba(27, 26, 23, 0.3);
+    --vermilion: #c8372d;
+    --vermilion-text: #b32e25;
+    --vermilion-soft: rgba(200, 55, 45, 0.08);
+    --seal-text: #fbf7ef;
+    --focus: rgba(200, 55, 45, 0.38);
+    --grain-opacity: 0.5;
+
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Songti TC", "Noto Serif TC", "Source Han Serif TC", "PMingLiU", "MingLiU", Georgia, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
     --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   }
 
   html, body {
     margin: 0;
-    min-height: 100%;
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang TC", "Microsoft JhengHei", sans-serif;
-    color: var(--text);
-    background: var(--page);
-    font-optical-sizing: auto;
+    color: var(--ink);
+    background: var(--paper);
+    font-family: var(--serif);
     -webkit-font-smoothing: antialiased;
   }
 
-  body { width: 380px; }
-  button, input, select { font: inherit; }
+  /* 極淡的紙張纖維 */
+  body {
+    position: relative;
+    width: 360px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .36 0 0 0 0 .26 0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
 
-  .app-header {
-    position: sticky;
-    top: 0;
-    z-index: 2;
+  button, input, select { font: inherit; color: inherit; }
+  [hidden] { display: none !important; }
+
+  /* ---------- Masthead ---------- */
+
+  .masthead { padding: 16px 20px 0; }
+
+  .kicker-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    color: var(--ink-2);
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .kicker-row .edition { letter-spacing: 0.06em; font-weight: 500; }
+
+  .masthead-main {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    min-height: 76px;
-    padding: 14px 16px 13px 18px;
-    background: var(--glass);
-    border-bottom: 1px solid rgba(60, 60, 67, 0.1);
-    box-shadow: inset 0 1px 0 var(--glass-highlight), 0 1px 6px var(--glass-shadow);
-    -webkit-backdrop-filter: saturate(180%) blur(20px);
-    backdrop-filter: saturate(180%) blur(20px);
+    gap: 12px;
+    margin-top: 4px;
   }
 
   .app-title {
     margin: 0;
-    font-size: 20px;
+    font-size: 28px;
     font-weight: 700;
-    letter-spacing: -0.015em;
-    line-height: 1.2;
+    letter-spacing: 0.06em;
+    line-height: 1.15;
   }
 
-  .app-state {
-    margin: 3px 0 0;
-    color: var(--secondary);
+  .seal {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 auto;
+    transform: rotate(-4deg);
+    border-radius: 5px;
+  }
+
+  body.is-paused .seal { filter: grayscale(1); opacity: 0.55; }
+
+  .double-rule {
+    height: 5px;
+    margin-top: 10px;
+    border-top: 2px solid var(--ink);
+    border-bottom: 1px solid var(--ink);
+  }
+
+  /* ---------- Entries ---------- */
+
+  .main { padding: 0 20px; }
+
+  .entry { padding: 14px 0 16px; }
+  .entry + .entry { border-top: 1px solid var(--hair); }
+
+  .entry-heading {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin: 0 0 10px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+
+  .entry-num {
+    color: var(--vermilion-text);
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  /* 開關那一條 */
+  .toggle-entry {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+  }
+
+  .toggle-entry .entry-heading { margin-bottom: 3px; }
+
+  .entry-desc {
+    margin: 0;
+    color: var(--ink-2);
+    font-family: var(--sans);
     font-size: 12px;
-    line-height: 1.25;
+    line-height: 1.5;
   }
 
   .switch {
     position: relative;
-    width: 44px;
+    width: 50px;
     height: 44px;
     flex: 0 0 auto;
+    margin-right: -4px;
     padding: 0;
     background: transparent;
     border: 0;
     cursor: pointer;
-    transition: transform 120ms var(--ease-out);
   }
 
   .switch::before,
   .switch::after {
     content: "";
     position: absolute;
-    transition: background 180ms ease, transform 180ms var(--ease-out);
+    top: 50%;
+    transition: background 180ms ease, border-color 180ms ease, transform 220ms var(--ease-out);
   }
 
   .switch::before {
-    top: 11px;
-    left: 3px;
-    width: 38px;
-    height: 22px;
-    background: #a9a9ad;
-    border-radius: 11px;
+    left: 4px;
+    width: 42px;
+    height: 24px;
+    margin-top: -12px;
+    background: transparent;
+    border: 1.5px solid var(--ink);
+    border-radius: 12px;
   }
 
   .switch::after {
-    top: 13px;
-    left: 5px;
-    width: 18px;
-    height: 18px;
-    background: #fff;
+    left: 9px;
+    width: 14px;
+    height: 14px;
+    margin-top: -7px;
+    background: var(--ink);
     border-radius: 50%;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
-    transform: translateX(0);
   }
 
-  .switch.on::before { background: var(--accent); }
-  .switch.on::after { transform: translateX(16px); }
-  .switch:active { transform: scale(0.97); }
+  .switch.on::before { background: var(--vermilion); border-color: var(--vermilion); }
+  .switch.on::after { background: var(--seal-text); transform: translateX(18px); }
 
-  .main { padding: 16px; }
+  /* 翻譯引擎：像字典的義項 */
+  .senses {
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
 
-  .settings-group {
+  .senses legend {
+    position: absolute;
+    width: 1px;
+    height: 1px;
     overflow: hidden;
-    background: var(--surface);
-    border: 1px solid rgba(60, 60, 67, 0.12);
-    border-radius: 12px;
-    box-shadow: 0 2px 8px var(--glass-shadow);
+    clip: rect(0 0 0 0);
   }
 
-  .field { padding: 14px 15px 15px; }
-  .field + .field { border-top: 1px solid var(--separator); }
-
-  .field-header {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 8px;
-  }
-
-  label {
-    font-size: 13px;
-    font-weight: 600;
-  }
-
-  .field-meta {
-    color: var(--secondary);
-    font-size: 11px;
-    text-align: right;
-  }
-
-  input, select {
-    width: 100%;
-    height: 44px;
-    color: var(--text);
-    background: var(--control);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    font-size: 13px;
-    transition: background 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
-  }
-
-  input { padding: 0 58px 0 12px; }
-
-  select {
-    padding: 0 11px;
+  .sense {
+    position: relative;
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: 2px 8px;
+    padding: 9px 0;
     cursor: pointer;
   }
 
-  input:focus, select:focus,
+  .sense + .sense { border-top: 1px dotted var(--dots); }
+
+  .sense input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .sense-mark {
+    position: relative;
+    width: 16px;
+    height: 16px;
+    margin-top: 2px;
+    border: 1.5px solid var(--ink);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .sense-mark::after {
+    content: "";
+    position: absolute;
+    inset: 2.5px;
+    background: var(--vermilion);
+    border-radius: 50%;
+    transform: scale(0);
+    transition: transform 180ms var(--ease-out);
+  }
+
+  .sense input:checked ~ .sense-mark::after { transform: scale(1); }
+  .sense input:focus-visible ~ .sense-mark { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+  .sense-body { pointer-events: none; }
+
+  .sense-title {
+    display: block;
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.35;
+  }
+
+  .sense input:checked ~ .sense-body .sense-title { font-weight: 700; }
+
+  .sense-desc {
+    display: block;
+    margin-top: 2px;
+    color: var(--ink-2);
+    font-family: var(--sans);
+    font-size: 11.5px;
+    line-height: 1.5;
+  }
+
+  .footnote {
+    margin: 6px 0 0 30px;
+    padding-left: 2.3em;
+    text-indent: -2.3em;
+    color: var(--ink-2);
+    font-family: var(--sans);
+    font-size: 11.5px;
+    line-height: 1.55;
+  }
+
+  .footnote::before {
+    content: "註　";
+    color: var(--vermilion-text);
+    font-weight: 600;
+  }
+
+  /* AI 欄位 */
+  .ai-fields {
+    display: grid;
+    gap: 14px;
+    margin: 8px 0 0 30px;
+  }
+
+  .field-label {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 2px;
+    color: var(--ink-2);
+    font-family: var(--sans);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+  }
+
+  .field-meta {
+    font-weight: 400;
+    letter-spacing: 0.02em;
+  }
+
+  .field-link {
+    color: var(--vermilion-text);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  .field-link:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+  .select-wrap,
+  .secret-wrap { position: relative; }
+
+  select,
+  input {
+    width: 100%;
+    height: 36px;
+    padding: 0;
+    color: var(--ink);
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--ink);
+    border-radius: 0;
+    transition: border-color 140ms ease, box-shadow 140ms ease;
+  }
+
+  select {
+    -webkit-appearance: none;
+    appearance: none;
+    padding-right: 24px;
+    font-family: var(--serif);
+    font-size: 15px;
+    cursor: pointer;
+  }
+
+  select option { color: #1b1a17; background: #fbf8f1; }
+
+  .select-wrap::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: 2px;
+    width: 12px;
+    height: 12px;
+    margin-top: -6px;
+    background: var(--ink);
+    pointer-events: none;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='black' stroke-width='1.5'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='black' stroke-width='1.5'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+
+  input {
+    padding-right: 52px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+  }
+
+  input::placeholder {
+    color: var(--ink-3);
+    font-family: var(--serif);
+    font-size: 14px;
+  }
+
+  select:focus-visible,
+  input:focus-visible {
+    outline: none;
+    border-bottom-color: var(--vermilion);
+    box-shadow: 0 1px 0 var(--vermilion);
+  }
+
   button:focus-visible {
     outline: 3px solid var(--focus);
     outline-offset: 2px;
   }
 
-  input:focus, select:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 1px var(--accent);
-  }
-
-  .secret-wrap { position: relative; }
-
   .key-toggle {
     position: absolute;
-    top: 0;
     right: 0;
-    width: 52px;
-    height: 44px;
-    padding: 0;
-    color: var(--accent);
+    bottom: 4px;
+    height: 28px;
+    padding: 0 8px;
+    color: var(--ink-2);
     background: transparent;
-    border: 0;
-    border-radius: 10px;
+    border: 1px solid var(--hair);
+    border-radius: 3px;
     cursor: pointer;
-    font-size: 12px;
+    font-family: var(--sans);
+    font-size: 11px;
     font-weight: 600;
-    transition: background 140ms ease, transform 120ms var(--ease-out);
+    letter-spacing: 0.06em;
   }
-
-  .key-toggle:active { transform: scale(0.96); }
 
   .field-help {
-    margin: 7px 0 0;
-    color: var(--secondary);
-    font-size: 11px;
-    line-height: 1.45;
+    margin: 6px 0 0;
+    padding-left: 2.3em;
+    text-indent: -2.3em;
+    color: var(--ink-2);
+    font-family: var(--sans);
+    font-size: 11.5px;
+    line-height: 1.55;
   }
 
-  .builtin-info {
-    margin-top: 8px;
-    color: var(--secondary);
-    font-size: 11px;
-    line-height: 1.45;
+  .field-help::before {
+    content: "註　";
+    color: var(--ink-2);
+    font-weight: 600;
   }
 
-  [hidden] { display: none !important; }
+  .field-help.is-warning { color: var(--vermilion-text); }
+  .field-help.is-warning::before { content: "※　"; color: var(--vermilion-text); }
 
-  .usage-row {
+  /* 語言 */
+  .lang-line {
+    display: grid;
+    grid-template-columns: auto auto 1fr;
+    grid-template-areas:
+      "cap-from . cap-to"
+      "from arrow to";
+    align-items: center;
+    column-gap: 12px;
+    row-gap: 2px;
+  }
+
+  .lang-cap-from { grid-area: cap-from; }
+  .lang-cap-to { grid-area: cap-to; }
+  .lang-to-wrap { grid-area: to; }
+  .lang-arrow { grid-area: arrow; }
+
+  .lang-caption {
+    display: block;
+    color: var(--ink-2);
+    font-family: var(--sans);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+  }
+
+  .lang-value {
+    grid-area: from;
+    height: 36px;
+    color: var(--ink-2);
+    border-bottom: 1px dotted var(--dots);
+    font-size: 15px;
+    line-height: 35px;
+  }
+
+  .lang-arrow {
+    width: 22px;
+    height: 12px;
+    color: var(--vermilion);
+  }
+
+  .lang-to select { font-weight: 700; }
+
+  /* ---------- Colophon ---------- */
+
+  .colophon {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin: 12px 4px 0;
-    color: var(--secondary);
-    font-size: 12px;
+    gap: 12px;
+    min-height: 52px;
+    margin: 0 20px;
+    padding: 10px 0 14px;
+    border-top: 1px solid var(--ink);
+    color: var(--ink-2);
+    font-size: 13px;
   }
 
   .usage-value {
-    color: var(--text);
-    font-variant-numeric: tabular-nums;
-    font-weight: 600;
+    color: var(--vermilion-text);
+    font-size: 18px;
+    font-weight: 700;
+    font-variant-numeric: oldstyle-nums;
+    margin: 0 2px;
   }
 
-  .save-button {
-    width: 100%;
-    height: 44px;
-    margin-top: 14px;
-    color: var(--accent-foreground);
-    background: var(--accent);
-    border: 1px solid transparent;
-    border-radius: 10px;
-    box-shadow: 0 2px 6px var(--glass-shadow);
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 140ms ease, opacity 140ms ease, transform 120ms var(--ease-out);
-  }
-
-  .save-button:active { transform: scale(0.97); }
-  .save-button:disabled { cursor: wait; opacity: 0.65; }
-  .save-button:disabled:active { transform: none; }
-
+  /* 已儲存：像蓋上去的印 */
   .status {
-    min-height: 18px;
-    margin: 8px 2px 0;
-    color: var(--accent);
-    font-size: 12px;
-    text-align: center;
+    margin: 0;
+    padding: 2px 8px 3px;
+    color: var(--vermilion-text);
+    border: 1.5px solid var(--vermilion);
+    border-radius: 3px;
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
     opacity: 0;
-    transform: translateY(2px);
-    transition: opacity 160ms var(--ease-out), transform 160ms var(--ease-out);
+    transform: rotate(-6deg) scale(1.4);
+    transition: opacity 120ms ease, transform 220ms var(--ease-out);
   }
 
-  .status.warning { color: var(--danger); }
-  .status.show {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  .status:empty { display: none; }
+  .status.show { opacity: 0.92; transform: rotate(-6deg) scale(1); }
 
   @media (hover: hover) and (pointer: fine) {
-    input:hover, select:hover { background: var(--control-hover); }
-    .key-toggle:hover { background: var(--accent-soft); }
-    .save-button:hover { background: var(--accent-hover); }
+    .sense:hover .sense-title { text-decoration: underline; text-decoration-color: var(--dots); text-underline-offset: 3px; }
+    select:hover { border-bottom-color: var(--vermilion); }
+    .key-toggle:hover { color: var(--ink); border-color: var(--ink); }
+    .field-link:hover { text-decoration-thickness: 2px; }
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .switch,
-    .switch::before,
-    .switch::after,
-    .key-toggle,
-    .save-button { transition-duration: 0.01ms; }
-
-    .switch:active,
-    .key-toggle:active,
-    .save-button:active { transform: none; }
-
-    .status {
-      transform: none;
-      transition: opacity 120ms ease;
-    }
-  }
+  /* ---------- 夜讀 ---------- */
 
   @media (prefers-color-scheme: dark) {
     :root {
-      --page: #111214;
-      --surface: #1c1c1e;
-      --surface-solid: #1c1c1e;
-      --glass: rgba(28, 28, 30, 0.72);
-      --glass-border: rgba(255, 255, 255, 0.16);
-      --glass-highlight: rgba(255, 255, 255, 0.22);
-      --glass-shadow: rgba(0, 0, 0, 0.28);
-      --control: #2c2c2e;
-      --control-solid: #3a3a3c;
-      --control-hover: #3a3a3c;
-      --text: #f5f5f7;
-      --secondary: #aeaeb2;
-      --separator: rgba(84, 84, 88, 0.56);
-      --border: rgba(142, 142, 147, 0.42);
-      --accent: #0a84ff;
-      --accent-hover: #409cff;
-      --accent-foreground: #ffffff;
-      --accent-soft: rgba(10, 132, 255, 0.16);
-      --focus: rgba(10, 132, 255, 0.38);
-      --danger: #ff6961;
+      --paper: #1a1815;
+      --sheet: #211f1b;
+      --paper-2: #2a2722;
+      --paper-3: #34302a;
+      --ink: #ede6d8;
+      --ink-2: #b4ac9c;
+      --ink-3: #8a8375;
+      --hair: rgba(237, 230, 216, 0.14);
+      --dots: rgba(237, 230, 216, 0.3);
+      --vermilion: #e0604c;
+      --vermilion-text: #ee7a66;
+      --vermilion-soft: rgba(224, 96, 76, 0.12);
+      --seal-text: #1a1815;
+      --focus: rgba(238, 122, 102, 0.45);
     }
 
-    .switch::before { background: #636366; }
+    body { background-image: none; }
+    select option { color: #ede6d8; background: #211f1b; }
   }
+
+  /* ---------- 輔助偏好 ---------- */
 
   @media (prefers-contrast: more) {
     :root {
-      --separator: rgba(60, 60, 67, 0.45);
-      --border: rgba(60, 60, 67, 0.68);
-      --surface: var(--surface-solid);
+      --ink-2: #3d3931;
+      --hair: rgba(27, 26, 23, 0.5);
+      --dots: rgba(27, 26, 23, 0.6);
     }
-
-    .settings-group { border-color: var(--border); }
+    body { background-image: none; }
   }
 
   @media (prefers-color-scheme: dark) and (prefers-contrast: more) {
     :root {
-      --separator: rgba(174, 174, 178, 0.7);
-      --border: rgba(235, 235, 245, 0.76);
+      --ink-2: #d8d1c3;
+      --hair: rgba(237, 230, 216, 0.5);
+      --dots: rgba(237, 230, 216, 0.6);
     }
   }
 
   @media (prefers-reduced-transparency: reduce) {
-    .app-header {
-      -webkit-backdrop-filter: none;
-      backdrop-filter: none;
-    }
+    body { background-image: none; }
+  }
 
-    .app-header { background: var(--surface-solid); }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: 0.01ms !important; }
+    .status, .status.show { transform: rotate(-6deg); }
   }
 </style>
 </head>
 <body>
-  <header class="app-header">
-    <div>
-      <h1 class="app-title">隨選翻譯</h1>
-      <p class="app-state" id="app-state">選字翻譯已開啟</p>
+  <header class="masthead">
+    <div class="kicker-row">
+      <span>Context Translator</span>
+      <span class="edition" id="edition"></span>
     </div>
-    <button class="switch" id="toggle-switch" type="button" role="switch" aria-checked="true" aria-label="暫停選字翻譯"></button>
+    <div class="masthead-main">
+      <h1 class="app-title">隨選翻譯</h1>
+      <img class="seal" src="icons/icon128.png" alt="" width="36" height="36">
+    </div>
+    <div class="double-rule" aria-hidden="true"></div>
   </header>
 
   <main class="main">
-    <section class="settings-group" aria-label="翻譯設定">
-    <div class="field">
-      <div class="field-header">
-        <label for="provider-select">翻譯方式</label>
-        <span class="field-meta" id="model-note">免金鑰，本機處理</span>
+    <section class="entry toggle-entry">
+      <div>
+        <h2 class="entry-heading" id="toggle-label">選字翻譯</h2>
+        <p class="entry-desc" id="app-state">選取文字後，旁邊會出現翻譯按鈕</p>
       </div>
-      <select id="provider-select">
-        <option value="builtin">Chrome 內建翻譯（免金鑰）</option>
-        <option value="gemini">Gemini · Google</option>
-        <option value="minimax">MiniMax</option>
-        <option value="kimi">Kimi · Moonshot</option>
-        <option value="openai">OpenAI</option>
-        <option value="deepseek">DeepSeek V4 Flash</option>
-        <option value="claude">Claude · Anthropic</option>
-      </select>
-      <div class="builtin-info" id="builtin-info" role="note">在裝置上處理；首次使用可能需要下載語言套件。</div>
-    </div>
-
-    <div class="field" id="api-key-field" hidden>
-      <div class="field-header">
-        <label for="api-key">API 金鑰</label>
-        <span class="field-meta">每個模型分開保存</span>
-      </div>
-      <div class="secret-wrap">
-        <input type="password" id="api-key" placeholder="輸入 API 金鑰" autocomplete="off" spellcheck="false" aria-describedby="api-key-help">
-        <button class="key-toggle" id="key-visibility" type="button" aria-label="顯示 API 金鑰" aria-pressed="false">顯示</button>
-      </div>
-      <p class="field-help" id="api-key-help">金鑰只會儲存在 Chrome 同步空間。</p>
-    </div>
-
-    <div class="field">
-      <div class="field-header">
-        <label for="lang-select">譯文語言</label>
-        <span class="field-meta">翻譯結果的顯示語言</span>
-      </div>
-      <select id="lang-select">
-        <option value="zh-TW">繁體中文</option>
-        <option value="zh-CN">简体中文</option>
-        <option value="en">English</option>
-        <option value="ko">한국어</option>
-        <option value="fr">Français</option>
-        <option value="de">Deutsch</option>
-        <option value="es">Español</option>
-      </select>
-    </div>
+      <button class="switch on" id="toggle-switch" type="button" role="switch" aria-checked="true" aria-labelledby="toggle-label" aria-describedby="app-state"></button>
     </section>
 
-    <div class="usage-row" aria-label="今日翻譯用量">
-      <span class="usage-label">今日翻譯</span>
-      <span class="usage-value" id="quota-text">0 次</span>
-    </div>
+    <section class="entry" aria-labelledby="engine-title">
+      <h2 class="entry-heading" id="engine-title"><span class="entry-num" aria-hidden="true">壹</span>翻譯引擎</h2>
 
-    <button class="save-button" id="save-btn" type="button">儲存設定</button>
-    <p class="status" id="status-msg" role="status" aria-live="polite"></p>
+      <fieldset class="senses" id="engine-mode" data-value="builtin">
+        <legend>翻譯引擎</legend>
+        <label class="sense">
+          <input type="radio" name="engine" value="builtin" checked>
+          <span class="sense-mark" aria-hidden="true"></span>
+          <span class="sense-body">
+            <span class="sense-title">本機翻譯</span>
+            <span class="sense-desc">Chrome 內建・免金鑰・文字不離開裝置</span>
+          </span>
+        </label>
+        <label class="sense">
+          <input type="radio" name="engine" value="ai">
+          <span class="sense-mark" aria-hidden="true"></span>
+          <span class="sense-body">
+            <span class="sense-title">AI 模型</span>
+            <span class="sense-desc">會參考上下文，譯得更準・需 API 金鑰</span>
+          </span>
+        </label>
+      </fieldset>
+
+      <p class="footnote" id="builtin-info">首次使用某個語言時，Chrome 需要先下載語言套件。</p>
+
+      <div class="ai-fields" id="ai-fields" hidden>
+        <div>
+          <label class="field-label" for="provider-select">
+            <span>模型</span>
+            <span class="field-meta" id="model-note">Gemini 2.0 Flash</span>
+          </label>
+          <div class="select-wrap">
+            <select id="provider-select">
+              <option value="gemini">Gemini · Google</option>
+              <option value="openai">OpenAI</option>
+              <option value="claude">Claude · Anthropic</option>
+              <option value="deepseek">DeepSeek V4 Flash</option>
+              <option value="kimi">Kimi · Moonshot</option>
+              <option value="minimax">MiniMax</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="api-key-field">
+          <div class="field-label">
+            <label for="api-key">API 金鑰</label>
+            <a class="field-link" id="key-link" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">取得金鑰</a>
+          </div>
+          <div class="secret-wrap">
+            <input type="password" id="api-key" placeholder="貼上 API 金鑰" autocomplete="off" spellcheck="false" aria-describedby="api-key-help">
+            <button class="key-toggle" id="key-visibility" type="button" aria-label="顯示 API 金鑰" aria-pressed="false">顯示</button>
+          </div>
+          <p class="field-help" id="api-key-help"></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="entry" aria-labelledby="lang-title">
+      <h2 class="entry-heading" id="lang-title"><span class="entry-num" aria-hidden="true">貳</span>語言</h2>
+      <div class="lang-line">
+        <span class="lang-caption lang-cap-from">原文</span>
+        <label class="lang-caption lang-cap-to" for="lang-select">譯文</label>
+        <span class="lang-value">自動偵測</span>
+        <svg class="lang-arrow" viewBox="0 0 22 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 6h19M15 1.5 20 6l-5 4.5"/></svg>
+        <div class="lang-to-wrap">
+          <div class="select-wrap lang-to">
+            <select id="lang-select">
+              <option value="zh-TW">繁體中文</option>
+              <option value="zh-CN">简体中文</option>
+              <option value="en">English</option>
+              <option value="ko">한국어</option>
+              <option value="fr">Français</option>
+              <option value="de">Deutsch</option>
+              <option value="es">Español</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
+
+  <footer class="colophon">
+    <span>今日已翻譯<span class="usage-value" id="quota-text">0</span>次</span>
+    <p class="status" id="status-msg" role="status" aria-live="polite"></p>
+  </footer>
 
   <script src="popup.js"></script>
 </body>

@@ -6,314 +6,439 @@
     btn: "ctx-trans-floating-btn",
     pop: "ctx-trans-popover",
   };
+  const B = `#${IDS.btn}`;
+  const P = `#${IDS.pop}`;
 
   // 清掉舊版殘留節點 (避免擴充更新後重複)
   Object.values(IDS).forEach((id) => document.getElementById(id)?.remove());
 
-  // 與設定視窗一致的系統自適應、內容優先介面。
+  // 紙本字典風：米白紙、墨黑字、朱紅印。所有選擇器都限定在擴充功能自己的節點內，
+  // 並重設常見屬性，避免網頁本身的 CSS 滲入。
   const style = document.createElement("style");
   style.id = IDS.style;
   style.textContent = `
-    #${IDS.btn}, #${IDS.pop} {
-      --ctx-surface: #ffffff;
-      --ctx-surface-secondary: #f5f5f7;
-      --ctx-material: rgba(248, 249, 251, 0.86);
-      --ctx-glass-border: rgba(255, 255, 255, 0.72);
-      --ctx-glass-highlight: rgba(255, 255, 255, 0.82);
-      --ctx-shadow: rgba(15, 23, 42, 0.18);
-      --ctx-control: rgba(118, 118, 128, 0.12);
-      --ctx-text: #1d1d1f;
-      --ctx-secondary: #6e6e73;
-      --ctx-border: rgba(60, 60, 67, 0.24);
-      --ctx-accent: #007aff;
-      --ctx-accent-hover: #0066d6;
-      --ctx-accent-glass: rgba(0, 122, 255, 0.86);
-      --ctx-accent-foreground: #ffffff;
-      --ctx-focus: rgba(0, 122, 255, 0.3);
-      --ctx-danger: #c9342f;
-      --ctx-danger-bg: #fff2f1;
-      --ctx-danger-border: rgba(201, 52, 47, 0.26);
+    ${B}, ${P} {
+      --ctx-paper: #fbf8f1;
+      --ctx-paper-2: #f1ebdf;
+      --ctx-paper-3: #e6decd;
+      --ctx-ink: #1b1a17;
+      --ctx-ink-2: #5c574d;
+      --ctx-ink-3: #8c8577;
+      --ctx-hair: rgba(27, 26, 23, 0.14);
+      --ctx-dots: rgba(27, 26, 23, 0.3);
+      --ctx-vermilion: #c8372d;
+      --ctx-vermilion-text: #b32e25;
+      --ctx-seal-text: #fbf7ef;
+      --ctx-focus: rgba(200, 55, 45, 0.38);
+      --ctx-shadow: 0 1px 0 rgba(27, 26, 23, 0.06), 0 18px 40px -18px rgba(60, 40, 20, 0.45), 0 4px 10px -6px rgba(60, 40, 20, 0.18);
+      --ctx-shadow-btn: 0 1px 0 rgba(27, 26, 23, 0.08), 0 8px 18px -10px rgba(60, 40, 20, 0.55);
+      --ctx-serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Songti TC", "Noto Serif TC", "Source Han Serif TC", "PMingLiU", "MingLiU", Georgia, serif;
+      --ctx-sans: -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
       --ctx-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang TC", "Microsoft JhengHei", sans-serif;
-      color: var(--ctx-text);
+      all: initial;
+      position: fixed;
+      z-index: 2147483647;
+      display: none;
       box-sizing: border-box;
-      font-optical-sizing: auto;
+      color: var(--ctx-ink);
+      font-family: var(--ctx-serif);
+      font-size: 14px;
+      line-height: 1.5;
+      text-align: left;
       -webkit-font-smoothing: antialiased;
     }
-    #${IDS.btn} *, #${IDS.pop} * { box-sizing: border-box; }
+    ${B} *, ${P} * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      font: inherit;
+      color: inherit;
+      letter-spacing: normal;
+      text-transform: none;
+      text-shadow: none;
+      text-decoration: none;
+      background: none;
+      box-shadow: none;
+      min-width: 0;
+      max-width: none;
+      float: none;
+    }
+    ${B} svg, ${P} svg { display: block; overflow: visible; }
 
-    #${IDS.btn} {
-      position: fixed;
-      z-index: 2147483647;
-      display: none;
-      align-items: center;
-      min-height: 44px;
-      padding: 0 14px;
-      color: var(--ctx-accent-foreground);
-      background: var(--ctx-accent-glass);
-      border: 1px solid var(--ctx-glass-border);
-      border-radius: 12px;
-      box-shadow: inset 0 1px 0 var(--ctx-glass-highlight), 0 2px 8px var(--ctx-shadow);
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 600;
+    /* ---------- 朱印 ---------- */
+    ${B} .ctx-seal, ${P} .ctx-seal {
+      display: inline-grid;
+      place-items: center;
+      flex: 0 0 auto;
+      color: var(--ctx-seal-text);
+      background: var(--ctx-vermilion);
+      border-radius: 3px;
+      font-family: var(--ctx-serif);
+      font-weight: 900;
       line-height: 1;
+    }
+
+    /* ---------- 翻譯按鈕 ---------- */
+    ${B} {
+      align-items: center;
+      gap: 8px;
+      height: 32px;
+      padding: 0 12px 0 4px;
+      color: var(--ctx-ink);
+      background: var(--ctx-paper);
+      border: 1px solid var(--ctx-ink);
+      border-radius: 3px;
+      box-shadow: var(--ctx-shadow-btn);
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      line-height: 1;
+      white-space: nowrap;
       user-select: none;
-      transition: background 140ms ease, opacity 140ms ease, transform 120ms var(--ctx-ease-out);
-      -webkit-backdrop-filter: saturate(180%) blur(18px);
-      backdrop-filter: saturate(180%) blur(18px);
+      -webkit-user-select: none;
+      transition: box-shadow 160ms ease, transform 140ms var(--ctx-ease-out);
     }
-    #${IDS.btn}:active { transform: scale(0.97); }
-    #${IDS.btn}:focus-visible {
-      outline: 3px solid var(--ctx-focus);
-      outline-offset: 3px;
-    }
-    #${IDS.pop} {
-      position: fixed;
-      z-index: 2147483647;
-      display: none;
-      width: 352px;
-      max-width: calc(100vw - 16px);
-      background: var(--ctx-material);
-      border: 1px solid var(--ctx-glass-border);
-      border-radius: 14px;
-      box-shadow: inset 0 1px 0 var(--ctx-glass-highlight), 0 2px 8px var(--ctx-shadow);
+    ${B} .ctx-seal {
+      width: 22px;
+      height: 22px;
       font-size: 13px;
+      letter-spacing: 0;
+      transform: rotate(-4deg);
+    }
+    ${B}:active { transform: translateY(1px); box-shadow: 0 1px 0 rgba(27, 26, 23, 0.08); }
+    ${B}:focus-visible {
+      outline: 3px solid var(--ctx-focus);
+      outline-offset: 2px;
+    }
+
+    /* ---------- 結果浮窗 ---------- */
+    ${P} {
+      width: 380px;
+      max-width: calc(100vw - 16px);
+      background: var(--ctx-paper);
+      border: 1px solid var(--ctx-ink);
+      border-radius: 4px;
+      box-shadow: var(--ctx-shadow);
       overflow: hidden;
       transform-origin: var(--ctx-origin-x, 50%) var(--ctx-origin-y, 0%);
-      -webkit-backdrop-filter: saturate(180%) blur(28px);
-      backdrop-filter: saturate(180%) blur(28px);
     }
 
-    .ctx-header {
+    ${P} .ctx-header {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      gap: 10px;
-      min-height: 58px;
-      padding: 6px 6px 6px 16px;
-      background: rgba(255, 255, 255, 0.2);
-      color: var(--ctx-text);
-      border-bottom: 1px solid var(--ctx-glass-border);
-      box-shadow: inset 0 1px 0 var(--ctx-glass-highlight);
+      gap: 11px;
+      min-height: 52px;
+      margin: 0 14px;
+      padding: 9px 0 8px;
+      border-bottom: 3px double var(--ctx-ink);
       cursor: grab;
       touch-action: none;
       user-select: none;
+      -webkit-user-select: none;
     }
-    .ctx-header:active { cursor: grabbing; }
-
-    .ctx-title-group {
+    ${P} .ctx-header:active { cursor: grabbing; }
+    ${P} .ctx-header .ctx-seal {
+      width: 28px;
+      height: 28px;
+      font-size: 17px;
+      transform: rotate(-4deg);
+    }
+    ${P} .ctx-title-copy {
       display: flex;
-      align-items: center;
-      overflow: hidden;
+      flex-direction: column;
+      flex: 1;
+      min-width: 0;
     }
-    .ctx-title-copy { min-width: 0; }
-    .ctx-title-main {
+    ${P} .ctx-title-main,
+    ${P} .ctx-title-sub {
       display: block;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    ${P} .ctx-title-main {
       font-size: 15px;
       font-weight: 700;
-      letter-spacing: -0.01em;
-      line-height: 1.25;
+      letter-spacing: 0.04em;
+      line-height: 1.3;
     }
-    .ctx-title-sub {
-      display: block;
+    ${P} .ctx-title-sub {
       margin-top: 1px;
-      color: var(--ctx-secondary);
+      color: var(--ctx-ink-2);
+      font-family: var(--ctx-sans);
       font-size: 11px;
-      font-weight: 400;
+      letter-spacing: 0.04em;
+      line-height: 1.3;
     }
 
-    .ctx-header-actions {
+    ${P} .ctx-header-actions {
       display: flex;
-      gap: 0;
-      padding: 2px;
-      background: var(--ctx-control);
-      border: 1px solid var(--ctx-glass-border);
-      border-radius: 12px;
-      box-shadow: inset 0 1px 0 var(--ctx-glass-highlight);
+      flex: 0 0 auto;
+      gap: 2px;
+      margin-right: -6px;
     }
-    .ctx-icon-btn {
-      width: 40px;
-      height: 40px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--ctx-secondary);
-      background: transparent;
-      border: 0;
-      border-radius: 10px;
+    ${P} .ctx-icon-btn {
+      display: inline-grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      color: var(--ctx-ink-2);
+      border-radius: 3px;
       cursor: pointer;
-      font-size: 16px;
-      font-weight: 600;
-      line-height: 1;
-      padding: 0;
-      font-family: inherit;
-      transition: background 140ms ease, color 140ms ease, transform 120ms var(--ctx-ease-out);
+      transition: background 140ms ease, color 140ms ease;
     }
-    .ctx-icon-btn:active { transform: scale(0.96); }
-    .ctx-icon-btn[data-state="success"] { color: var(--ctx-accent); }
-    .ctx-icon-btn:focus-visible {
+    ${P} .ctx-icon-btn:disabled { opacity: 0.35; cursor: default; }
+    ${P} .ctx-icon-btn[data-state="success"] { color: var(--ctx-vermilion-text); }
+    ${P} .ctx-icon-btn:focus-visible {
       outline: 3px solid var(--ctx-focus);
-      outline-offset: -2px;
+      outline-offset: -1px;
     }
-    .ctx-icon-btn svg {
+    ${P} .ctx-icon-btn svg {
       width: 16px;
       height: 16px;
       fill: none;
       stroke: currentColor;
       stroke-linecap: round;
       stroke-linejoin: round;
-      stroke-width: 1.8;
+      stroke-width: 1.5;
     }
 
-    .ctx-body {
-      padding: 16px;
-      max-height: min(340px, calc(100vh - 84px));
+    /* ---------- 內文 ---------- */
+    ${P} .ctx-body {
+      display: block;
+      max-height: min(380px, calc(100vh - 90px));
+      padding: 12px 18px 18px;
       overflow-y: auto;
-      color: var(--ctx-text);
-      line-height: 1.65;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-      background: transparent;
-    }
-    .ctx-body::-webkit-scrollbar { width: 7px; }
-    .ctx-body::-webkit-scrollbar-track { background: var(--ctx-surface-secondary); }
-    .ctx-body::-webkit-scrollbar-thumb { background: var(--ctx-border); border-radius: 4px; }
-
-    .ctx-result {
-      font-size: 14px;
-      font-weight: 400;
-      line-height: 1.65;
-    }
-    .ctx-result.ctx-result-word { font-weight: 400; }
-    .ctx-result.ctx-result-word .ctx-line-trans {
-      display: block;
-      margin-bottom: 12px;
-      padding: 0 0 12px;
-      color: var(--ctx-text);
-      background: transparent;
-      border-bottom: 1px solid var(--ctx-border);
-      font-size: 16px;
-      font-weight: 650;
-    }
-    .ctx-result.ctx-result-word .ctx-line-ctx {
-      display: block;
-      font-weight: 400;
-      font-size: 12px;
-      line-height: 1.7;
-      color: var(--ctx-secondary);
-    }
-    .ctx-line-label {
-      display: block;
-      margin-bottom: 4px;
-      color: var(--ctx-secondary);
-      font-size: 11px;
-      font-weight: 600;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+      scrollbar-color: var(--ctx-dots) transparent;
     }
 
-    .ctx-error {
-      padding: 11px 12px;
-      color: var(--ctx-danger);
-      background: var(--ctx-danger-bg);
-      border: 1px solid var(--ctx-danger-border);
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 400;
-      line-height: 1.6;
-    }
-    .ctx-error::before {
-      content: "提示：";
-      font-weight: 600;
-    }
-
-    .ctx-loading {
+    ${P} .ctx-label {
       display: flex;
       align-items: center;
-      gap: 10px;
-      min-height: 44px;
-      color: var(--ctx-secondary);
-      font-size: 12px;
-      font-weight: 400;
+      gap: 8px;
+      margin-bottom: 5px;
+      color: var(--ctx-vermilion-text);
+      font-family: var(--ctx-sans);
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
     }
-    .ctx-spinner {
-      width: 18px;
-      height: 18px;
-      border: 2.5px solid var(--ctx-border);
-      border-top-color: var(--ctx-accent);
-      border-radius: 50%;
-      animation: ctxSpin 0.75s linear infinite;
-      flex-shrink: 0;
+    ${P} .ctx-label::after {
+      content: "";
+      flex: 1;
+      border-top: 1px dotted var(--ctx-dots);
     }
-    @keyframes ctxSpin { to { transform: rotate(360deg); } }
-    @media (prefers-color-scheme: dark) {
-      #${IDS.btn}, #${IDS.pop} {
-        --ctx-surface: #1c1c1e;
-        --ctx-surface-secondary: #3a3a3c;
-        --ctx-material: rgba(28, 28, 30, 0.88);
-        --ctx-glass-border: rgba(255, 255, 255, 0.16);
-        --ctx-glass-highlight: rgba(255, 255, 255, 0.2);
-        --ctx-shadow: rgba(0, 0, 0, 0.34);
-        --ctx-control: rgba(118, 118, 128, 0.24);
-        --ctx-text: #f5f5f7;
-        --ctx-secondary: #aeaeb2;
-        --ctx-border: rgba(142, 142, 147, 0.52);
-        --ctx-accent: #0a84ff;
-        --ctx-accent-hover: #409cff;
-        --ctx-accent-glass: rgba(10, 132, 255, 0.86);
-        --ctx-accent-foreground: #ffffff;
-        --ctx-focus: rgba(10, 132, 255, 0.38);
-        --ctx-danger: #ff6961;
-        --ctx-danger-bg: rgba(255, 105, 97, 0.1);
-        --ctx-danger-border: rgba(255, 105, 97, 0.32);
-      }
 
-      .ctx-header { background: rgba(255, 255, 255, 0.04); }
+    ${P} .ctx-source {
+      display: -webkit-box;
+      margin-bottom: 14px;
+      overflow: hidden;
+      color: var(--ctx-ink-2);
+      font-size: 13.5px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 3;
     }
-    @media (prefers-contrast: more) {
-      #${IDS.btn}, #${IDS.pop} {
-        --ctx-material: var(--ctx-surface);
-        --ctx-border: rgba(60, 60, 67, 0.62);
-        --ctx-glass-border: rgba(60, 60, 67, 0.72);
+    ${P} .ctx-source.is-latin { font-style: italic; }
+
+    ${P} .ctx-result {
+      display: block;
+      color: var(--ctx-ink);
+      font-size: 16.5px;
+      line-height: 1.8;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    /* 單字：詞條 */
+    ${P} .ctx-word { display: block; }
+    ${P} .ctx-headword {
+      display: block;
+      padding-top: 2px;
+      color: var(--ctx-ink);
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: 0.01em;
+      overflow-wrap: anywhere;
+    }
+    ${P} .ctx-headword-meta {
+      display: block;
+      margin: 3px 0 12px;
+      color: var(--ctx-ink-3);
+      font-family: var(--ctx-sans);
+      font-size: 11px;
+      letter-spacing: 0.06em;
+    }
+    ${P} .ctx-senses {
+      display: block;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+    ${P} .ctx-sense {
+      display: flex;
+      gap: 8px;
+      align-items: baseline;
+      font-size: 18px;
+      font-weight: 600;
+      line-height: 1.55;
+      overflow-wrap: anywhere;
+    }
+    ${P} .ctx-sense + .ctx-sense { margin-top: 2px; }
+    ${P} .ctx-sense-num {
+      flex: 0 0 auto;
+      color: var(--ctx-vermilion-text);
+      font-size: 15px;
+      font-weight: 700;
+    }
+    ${P} .ctx-label-note { margin-top: 16px; }
+    ${P} .ctx-note {
+      display: block;
+      color: var(--ctx-ink-2);
+      font-size: 14px;
+      line-height: 1.75;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    /* ---------- 查閱中 ---------- */
+    ${P} .ctx-skeleton { display: grid; gap: 12px; padding: 6px 0 2px; }
+    ${P} .ctx-skeleton i {
+      display: block;
+      height: 1px;
+      border-top: 1px dotted var(--ctx-dots);
+      position: relative;
+      overflow: visible;
+    }
+    ${P} .ctx-skeleton i::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: -5px;
+      height: 8px;
+      width: 0;
+      background: var(--ctx-paper-3);
+      border-radius: 1px;
+      animation: ctxWrite 1.6s var(--ctx-ease-out) infinite;
+    }
+    ${P} .ctx-skeleton i:nth-child(1)::before { --w: 92%; }
+    ${P} .ctx-skeleton i:nth-child(2)::before { --w: 100%; animation-delay: 160ms; }
+    ${P} .ctx-skeleton i:nth-child(3)::before { --w: 56%; animation-delay: 320ms; }
+    ${P} .ctx-loading-text {
+      display: block;
+      margin-top: 14px;
+      color: var(--ctx-ink-2);
+      font-family: var(--ctx-sans);
+      font-size: 11.5px;
+      letter-spacing: 0.04em;
+    }
+    @keyframes ctxWrite {
+      0% { width: 0; opacity: 1; }
+      60% { width: var(--w, 100%); opacity: 1; }
+      100% { width: var(--w, 100%); opacity: 0; }
+    }
+
+    /* ---------- 錯誤 ---------- */
+    ${P} .ctx-error {
+      display: block;
+      padding: 2px 0 2px 12px;
+      border-left: 3px solid var(--ctx-vermilion);
+    }
+    ${P} .ctx-error-title {
+      display: block;
+      color: var(--ctx-vermilion-text);
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      line-height: 1.4;
+    }
+    ${P} .ctx-error-text {
+      display: block;
+      margin-top: 3px;
+      color: var(--ctx-ink-2);
+      font-family: var(--ctx-sans);
+      font-size: 12.5px;
+      line-height: 1.65;
+      overflow-wrap: anywhere;
+    }
+
+    /* ---------- 夜讀 ---------- */
+    @media (prefers-color-scheme: dark) {
+      ${B}, ${P} {
+        --ctx-paper: #211f1b;
+        --ctx-paper-2: #2a2722;
+        --ctx-paper-3: #3a352d;
+        --ctx-ink: #ede6d8;
+        --ctx-ink-2: #b4ac9c;
+        --ctx-ink-3: #8a8375;
+        --ctx-hair: rgba(237, 230, 216, 0.14);
+        --ctx-dots: rgba(237, 230, 216, 0.3);
+        --ctx-vermilion: #e0604c;
+        --ctx-vermilion-text: #ee7a66;
+        --ctx-seal-text: #1a1815;
+        --ctx-focus: rgba(238, 122, 102, 0.45);
+        --ctx-shadow: 0 18px 40px -16px rgba(0, 0, 0, 0.75);
+        --ctx-shadow-btn: 0 8px 18px -10px rgba(0, 0, 0, 0.8);
       }
+    }
+
+    /* ---------- 輔助偏好 ---------- */
+    @media (prefers-contrast: more) {
+      ${B}, ${P} {
+        --ctx-ink-2: #3d3931;
+        --ctx-dots: rgba(27, 26, 23, 0.6);
+      }
+      ${B}, ${P} { border-width: 2px; }
     }
     @media (prefers-color-scheme: dark) and (prefers-contrast: more) {
-      #${IDS.btn}, #${IDS.pop} {
-        --ctx-border: rgba(235, 235, 245, 0.72);
-        --ctx-glass-border: rgba(235, 235, 245, 0.72);
+      ${B}, ${P} {
+        --ctx-ink-2: #d8d1c3;
+        --ctx-dots: rgba(237, 230, 216, 0.6);
       }
     }
     @media (hover: hover) and (pointer: fine) {
-      #${IDS.btn}:hover { background: var(--ctx-accent-hover); }
-      .ctx-icon-btn:hover {
-        color: var(--ctx-text);
-        background: var(--ctx-control);
+      ${B}:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 1px 0 rgba(27, 26, 23, 0.08), 0 12px 22px -12px rgba(60, 40, 20, 0.6);
       }
-    }
-    @media (prefers-reduced-transparency: reduce) {
-      #${IDS.btn}, #${IDS.pop} {
-        -webkit-backdrop-filter: none;
-        backdrop-filter: none;
+      ${B}:active { transform: translateY(1px); }
+      ${P} .ctx-icon-btn:not(:disabled):hover {
+        color: var(--ctx-ink);
+        background: var(--ctx-paper-2);
       }
-      #${IDS.btn} { background: var(--ctx-accent); }
-      #${IDS.pop} { background: var(--ctx-surface); }
-      .ctx-header, .ctx-body { background: transparent; }
     }
     @media (prefers-reduced-motion: reduce) {
-      #${IDS.btn}, .ctx-icon-btn { transition-duration: 0.01ms; }
-      #${IDS.btn}:active, .ctx-icon-btn:active { transform: none; }
-      .ctx-spinner { animation-duration: 1.5s; }
+      ${B}, ${P} .ctx-icon-btn { transition-duration: 0.01ms; }
+      ${B}:active, ${B}:hover { transform: none; }
+      ${P} .ctx-skeleton i::before { animation: none; width: var(--w, 100%); }
     }
   `;
-  document.head.appendChild(style);
+  (document.head || document.documentElement).appendChild(style);
 
   // ----------------------------------------------------------------------
   // DOM: 浮動按鈕 + 翻譯氣泡
   // ----------------------------------------------------------------------
+  const ICONS = {
+    copy: '<svg viewBox="0 0 18 18" aria-hidden="true"><rect x="6" y="6" width="9" height="9" rx="2"></rect><path d="M12 6V4.5A1.5 1.5 0 0 0 10.5 3h-6A1.5 1.5 0 0 0 3 4.5v6A1.5 1.5 0 0 0 4.5 12H6"></path></svg>',
+    check: '<svg viewBox="0 0 18 18" aria-hidden="true"><path d="m3.8 9.4 3.3 3.3 7.1-7.4"></path></svg>',
+    close: '<svg viewBox="0 0 18 18" aria-hidden="true"><path d="M5 5 13 13M13 5 5 13"></path></svg>',
+  };
+
   const btn = document.createElement("button");
   btn.id = IDS.btn;
   btn.type = "button";
   btn.setAttribute("aria-label", "翻譯選取內容");
-  btn.textContent = "翻譯";
+  btn.innerHTML = '<span class="ctx-seal" aria-hidden="true">文</span><span>翻譯</span>';
   document.documentElement.appendChild(btn);
 
   const pop = document.createElement("div");
@@ -322,20 +447,15 @@
   pop.setAttribute("aria-label", "翻譯結果");
   pop.setAttribute("aria-hidden", "true");
   pop.innerHTML = `
-    <div class="ctx-header" id="ctx-drag-handle">
-      <div class="ctx-title-group">
-        <span class="ctx-title-copy">
-          <span class="ctx-title-main">隨選翻譯</span>
-          <span class="ctx-title-sub" id="ctx-mode-label">翻譯結果</span>
-        </span>
-      </div>
+    <div class="ctx-header" id="ctx-drag-handle" title="拖曳移動">
+      <span class="ctx-seal" aria-hidden="true">文</span>
+      <span class="ctx-title-copy">
+        <span class="ctx-title-main" id="ctx-direction-label">翻譯結果</span>
+        <span class="ctx-title-sub" id="ctx-mode-label">隨選翻譯</span>
+      </span>
       <div class="ctx-header-actions">
-        <button type="button" class="ctx-icon-btn" id="ctx-copy-btn" title="複製譯文" aria-label="複製譯文">
-          <svg viewBox="0 0 18 18" aria-hidden="true"><rect x="6" y="5" width="9" height="10" rx="2"></rect><path d="M4 12H3.5A1.5 1.5 0 0 1 2 10.5v-7A1.5 1.5 0 0 1 3.5 2h7A1.5 1.5 0 0 1 12 3.5V4"></path></svg>
-        </button>
-        <button type="button" class="ctx-icon-btn" id="ctx-close-btn" title="關閉翻譯結果" aria-label="關閉翻譯結果">
-          <svg viewBox="0 0 18 18" aria-hidden="true"><path d="M4.5 4.5 13.5 13.5M13.5 4.5 4.5 13.5"></path></svg>
-        </button>
+        <button type="button" class="ctx-icon-btn" id="ctx-copy-btn" title="複製譯文" aria-label="複製譯文" disabled>${ICONS.copy}</button>
+        <button type="button" class="ctx-icon-btn" id="ctx-close-btn" title="關閉（Esc）" aria-label="關閉翻譯結果">${ICONS.close}</button>
       </div>
     </div>
     <div class="ctx-body" id="ctx-body" aria-live="polite"></div>
@@ -347,7 +467,7 @@
   const copyBtn = pop.querySelector("#ctx-copy-btn");
   const handle = pop.querySelector("#ctx-drag-handle");
   const modeLabel = pop.querySelector("#ctx-mode-label");
-  const copyIconMarkup = copyBtn.innerHTML;
+  const directionLabel = pop.querySelector("#ctx-direction-label");
 
   // ----------------------------------------------------------------------
   // 狀態
@@ -359,8 +479,10 @@
   let activeProvider = "builtin";
   let activeTargetLanguage = "zh-TW";
   let currentResult = "";
+  let copyText = "";
   let isTranslating = false;
   let popoverAnimation = null;
+  let buttonAnimation = null;
   let copyResetTimer = null;
 
   const BUILTIN_TARGETS = {
@@ -372,6 +494,52 @@
     de: "de",
     es: "es",
   };
+
+  const TARGET_NAMES = {
+    "zh-TW": "繁體中文",
+    "zh-CN": "简体中文",
+    en: "英文",
+    ko: "韓文",
+    fr: "法文",
+    de: "德文",
+    es: "西班牙文",
+  };
+
+  const PROVIDER_NAMES = {
+    builtin: "Chrome 內建翻譯",
+    gemini: "Gemini",
+    minimax: "MiniMax",
+    kimi: "Kimi",
+    openai: "OpenAI",
+    deepseek: "DeepSeek",
+    claude: "Claude",
+  };
+
+  let languageNames = null;
+  try {
+    languageNames = new Intl.DisplayNames(["zh-Hant"], { type: "language" });
+  } catch (_) {}
+
+  function languageName(code) {
+    if (!code) return "";
+    try {
+      return languageNames?.of(code) || code;
+    } catch (_) {
+      return code;
+    }
+  }
+
+  let currentSourceName = "";
+
+  function setHeader(provider, sourceLanguage = "") {
+    const target = TARGET_NAMES[activeTargetLanguage] || "繁體中文";
+    const source = languageName(sourceLanguage);
+    currentSourceName = source;
+    directionLabel.textContent = source && source !== target ? `${source} → ${target}` : `譯為${target}`;
+    modeLabel.textContent = provider === "builtin"
+      ? "Chrome 內建翻譯・本機處理"
+      : `${PROVIDER_NAMES[provider] || "AI 模型"}・上下文翻譯`;
+  }
 
   const BLOCK_SELECTOR =
     "p, li, td, th, dd, dt, blockquote, figcaption, h1, h2, h3, h4, h5, h6, article, section, main, pre, div[class], div[id]";
@@ -500,6 +668,8 @@
         throw new Error("無法判斷原文語言，請選取較完整的句子後再試。");
       }
 
+      setHeader("builtin", sourceLanguage);
+
       if (sourceLanguage === targetLanguage) return text;
 
       const translatorOptions = { sourceLanguage, targetLanguage };
@@ -586,11 +756,11 @@
 
   function clampToViewport(left, top) {
     const rect = pop.getBoundingClientRect();
-    const maxLeft = window.innerWidth - rect.width - 4;
-    const maxTop = window.innerHeight - rect.height - 4;
+    const maxLeft = window.innerWidth - rect.width - 8;
+    const maxTop = window.innerHeight - rect.height - 8;
     return {
-      left: Math.max(4, Math.min(left, maxLeft)),
-      top: Math.max(4, Math.min(top, maxTop)),
+      left: Math.max(8, Math.min(left, maxLeft)),
+      top: Math.max(8, Math.min(top, maxTop)),
     };
   }
 
@@ -637,6 +807,8 @@
   // ----------------------------------------------------------------------
   // 顯示與隱藏
   // ----------------------------------------------------------------------
+  const prefersReducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+
   function hidePopover() {
     onDragEnd();
     popoverAnimation?.cancel();
@@ -646,15 +818,30 @@
   }
 
   function hideButton() {
+    buttonAnimation?.cancel();
+    buttonAnimation = null;
     btn.style.display = "none";
+  }
+
+  function showButton() {
+    btn.style.display = "inline-flex";
+    if (prefersReducedMotion() || !btn.animate) return;
+    buttonAnimation?.cancel();
+    buttonAnimation = btn.animate(
+      [
+        { opacity: 0, transform: "translateY(4px) scale(0.94)" },
+        { opacity: 1, transform: "none" },
+      ],
+      { duration: 160, easing: "cubic-bezier(0.23, 1, 0.32, 1)" }
+    );
   }
 
   function showPopoverAt(clientX, clientY) {
     pop.style.display = "block";
     pop.setAttribute("aria-hidden", "false");
     // 先放到接近選取的位置
-    pop.style.left = `${clientX}px`;
-    pop.style.top = `${clientY + 12}px`;
+    pop.style.left = `${clientX - 24}px`;
+    pop.style.top = `${clientY + 14}px`;
     pop.style.right = "auto";
     pop.style.bottom = "auto";
     // 再 clamp 一次到視窗內
@@ -668,7 +855,7 @@
   }
 
   function animatePopoverFrom(clientX, clientY) {
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches || !pop.animate) return;
+    if (prefersReducedMotion() || !pop.animate) return;
 
     const rect = pop.getBoundingClientRect();
     const originX = Math.max(12, Math.min(clientX - rect.left, rect.width - 12));
@@ -679,11 +866,11 @@
     popoverAnimation?.cancel();
     popoverAnimation = pop.animate(
       [
-        { opacity: 0, transform: "scale(0.97)" },
+        { opacity: 0, transform: "scale(0.96)" },
         { opacity: 1, transform: "scale(1)" },
       ],
       {
-        duration: 160,
+        duration: 180,
         easing: "cubic-bezier(0.23, 1, 0.32, 1)",
       }
     );
@@ -696,6 +883,7 @@
 
   function setBody(html) {
     body.innerHTML = html;
+    body.scrollTop = 0;
     requestAnimationFrame(keepPopoverInViewport);
   }
 
@@ -709,13 +897,57 @@
 
   window.addEventListener("resize", keepPopoverInViewport);
 
+  function setCopyEnabled(enabled) {
+    copyBtn.disabled = !enabled;
+    resetCopyButton();
+  }
+
+  function resetCopyButton() {
+    clearTimeout(copyResetTimer);
+    copyBtn.innerHTML = ICONS.copy;
+    delete copyBtn.dataset.state;
+    copyBtn.title = "複製譯文";
+    copyBtn.setAttribute("aria-label", "複製譯文");
+  }
+
+  const CJK_RE = /[\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af\uf900-\ufaff]/;
+  const SENSE_NUMS = ["①", "②", "③", "④", "⑤", "⑥"];
+
+  function sourceBlock() {
+    if (!currentSelection || isWordLookup(currentSelection)) return "";
+    const latin = CJK_RE.test(currentSelection) ? "" : " is-latin";
+    return `<div class="ctx-label">原文</div><div class="ctx-source${latin}">${escapeHtml(currentSelection)}</div>`;
+  }
+
+  function headwordBlock() {
+    const meta = currentSourceName ? `${currentSourceName}・單字查詢` : "單字查詢";
+    return `<span class="ctx-headword">${escapeHtml(currentSelection)}</span><span class="ctx-headword-meta">${escapeHtml(meta)}</span>`;
+  }
+
+  // 「值得的；有價值的」→ ① 值得的 ② 有價值的
+  function sensesBlock(text) {
+    const parts = String(text).split(/\s*[；;]\s*/).map((part) => part.trim()).filter(Boolean);
+    if (parts.length < 2 || parts.length > SENSE_NUMS.length) {
+      return `<span class="ctx-senses"><span class="ctx-sense"><span>${escapeHtml(text)}</span></span></span>`;
+    }
+    const items = parts
+      .map((part, i) => `<span class="ctx-sense"><span class="ctx-sense-num">${SENSE_NUMS[i]}</span><span>${escapeHtml(part)}</span></span>`)
+      .join("");
+    return `<span class="ctx-senses">${items}</span>`;
+  }
+
   function showLoading(message = "正在翻譯…") {
     revealPopover();
+    currentResult = "";
+    copyText = "";
+    setCopyEnabled(false);
+    const lead = isWordLookup(currentSelection)
+      ? `<div class="ctx-word">${headwordBlock()}</div>`
+      : `${sourceBlock()}<div class="ctx-label">譯文</div>`;
     setBody(`
-      <div class="ctx-loading">
-        <div class="ctx-spinner"></div>
-        <span id="ctx-loading-text">${escapeHtml(message)}</span>
-      </div>
+      ${lead}
+      <div class="ctx-skeleton" aria-hidden="true"><i></i><i></i><i></i></div>
+      <span class="ctx-loading-text" id="ctx-loading-text">${escapeHtml(message)}</span>
     `);
   }
 
@@ -749,33 +981,43 @@
     const trans = (transMatch?.[1] || "").trim();
     const ctxLine = (ctxMatch?.[1] || "").trim();
 
+    let html = `<div class="ctx-word">${headwordBlock()}`;
     if (trans || ctxLine) {
-      let html = '<div class="ctx-result ctx-result-word">';
-      if (trans) {
-        html += `<span class="ctx-line-trans"><span class="ctx-line-label">譯文</span>${escapeHtml(trans)}</span>`;
-      }
+      copyText = trans || ctxLine;
+      if (trans) html += sensesBlock(trans);
       if (ctxLine) {
-        html += `<span class="ctx-line-ctx"><span class="ctx-line-label">上下文說明</span>${escapeHtml(ctxLine)}</span>`;
+        html += `<div class="ctx-label ctx-label-note">語境說明</div><span class="ctx-note">${escapeHtml(ctxLine)}</span>`;
       }
-      html += "</div>";
-      return html;
+    } else {
+      copyText = raw;
+      html += sensesBlock(raw);
     }
-    return `<div class="ctx-result ctx-result-word">${escapeHtml(raw)}</div>`;
+    html += "</div>";
+    return html;
   }
 
   function showResult(text) {
     currentResult = text;
+    copyText = text;
     revealPopover();
     const html = isWordLookup(currentSelection)
       ? formatWordResult(text)
-      : `<div class="ctx-result">${escapeHtml(text)}</div>`;
+      : `${sourceBlock()}<div class="ctx-label">譯文</div><div class="ctx-result">${escapeHtml(text)}</div>`;
     setBody(html);
+    setCopyEnabled(Boolean(copyText));
   }
 
   function showError(msg) {
     currentResult = "";
+    copyText = "";
     revealPopover();
-    setBody(`<div class="ctx-error">${escapeHtml(msg || "Unknown error")}</div>`);
+    setCopyEnabled(false);
+    setBody(`
+      <div class="ctx-error" role="alert">
+        <span class="ctx-error-title">無法完成翻譯</span>
+        <span class="ctx-error-text">${escapeHtml(msg || "發生未知錯誤，請稍後再試")}</span>
+      </div>
+    `);
   }
 
   // ----------------------------------------------------------------------
@@ -785,6 +1027,14 @@
     if (t instanceof Element) return t;
     if (t instanceof Node && t.parentElement) return t.parentElement;
     return null;
+  }
+
+  // 翻譯按鈕放在選取範圍最後一行的結尾，也就是滑鼠放開的位置附近
+  function selectionAnchor(range, e) {
+    const rects = range ? [...range.getClientRects()].filter((r) => r.width || r.height) : [];
+    const last = rects[rects.length - 1] || range?.getBoundingClientRect();
+    if (last && (last.width || last.height)) return { x: last.right, y: last.bottom };
+    return { x: e.clientX, y: e.clientY };
   }
 
   document.addEventListener("mouseup", async (e) => {
@@ -809,19 +1059,15 @@
     currentContext = context;
 
     const range = sel.rangeCount > 0 ? sel.getRangeAt(0) : null;
-    const rect = range ? range.getBoundingClientRect() : null;
+    const anchor = selectionAnchor(range, e);
 
-    // 用 clientX/Y (fixed 座標)
-    const baseX = rect ? rect.right : e.clientX;
-    const baseY = rect ? rect.bottom : e.clientY;
-
-    btn.style.display = "inline-flex";
-    btn.style.left = `${baseX + 6}px`;
-    btn.style.top = `${baseY + 6}px`;
+    btn.style.left = `${anchor.x + 6}px`;
+    btn.style.top = `${anchor.y + 8}px`;
+    showButton();
     requestAnimationFrame(() => {
       const buttonRect = btn.getBoundingClientRect();
-      const left = Math.max(6, Math.min(buttonRect.left, window.innerWidth - buttonRect.width - 6));
-      const top = Math.max(6, Math.min(buttonRect.top, window.innerHeight - buttonRect.height - 6));
+      const left = Math.max(8, Math.min(buttonRect.left, window.innerWidth - buttonRect.width - 8));
+      const top = Math.max(8, Math.min(buttonRect.top, window.innerHeight - buttonRect.height - 8));
       btn.style.left = `${left}px`;
       btn.style.top = `${top}px`;
     });
@@ -844,16 +1090,20 @@
     e.stopPropagation();
     e.preventDefault();
 
+    const buttonRect = btn.getBoundingClientRect();
+    const anchorX = buttonRect.left || e.clientX;
+    const anchorY = buttonRect.bottom || e.clientY;
+
     if (!currentSelection.trim()) {
-      showPopoverAt(e.clientX, e.clientY);
+      showPopoverAt(anchorX, anchorY);
       showError("請先選取要翻譯的文字");
       return;
     }
 
     hideButton();
-    showPopoverAt(e.clientX, e.clientY);
+    showPopoverAt(anchorX, anchorY);
     const provider = activeProvider;
-    modeLabel.textContent = provider === "builtin" ? "Chrome 內建翻譯" : "進階上下文翻譯";
+    setHeader(provider);
     showLoading(provider === "builtin" ? "正在準備本機翻譯…" : "正在理解上下文並翻譯…");
 
     // 點擊翻譯時選取可能已消失，用儲存的 Range 重新擷取上下文
@@ -872,7 +1122,7 @@
     };
 
     const timeoutId = setTimeout(() => {
-      finish(() => showError("逾時 — 請稍後再試"));
+      finish(() => showError("等待太久沒有回應，請稍後再試"));
     }, provider === "builtin" ? 300000 : 18000);
 
     try {
@@ -940,20 +1190,15 @@
 
   copyBtn.addEventListener("click", async (e) => {
     e.stopPropagation();
-    if (!currentResult) return;
+    if (!copyText) return;
     try {
-      await navigator.clipboard.writeText(currentResult);
+      await navigator.clipboard.writeText(copyText);
       clearTimeout(copyResetTimer);
-      copyBtn.innerHTML = '<svg viewBox="0 0 18 18" aria-hidden="true"><path d="m3.5 9.5 3.4 3.4 7.6-7.8"></path></svg>';
+      copyBtn.innerHTML = ICONS.check;
       copyBtn.dataset.state = "success";
       copyBtn.title = "譯文已複製";
       copyBtn.setAttribute("aria-label", "譯文已複製");
-      copyResetTimer = setTimeout(() => {
-        copyBtn.innerHTML = copyIconMarkup;
-        delete copyBtn.dataset.state;
-        copyBtn.title = "複製譯文";
-        copyBtn.setAttribute("aria-label", "複製譯文");
-      }, 1100);
+      copyResetTimer = setTimeout(resetCopyButton, 1400);
     } catch (_) {}
   });
 
