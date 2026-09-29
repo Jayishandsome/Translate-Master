@@ -1038,6 +1038,7 @@
   }
 
   document.addEventListener("mouseup", async (e) => {
+    if (!e.isTrusted) return;
     const target = elementOfTarget(e.target);
     if (!target) return;
     // 點到自己的浮窗就跳過
@@ -1089,6 +1090,10 @@
   btn.addEventListener("click", async (e) => {
     e.stopPropagation();
     e.preventDefault();
+
+    // 只回應使用者真的點擊或按鍵；網頁腳本呼叫 btn.click() 不會觸發翻譯，
+    // 避免惡意網頁用你的 API 金鑰大量送出請求。
+    if (!e.isTrusted) return;
 
     const buttonRect = btn.getBoundingClientRect();
     const anchorX = buttonRect.left || e.clientX;

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "隨選翻譯 — Context Translator",
-  "version": "2.5.0",
+  "version": "2.5.1",
   "description": "選取網頁文字即可翻譯；預設使用 Chrome 內建模型，免 API 金鑰並在裝置上處理。",
   "icons": {
     "16": "icons/icon16.png",
@@ -10,12 +10,16 @@
     "128": "icons/icon128.png"
   },
   "permissions": [
-    "storage",
-    "activeTab",
-    "scripting"
+    "storage"
   ],
   "host_permissions": [
-    "<all_urls>"
+    "https://generativelanguage.googleapis.com/*",
+    "https://api.openai.com/*",
+    "https://api.anthropic.com/*",
+    "https://api.deepseek.com/*",
+    "https://api.moonshot.cn/*",
+    "https://api.minimax.io/*",
+    "https://api.minimaxi.com/*"
   ],
   "background": {
     "service_worker": "background.js"

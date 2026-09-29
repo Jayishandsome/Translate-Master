@@ -8,8 +8,9 @@ const PROVIDERS = {
   gemini: {
     name: "Gemini",
     model: "gemini-2.0-flash",
-    endpoint: (key, model) =>
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`,
+    // 金鑰放在標頭，不放進網址，避免出現在記錄或錯誤訊息裡
+    endpoint: (model) =>
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
   },
   minimax: {
     name: "MiniMax",
@@ -57,7 +58,10 @@ const LANGUAGES = {
 
 // ---------------------------------------------------------------------------
 
-chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  // 只接受本擴充功能自己的內容腳本與頁面
+  if (sender?.id !== chrome.runtime.id) return false;
+
   if (request.action === "translate") {
     (async () => {
       try {
@@ -119,8 +123,6 @@ async function handleTranslation(selectedText, context) {
   if (targetLang !== data.targetLang && data.targetLang) {
     chrome.storage.sync.set({ targetLang }).catch(() => {});
   }
-
-  console.log("handleTranslation:", { provider, apiKey: apiKey ? "***" : "empty", targetLang });
 
   if (provider === "builtin") {
     throw new Error("請重新整理目前網頁，以啟用 Chrome 內建翻譯。");
@@ -301,10 +303,13 @@ function buildPrompt(selectedText, context, targetLang) {
 async function callGemini(apiKey, prompt) {
   const { model, endpoint } = PROVIDERS.gemini;
   const res = await fetchWithTimeout(
-    endpoint(apiKey, model),
+    endpoint(model),
     {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": apiKey,
+      },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: { temperature: 0.2 },
@@ -390,7 +395,6 @@ async function callMiniMaxAt(endpoint, apiKey, prompt, model) {
 
   const text = extractMiniMaxText(json);
   if (!text) {
-    console.warn("MiniMax empty extract:", endpoint, text_raw.slice(0, 500));
     throw new Error("MiniMax 回應為空");
   }
   return text;
@@ -418,9 +422,7 @@ async function callOpenAICompat(
     },
     15000
   );
-  console.log("MiniMax raw response status:", res.status);
   const text_raw = await res.text();
-  console.log("MiniMax raw response:", text_raw);
   if (!res.ok) {
     let err = {};
     try { err = JSON.parse(text_raw); } catch (_) {}
