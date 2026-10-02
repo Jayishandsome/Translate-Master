@@ -18,7 +18,7 @@
 | 摘要 | 由 manifest 帶入：選取網頁文字即可翻譯，也能右鍵翻譯整頁；預設使用 Chrome 內建模型，免 API 金鑰並在裝置上處理。 |
 | 類別 | 工具（Tools） |
 | 語言 | 中文（繁體） |
-| 商店圖示 | `icons/icon128.png` |
+| 商店圖示 | `store-icon-128.png`（128×128，圖案 96×96、四周各留 16px 透明邊） |
 | 螢幕截圖 | `screenshot-1.png` ～ `screenshot-5.png`（1280×800） |
 | 小型宣傳圖塊 | `promo-small-440x280.png` |
 | 跑馬燈宣傳圖塊（選填） | `promo-marquee-1400x560.png` |
