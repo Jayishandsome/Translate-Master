@@ -479,6 +479,9 @@
   let savedRange = null;
   let isFeatureEnabled = true;
   let activeProvider = "builtin";
+  // 選了 AI 但還沒儲存金鑰時，暫時用 Chrome 內建翻譯；這裡只記哪些服務商有金鑰，不留金鑰本身
+  let storedProvider = "builtin";
+  let providersWithKey = new Set();
   let activeTargetLanguage = "zh-TW";
   let currentResult = "";
   let copyText = "";
@@ -712,18 +715,22 @@
     }
   }
 
+  function keyedProviders(keys) {
+    return new Set(Object.keys(keys || {}).filter((k) => String(keys[k] || "").trim()));
+  }
+
+  function resolveProvider() {
+    activeProvider = storedProvider === "builtin" || providersWithKey.has(storedProvider) ? storedProvider : "builtin";
+  }
+
   async function refreshState() {
     try {
       if (chrome?.storage?.sync) {
         const s = await chrome.storage.sync.get(["isEnabled", "apiProvider", "apiKeys", "targetLang"]);
         isFeatureEnabled = s.isEnabled !== false;
-        const storedProvider = s.apiProvider || "builtin";
-        activeProvider = storedProvider === "builtin" || s.apiKeys?.[storedProvider]
-          ? storedProvider
-          : "builtin";
-        if (activeProvider !== s.apiProvider) {
-          chrome.storage.sync.set({ apiProvider: activeProvider }).catch(() => {});
-        }
+        storedProvider = s.apiProvider || "builtin";
+        providersWithKey = keyedProviders(s.apiKeys);
+        resolveProvider();
         activeTargetLanguage = BUILTIN_TARGETS[s.targetLang] ? s.targetLang : "zh-TW";
       }
     } catch (_) {
@@ -735,7 +742,9 @@
   if (globalThis.chrome?.storage?.onChanged) {
     chrome.storage.onChanged.addListener((changes, areaName) => {
       if (areaName !== "sync") return;
-      if (changes.apiProvider) activeProvider = changes.apiProvider.newValue || "builtin";
+      if (changes.apiProvider) storedProvider = changes.apiProvider.newValue || "builtin";
+      if (changes.apiKeys) providersWithKey = keyedProviders(changes.apiKeys.newValue);
+      if (changes.apiProvider || changes.apiKeys) resolveProvider();
       if (changes.targetLang) {
         activeTargetLanguage = BUILTIN_TARGETS[changes.targetLang.newValue]
           ? changes.targetLang.newValue
@@ -1214,7 +1223,8 @@
 
   // ----------------------------------------------------------------------
   // 全頁翻譯（右鍵選單）
-  // 一律用 Chrome 內建翻譯在裝置上處理：整頁文字量大，不送到 AI 服務商。
+  // 跟著設定走：本機翻譯用 Chrome 內建翻譯在裝置上處理；選了 AI 模型（且已儲存金鑰）
+  // 就把段落分批送到該服務商，一次一批、附上前後段落當上下文。
   // 每個段落的譯文放在 <ctx-tr> 元素裡；「譯文」模式暫時清空原文的文字節點，
   // 「對照」模式保留原文、譯文顯示在下方；「還原」把一切復原。
   // 只翻譯捲動到附近的段落，之後動態載入的內容也會接著翻。
@@ -1256,7 +1266,7 @@
     ${PB} .ctx-pb-btn { flex: none; padding: 0 11px; border: 1px solid var(--pb-ink); }
     ${PB} .ctx-pb-btn.primary { color: var(--pb-seal-text); background: var(--pb-vermilion); border-color: var(--pb-vermilion); }
     ${PB} .ctx-pb-x { flex: none; width: 28px; display: grid; place-items: center; color: var(--pb-ink-2); }
-    ${PB}[data-kind="error"] .ctx-pb-title, ${PB}[data-kind="retry"] .ctx-pb-title { color: var(--pb-vermilion); }
+    ${PB}[data-kind="error"] .ctx-pb-title, ${PB}[data-kind="retry"] .ctx-pb-title, ${PB}[data-kind="failed"] .ctx-pb-title { color: var(--pb-vermilion); }
     @media (hover: hover) and (pointer: fine) {
       ${PB} .ctx-pb-seg button[aria-pressed="false"]:hover, ${PB} .ctx-pb-btn:not(.primary):hover, ${PB} .ctx-pb-x:hover { background: var(--pb-paper-2); color: var(--pb-ink); }
     }
@@ -1278,7 +1288,7 @@
 
   const page = {
     active: false, starting: false, token: 0, mode: "translated",
-    source: "", knownSource: "", target: "", translator: null,
+    engine: "builtin", source: "", knownSource: "", target: "", translator: null, failed: [], lastError: "",
     entries: [], queued: new WeakSet(), pending: new Map(), queue: [], running: 0, done: 0,
     io: null, mo: null, barState: null,
   };
@@ -1338,6 +1348,7 @@
   }
 
   function pump() {
+    if (page.engine !== "builtin") { pumpAI(); return; }
     while (page.running < 3 && page.queue.length) {
       const item = page.queue.shift();
       const token = page.token;
@@ -1355,6 +1366,83 @@
           pump();
         });
     }
+  }
+
+  // AI：把相鄰段落湊成一批（最多 12 段、約 2,400 字），同時最多 2 批在途
+  const AI_BATCH_ITEMS = 12;
+  const AI_BATCH_CHARS = 2400;
+  const AI_CONCURRENCY = 2;
+
+  function takeBatch() {
+    const batch = [];
+    let chars = 0;
+    while (page.queue.length && batch.length < AI_BATCH_ITEMS) {
+      const next = page.queue[0];
+      if (batch.length && chars + next.text.length > AI_BATCH_CHARS) break;
+      batch.push(page.queue.shift());
+      chars += next.text.length;
+    }
+    return batch;
+  }
+
+  async function requestBatch(texts) {
+    const res = await chrome.runtime.sendMessage({ action: "translateBatch", texts, title: document.title.slice(0, 200) });
+    if (!res?.success) throw new Error(res?.error || "翻譯失敗");
+    return res.data;
+  }
+
+  const isRetryable = (message) => /rate|quota|exhaust|overload|busy|逾時|timeout|\b429\b|\b50\d\b/i.test(String(message || ""));
+  const pageErrorText = (error) => {
+    const message = String(error?.message || error || "翻譯失敗");
+    if (/context invalidated|receiving end/i.test(message)) return "擴充功能已更新，請重新整理此頁面";
+    return message.length > 120 ? `${message.slice(0, 120)}…` : message;
+  };
+
+  function pumpAI() {
+    while (page.running < AI_CONCURRENCY && page.queue.length) {
+      const batch = takeBatch();
+      const texts = batch.map((item) => item.text);
+      const token = page.token;
+      page.running++;
+      (async () => {
+        let out;
+        try {
+          out = await requestBatch(texts);
+        } catch (error) {
+          // 額度、忙碌、逾時這類暫時性錯誤，等一下自動再試一次
+          if (token !== page.token || !isRetryable(error?.message)) throw error;
+          await new Promise((resolve) => setTimeout(resolve, 2500));
+          if (token !== page.token) return;
+          out = await requestBatch(texts);
+        }
+        if (token !== page.token) return;
+        batch.forEach((item, i) => {
+          const translated = String(out?.[i] || "").trim();
+          if (translated) applyItem(item, translated);
+        });
+      })()
+        .catch((error) => {
+          if (token !== page.token) return;
+          page.failed.push(...batch);
+          page.lastError = pageErrorText(error);
+        })
+        .finally(() => {
+          if (token !== page.token) return;
+          page.running--;
+          if (page.failed.length) renderBar();
+          else updateProgress();
+          pump();
+        });
+    }
+  }
+
+  function retryFailed() {
+    if (!page.active || !page.failed.length) return;
+    page.queue.unshift(...page.failed);
+    page.failed = [];
+    page.lastError = "";
+    renderBar();
+    pump();
   }
 
   function applyItem(item, translated) {
@@ -1387,18 +1475,21 @@
     page.mo?.disconnect();
     page.queue = [];
     page.running = 0;
+    page.failed = [];
+    page.lastError = "";
     page.pending.clear();
     for (const item of page.entries) {
       item.nodes.forEach((n, i) => { n.data = item.originals[i]; });
       item.el?.remove();
     }
+    const hadTranslations = page.entries.length > 0;
     page.entries = [];
     page.queued = new WeakSet();
     page.done = 0;
     document.documentElement.classList.remove("ctx-page-bi");
     page.translator?.destroy?.();
     page.translator = null;
-    barMessage("info", "已還原原文");
+    barMessage("info", hadTranslations ? "已還原原文" : "已取消全頁翻譯");
   }
 
   // -------- status bar
@@ -1427,35 +1518,44 @@
     renderBar();
   }
 
+  const pageBusy = () => page.running > 0 || page.queue.length > 0;
+  const engineName = () => (page.engine === "builtin" ? "本機翻譯" : PROVIDER_NAMES[page.engine] || "AI 模型");
+
   function progressText() {
-    const busy = page.running > 0 || page.queue.length > 0;
-    return `本機翻譯・${busy ? "翻譯中，" : ""}已翻譯 ${page.done} 段`;
+    const busy = pageBusy();
+    let text = `${engineName()}・${busy ? "翻譯中，" : ""}已翻譯 ${page.done} 段`;
+    if (page.failed.length && !busy) text += `，${page.failed.length} 段失敗：${page.lastError}`;
+    return text;
   }
 
   function renderBar() {
     if (page.active) {
       const target = TARGET_NAMES[activeTargetLanguage] || "繁體中文";
       const source = languageName(page.source);
-      page.barState = { kind: "progress", title: source ? `${source} → ${target}` : `譯為${target}`, sub: progressText() };
+      const showRetry = page.failed.length > 0 && !pageBusy();
+      page.barState = !page.done && showRetry
+        ? { kind: "failed", title: "全頁翻譯失敗", sub: `${engineName()}：${page.lastError}`, retry: true }
+        : { kind: "progress", title: source ? `${source} → ${target}` : `譯為${target}`, sub: progressText(), retry: showRetry };
     }
     const s = page.barState;
     if (!s) return;
     const b = ensureBar();
     clearTimeout(barTimer);
     let actions = "";
-    if (s.kind === "progress") {
+    if (s.kind === "progress" || s.kind === "failed") {
       actions = `
-        <span class="ctx-pb-seg" role="group" aria-label="顯示方式">
+        ${s.retry ? `<button type="button" class="ctx-pb-btn primary" data-act="retryFailed">重試</button>` : ""}
+        ${s.kind === "progress" ? `<span class="ctx-pb-seg" role="group" aria-label="顯示方式">
           <button type="button" data-act="translated" aria-pressed="${page.mode === "translated"}">譯文</button>
           <button type="button" data-act="bilingual" aria-pressed="${page.mode === "bilingual"}">對照</button>
-        </span>
-        <button type="button" class="ctx-pb-btn" data-act="restore">還原</button>`;
+        </span>` : ""}
+        <button type="button" class="ctx-pb-btn" data-act="restore">${s.kind === "failed" ? "取消" : "還原"}</button>`;
     } else if (s.kind === "download" || s.kind === "retry") {
       actions = `<button type="button" class="ctx-pb-btn primary" data-act="download">${s.kind === "retry" ? "再試一次" : "下載並翻譯"}</button>`;
     }
     b.innerHTML = `
       <span class="ctx-pb-seal" aria-hidden="true">文</span>
-      <span class="ctx-pb-text"><span class="ctx-pb-title">${escapeHtml(s.title)}</span>${s.sub ? `<span class="ctx-pb-sub">${escapeHtml(s.sub)}</span>` : ""}</span>
+      <span class="ctx-pb-text"><span class="ctx-pb-title">${escapeHtml(s.title)}</span>${s.sub ? `<span class="ctx-pb-sub" title="${escapeHtml(s.sub)}">${escapeHtml(s.sub)}</span>` : ""}</span>
       ${actions}
       <button type="button" class="ctx-pb-x" data-act="close" title="關閉" aria-label="關閉">${ICONS.close}</button>`;
     b.dataset.kind = s.kind;
@@ -1474,16 +1574,17 @@
     e.stopPropagation();
     if (act === "close") hideBar();
     else if (act === "restore") restorePage();
+    else if (act === "retryFailed") retryFailed();
     else if (act === "download") startPageTranslation({ gesture: true, source: page.knownSource });
     else if (act === "translated" || act === "bilingual") setMode(act);
   }
 
   // -------- start
-  async function detectPageLanguage(sample, gesture) {
+  async function detectPageLanguage(sample, gesture, allowDownload = true) {
     try {
       if ("LanguageDetector" in globalThis) {
         const availability = await LanguageDetector.availability();
-        if (availability === "available" || gesture || navigator.userActivation?.isActive) {
+        if (availability === "available" || (allowDownload && (gesture || navigator.userActivation?.isActive))) {
           // 偵測模型若要下載，顯示進度；卡住超過 15 秒就改用網頁標示的語言，不讓狀態列一直停在準備中
           const detecting = (async () => {
             const detector = await LanguageDetector.create({
@@ -1512,8 +1613,10 @@
     page.starting = true;
     try {
       await refreshState();
-      if (!("Translator" in globalThis)) {
-        barMessage("error", "全頁翻譯需要 Chrome 內建翻譯", "請使用桌面版 Chrome 138 以上。");
+      // 設定選了 AI 模型且已儲存金鑰，就用 AI；否則用 Chrome 內建翻譯
+      const engine = activeProvider;
+      if (engine === "builtin" && !("Translator" in globalThis)) {
+        barMessage("error", "全頁翻譯需要 Chrome 內建翻譯", "請使用桌面版 Chrome 138 以上，或在設定改用 AI 模型。");
         return;
       }
       page.target = BUILTIN_TARGETS[activeTargetLanguage] || "zh-Hant";
@@ -1525,8 +1628,19 @@
         barMessage("info", "這個頁面沒有需要翻譯的文字");
         return;
       }
-      // 從下載提示按進來時已經知道語言，直接建立翻譯器，趁使用者這一下點擊還有效
       const sample = items.slice(0, 60).map((i) => i.text).join("\n").slice(0, 2500);
+      if (engine !== "builtin") {
+        // AI 會自己判斷原文語言；這裡只在不必下載模型時偵測，用來顯示方向、略過已是目標語言的頁面
+        const source = await detectPageLanguage(sample, false, false);
+        if (source && source === page.target) {
+          barMessage("info", `這個頁面已經是${targetName}`);
+          return;
+        }
+        beginPage(engine, source, items);
+        return;
+      }
+
+      // 從下載提示按進來時已經知道語言，直接建立翻譯器，趁使用者這一下點擊還有效
       const source = knownSource || await detectPageLanguage(sample, gesture);
       if (!source) {
         if (!gesture) barMessage("download", "需要先準備語言偵測", "按一下開始，準備好後就會翻譯。");
@@ -1591,46 +1705,53 @@
         return;
       }
 
-      page.active = true;
-      page.source = source;
-      page.token++;
-      page.done = 0;
-      page.mode = "translated";
-      document.documentElement.classList.remove("ctx-page-bi");
-      page.io = new IntersectionObserver((entries) => {
-        for (const entry of entries) {
-          if (!entry.isIntersecting) continue;
-          page.io.unobserve(entry.target);
-          const item = page.pending.get(entry.target);
-          page.pending.delete(entry.target);
-          if (item) page.queue.push(item);
-        }
-        pump();
-        updateProgress();
-      }, { rootMargin: "700px 0px" });
-      watch(items);
-
-      // 之後動態載入的內容（無限捲動、單頁應用）也接著翻
-      let added = [];
-      let rescanTimer = null;
-      page.mo = new MutationObserver((mutations) => {
-        for (const m of mutations) {
-          for (const n of m.addedNodes) {
-            if (n.nodeType === 1 && n.localName !== "ctx-tr" && !n.closest?.(`#${IDS.bar}, #${IDS.pop}, #${IDS.btn}`)) added.push(n);
-          }
-        }
-        if (!added.length) return;
-        clearTimeout(rescanTimer);
-        rescanTimer = setTimeout(() => {
-          const roots = added.filter((n) => n.isConnected); added = [];
-          if (page.active) roots.forEach((root) => watch(collectBlocks(root)));
-        }, 500);
-      });
-      page.mo.observe(document.body, { childList: true, subtree: true });
-      renderBar();
+      beginPage("builtin", source, items);
     } finally {
       page.starting = false;
     }
+  }
+
+  function beginPage(engine, source, items) {
+    page.engine = engine;
+    page.active = true;
+    page.source = source;
+    page.token++;
+    page.done = 0;
+    page.failed = [];
+    page.lastError = "";
+    page.mode = "translated";
+    document.documentElement.classList.remove("ctx-page-bi");
+    page.io = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        page.io.unobserve(entry.target);
+        const item = page.pending.get(entry.target);
+        page.pending.delete(entry.target);
+        if (item) page.queue.push(item);
+      }
+      pump();
+      updateProgress();
+    }, { rootMargin: "700px 0px" });
+    watch(items);
+
+    // 之後動態載入的內容（無限捲動、單頁應用）也接著翻
+    let added = [];
+    let rescanTimer = null;
+    page.mo = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        for (const n of m.addedNodes) {
+          if (n.nodeType === 1 && n.localName !== "ctx-tr" && !n.closest?.(`#${IDS.bar}, #${IDS.pop}, #${IDS.btn}`)) added.push(n);
+        }
+      }
+      if (!added.length) return;
+      clearTimeout(rescanTimer);
+      rescanTimer = setTimeout(() => {
+        const roots = added.filter((n) => n.isConnected); added = [];
+        if (page.active) roots.forEach((root) => watch(collectBlocks(root)));
+      }, 500);
+    });
+    page.mo.observe(document.body, { childList: true, subtree: true });
+    renderBar();
   }
 
   if (globalThis.chrome?.runtime?.onMessage) {
