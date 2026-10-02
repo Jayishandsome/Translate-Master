@@ -33,13 +33,13 @@ const AI_PROVIDERS = {
   },
   kimi: {
     vendor: "Moonshot",
-    placeholder: "貼上 Moonshot API 金鑰",
-    keyUrl: "https://platform.moonshot.cn/",
+    placeholder: "貼上 Kimi API 金鑰",
+    keyUrl: "https://platform.kimi.ai/",
   },
   minimax: {
     vendor: "MiniMax",
     placeholder: "貼上 MiniMax API 金鑰",
-    keyUrl: "https://platform.minimaxi.com/",
+    keyUrl: "https://platform.minimax.io/",
   },
 };
 

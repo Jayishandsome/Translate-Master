@@ -1286,9 +1286,27 @@
     `#${IDS.btn}`, `#${IDS.pop}`, `#${IDS.bar}`,
   ].join(",");
 
+  // AI 模式下不翻網站本身的框架：選單、導覽、頁首頁尾、側欄。這些每頁都一樣，翻了只是花錢。
+  // 例外：文章（article）裡的側欄、主內容（article / main）裡的頁首頁尾，通常是內容的一部分，照樣翻。
+  const AI_SKIP_ALWAYS = [
+    "nav", "[role='navigation']", "[role='menu']", "[role='menubar']", "[role='search']",
+    "[aria-hidden='true']", ".sidebar", "#sidebar", ".breadcrumb", ".breadcrumbs",
+  ].join(",");
+  const AI_SKIP_OUTSIDE_ARTICLE = "aside, [role='complementary']";
+  const AI_SKIP_OUTSIDE_MAIN = "header, footer, [role='banner'], [role='contentinfo']";
+
+  function isSiteChrome(el) {
+    if (el.closest(AI_SKIP_ALWAYS)) return true;
+    const side = el.closest(AI_SKIP_OUTSIDE_ARTICLE);
+    if (side && !side.closest("article")) return true;
+    const frame = el.closest(AI_SKIP_OUTSIDE_MAIN);
+    return !!frame && !frame.closest("article, main, [role='main']");
+  }
+
   const page = {
     active: false, starting: false, token: 0, mode: "translated",
     engine: "builtin", source: "", knownSource: "", target: "", translator: null, failed: [], lastError: "",
+    inflight: new Map(),
     entries: [], queued: new WeakSet(), pending: new Map(), queue: [], running: 0, done: 0,
     io: null, mo: null, barState: null,
   };
@@ -1311,7 +1329,7 @@
   }
 
   // 把文字節點依「最近的區塊元素」分組，每組就是一個翻譯單位（通常是一個段落）
-  function collectBlocks(root) {
+  function collectBlocks(root, { fallback = false } = {}) {
     const groups = new Map();
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
       acceptNode(node) {
@@ -1329,14 +1347,17 @@
       groups.get(block).push(node);
     }
     const items = [];
+    const chromeItems = [];
+    const skipChrome = page.engine !== "builtin";
     for (const [block, nodes] of groups) {
       const text = nodes.map((n) => n.data).join("").replace(/\s+/g, " ").trim();
       if (text.length < 2 || !/\p{L}/u.test(text)) continue;
       // 目標是中文時，已經是中文的段落就不用翻
       if (page.target.startsWith("zh") && /^[\p{Script=Han}\p{P}\p{S}\p{N}\s]+$/u.test(text)) continue;
-      items.push({ block, nodes, text });
+      (skipChrome && isSiteChrome(block) ? chromeItems : items).push({ block, nodes, text });
     }
-    return items;
+    // 整頁都被當成框架（結構很特別的網站）時，還是照常翻，免得什麼都沒翻
+    return fallback && !items.length ? chromeItems : items;
   }
 
   function watch(items) {
@@ -1347,15 +1368,43 @@
     }
   }
 
+  // 翻過的段落記在這一頁的記憶體裡：還原後再翻、或同一段文字重複出現，都直接套用，不再送出請求。
+  // 換了翻譯引擎或譯文語言就分開記。重新整理頁面後會清空。
+  const pageCache = new Map();
+  const PAGE_CACHE_LIMIT = 3000;
+  const cacheKey = (engine, target, text) => `${engine}\u0001${target}\u0001${text}`;
+
+  function cacheSet(engine, target, text, translated) {
+    if (pageCache.size >= PAGE_CACHE_LIMIT) pageCache.delete(pageCache.keys().next().value);
+    pageCache.set(cacheKey(engine, target, text), translated);
+  }
+
+  function applyCached() {
+    if (!page.queue.length) return;
+    const rest = [];
+    for (const item of page.queue) {
+      const cached = pageCache.get(cacheKey(page.engine, page.target, item.text));
+      if (cached) applyItem(item, cached);
+      else rest.push(item);
+    }
+    if (rest.length !== page.queue.length) {
+      page.queue = rest;
+      updateProgress();
+    }
+  }
+
   function pump() {
+    applyCached();
     if (page.engine !== "builtin") { pumpAI(); return; }
     while (page.running < 3 && page.queue.length) {
       const item = page.queue.shift();
       const token = page.token;
+      const { engine, target } = page;
       page.running++;
       page.translator.translate(item.text)
         .then((out) => {
           out = String(out || "").trim();
+          if (out) cacheSet(engine, target, item.text, out);
           if (token === page.token && out) applyItem(item, out);
         })
         .catch(() => {})
@@ -1373,16 +1422,24 @@
   const AI_BATCH_CHARS = 2400;
   const AI_CONCURRENCY = 2;
 
+  // 回傳這一批要送出的文字（不重複）；同樣的文字已經在途中的，就排在那一批後面等結果
   function takeBatch() {
-    const batch = [];
+    const texts = [];
     let chars = 0;
-    while (page.queue.length && batch.length < AI_BATCH_ITEMS) {
+    while (page.queue.length && texts.length < AI_BATCH_ITEMS) {
       const next = page.queue[0];
-      if (batch.length && chars + next.text.length > AI_BATCH_CHARS) break;
-      batch.push(page.queue.shift());
+      const waiting = page.inflight.get(next.text);
+      if (waiting) {
+        waiting.push(page.queue.shift());
+        continue;
+      }
+      if (texts.length && chars + next.text.length > AI_BATCH_CHARS) break;
+      page.queue.shift();
+      page.inflight.set(next.text, [next]);
+      texts.push(next.text);
       chars += next.text.length;
     }
-    return batch;
+    return texts;
   }
 
   async function requestBatch(texts) {
@@ -1400,9 +1457,15 @@
 
   function pumpAI() {
     while (page.running < AI_CONCURRENCY && page.queue.length) {
-      const batch = takeBatch();
-      const texts = batch.map((item) => item.text);
+      const texts = takeBatch();
+      if (!texts.length) continue;
       const token = page.token;
+      const { engine, target } = page;
+      const takeWaiting = (text) => {
+        const items = page.inflight.get(text) || [];
+        page.inflight.delete(text);
+        return items;
+      };
       page.running++;
       (async () => {
         let out;
@@ -1415,15 +1478,21 @@
           if (token !== page.token) return;
           out = await requestBatch(texts);
         }
-        if (token !== page.token) return;
-        batch.forEach((item, i) => {
+        // 已經付費取得的譯文，就算使用者中途按了還原也先記起來
+        texts.forEach((text, i) => {
           const translated = String(out?.[i] || "").trim();
-          if (translated) applyItem(item, translated);
+          if (translated) cacheSet(engine, target, text, translated);
+        });
+        if (token !== page.token) return;
+        texts.forEach((text, i) => {
+          const translated = String(out?.[i] || "").trim();
+          const items = takeWaiting(text);
+          if (translated) items.forEach((item) => applyItem(item, translated));
         });
       })()
         .catch((error) => {
           if (token !== page.token) return;
-          page.failed.push(...batch);
+          texts.forEach((text) => page.failed.push(...takeWaiting(text)));
           page.lastError = pageErrorText(error);
         })
         .finally(() => {
@@ -1477,6 +1546,7 @@
     page.running = 0;
     page.failed = [];
     page.lastError = "";
+    page.inflight = new Map();
     page.pending.clear();
     for (const item of page.entries) {
       item.nodes.forEach((n, i) => { n.data = item.originals[i]; });
@@ -1620,10 +1690,11 @@
         return;
       }
       page.target = BUILTIN_TARGETS[activeTargetLanguage] || "zh-Hant";
+      page.engine = engine;
       const targetName = TARGET_NAMES[activeTargetLanguage] || "繁體中文";
       barMessage("working", "正在準備全頁翻譯…");
 
-      const items = collectBlocks(document.body);
+      const items = collectBlocks(document.body, { fallback: true });
       if (!items.length) {
         barMessage("info", "這個頁面沒有需要翻譯的文字");
         return;
@@ -1719,6 +1790,7 @@
     page.done = 0;
     page.failed = [];
     page.lastError = "";
+    page.inflight = new Map();
     page.mode = "translated";
     document.documentElement.classList.remove("ctx-page-bi");
     page.io = new IntersectionObserver((entries) => {

@@ -1,5 +1,7 @@
 // 隨選翻譯 — 模型 API 路由
 
+// 各家都選目前最便宜、仍在服務、而且能關掉（或壓到最低）「思考」的模型：
+// 翻譯不需要推理，關掉可以省下思考 token，也快很多。
 const PROVIDERS = {
   builtin: {
     name: "Chrome 內建翻譯",
@@ -7,37 +9,53 @@ const PROVIDERS = {
   },
   gemini: {
     name: "Gemini",
-    model: "gemini-2.0-flash",
+    model: "gemini-3.5-flash-lite",
     // 金鑰放在標頭，不放進網址，避免出現在記錄或錯誤訊息裡
     endpoint: (model) =>
       `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
   },
+  // 以下都走 OpenAI 相容的 chat/completions。
+  // endpoints 依序嘗試：金鑰屬於另一個站台（中國站／國際站）時會被拒，就換下一個。
   minimax: {
     name: "MiniMax",
-    model: "MiniMax-M2.5",
+    model: "MiniMax-M3",
     endpoints: [
-      "https://api.minimax.io/v1/text/chatcompletion_v2",
-      "https://api.minimaxi.com/v1/text/chatcompletion_v2",
+      "https://api.minimax.io/v1/chat/completions",
+      "https://api.minimax.cn/v1/chat/completions",
+      "https://api.minimaxi.com/v1/chat/completions",
     ],
+    body: { thinking: { type: "disabled" } },
+    maxTokensField: "max_completion_tokens",
+    temperature: 0.2,
   },
   kimi: {
     name: "Kimi",
-    model: "moonshot-v1-8k",
-    endpoint: () => "https://api.moonshot.cn/v1/chat/completions",
+    model: "kimi-k2.6",
+    endpoints: [
+      "https://api.moonshot.cn/v1/chat/completions",
+      "https://api.moonshot.ai/v1/chat/completions",
+    ],
+    body: { thinking: { type: "disabled" } },
+    maxTokensField: "max_tokens",
+    // K2.6 的 temperature 是固定值，送其他值會報錯，所以不送
+    temperature: null,
   },
   openai: {
     name: "OpenAI",
-    model: "gpt-4o-mini",
-    endpoint: () => "https://api.openai.com/v1/chat/completions",
+    model: "gpt-6-luna",
+    endpoints: ["https://api.openai.com/v1/chat/completions"],
+    // 推理模型：推理設成 none；這類模型的輸出上限要用 max_completion_tokens，也不送 temperature
+    body: { reasoning_effort: "none" },
+    maxTokensField: "max_completion_tokens",
+    temperature: null,
   },
   deepseek: {
     name: "DeepSeek",
-    model: "deepseek-v4-flash",
-    endpoint: () => "https://api.deepseek.com/chat/completions",
-    requestOptions: {
-      thinking: { type: "disabled" },
-      max_tokens: 1024,
-    },
+    model: "deepseek-flash",
+    endpoints: ["https://api.deepseek.com/chat/completions"],
+    body: { thinking: { type: "disabled" } },
+    maxTokensField: "max_tokens",
+    temperature: 0.2,
   },
   claude: {
     name: "Claude",
@@ -45,6 +63,9 @@ const PROVIDERS = {
     endpoint: () => "https://api.anthropic.com/v1/messages",
   },
 };
+
+// 選字翻譯的輸出上限；全頁翻譯一批的上限見 BATCH_OPTIONS
+const SINGLE_MAX_TOKENS = 2048;
 
 const LANGUAGES = {
   "zh-TW": "Traditional Chinese (繁體中文)",
@@ -183,13 +204,10 @@ function callProvider(provider, apiKey, prompt, opts = {}) {
     case "gemini":
       return callGemini(apiKey, prompt, opts);
     case "minimax":
-      return callMiniMax(apiKey, prompt, opts);
     case "kimi":
-      return callOpenAICompat(PROVIDERS.kimi, apiKey, prompt, opts);
     case "openai":
-      return callOpenAICompat(PROVIDERS.openai, apiKey, prompt, opts);
     case "deepseek":
-      return callOpenAICompat(PROVIDERS.deepseek, apiKey, prompt, opts);
+      return callOpenAICompat(provider, apiKey, prompt, opts);
     case "claude":
       return callClaude(apiKey, prompt, opts);
     default:
@@ -210,7 +228,7 @@ async function handleTranslation(selectedText, context) {
 // 回傳格式不對時把這批拆成兩半重送，拆到只剩一段就直接用模型的回覆。
 
 const BATCH_LIMITS = { items: 40, itemChars: 6000 };
-const BATCH_OPTIONS = { maxTokens: 4096, timeout: 45000, json: true };
+const BATCH_OPTIONS = { maxTokens: 4096, timeout: 45000 };
 
 async function handleBatchTranslation(texts, title) {
   if (!Array.isArray(texts) || !texts.length) throw new Error("沒有要翻譯的段落");
@@ -318,41 +336,6 @@ function stripThinkingTags(text) {
     .trim();
 }
 
-function extractMiniMaxText(json) {
-  if (
-    json?.base_resp?.status_code !== undefined &&
-    json?.base_resp?.status_code !== 0
-  ) {
-    throw new Error(
-      `MiniMax API 錯誤 ${json.base_resp.status_code}: ${
-        json.base_resp.status_msg || "未知錯誤"
-      }`
-    );
-  }
-
-  const msg = json?.choices?.[0]?.message;
-  const delta = json?.choices?.[0]?.delta;
-
-  const candidates = [
-    stripThinkingTags(extractMessageText(msg?.content)),
-    stripThinkingTags(extractMessageText(delta?.content)),
-    stripThinkingTags(json?.reply || json?.text || ""),
-  ];
-
-  // reasoning_details 是思考過程，僅在沒有正式回覆時才嘗試
-  if (!candidates.some((t) => t.trim()) && Array.isArray(msg?.reasoning_details)) {
-    candidates.push(
-      ...msg.reasoning_details.map((d) => stripThinkingTags(d?.text || ""))
-    );
-  }
-
-  for (const text of candidates) {
-    if (text.trim()) return text.trim();
-  }
-
-  return "";
-}
-
 /** 單字 / 極短詞組：需要上下文解釋 */
 function isWordLookup(text) {
   const s = String(text || "").trim();
@@ -455,10 +438,8 @@ async function callGemini(apiKey, prompt, opts = {}) {
       },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.2,
-          ...(opts.json ? { responseMimeType: "application/json" } : {}),
-        },
+        // Gemini 3 系列建議 temperature 保持預設；思考壓到最低
+        generationConfig: { thinkingConfig: { thinkingLevel: "minimal" } },
       }),
     },
     opts.timeout || 15000
@@ -468,7 +449,7 @@ async function callGemini(apiKey, prompt, opts = {}) {
     throw new Error(err.error?.message || `Gemini API 錯誤 ${res.status}`);
   }
   const json = await res.json();
-  const parts = json?.candidates?.[0]?.content?.parts || [];
+  const parts = (json?.candidates?.[0]?.content?.parts || []).filter((p) => !p?.thought);
   const text = parts
     .map((p) => p?.text || extractMessageText(p))
     .join("")
@@ -484,121 +465,69 @@ async function callGemini(apiKey, prompt, opts = {}) {
   return text;
 }
 
-async function callMiniMax(apiKey, prompt, opts = {}) {
-  const { model, endpoints } = PROVIDERS.minimax;
-  let lastError = new Error("MiniMax 回應為空");
+// 記住每家最後一次成功的站台，下次直接從那裡開始
+const preferredEndpoint = {};
 
-  for (const endpoint of endpoints) {
+async function callOpenAICompat(provider, apiKey, prompt, opts = {}) {
+  const { name, model, endpoints, body = {}, maxTokensField, temperature } = PROVIDERS[provider];
+  const payload = JSON.stringify({
+    model,
+    messages: [{ role: "user", content: prompt }],
+    ...(temperature === null ? {} : { temperature }),
+    ...body,
+    [maxTokensField]: opts.maxTokens || SINGLE_MAX_TOKENS,
+  });
+  const start = Math.max(0, endpoints.indexOf(preferredEndpoint[provider]));
+  const order = [...endpoints.slice(start), ...endpoints.slice(0, start)];
+
+  let lastError = null;
+  for (const endpoint of order) {
+    let res;
     try {
-      const text = await callMiniMaxAt(endpoint, apiKey, prompt, model, opts);
-      if (text) return text;
-      lastError = new Error("MiniMax 回應為空");
+      res = await fetchWithTimeout(
+        endpoint,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: payload,
+        },
+        opts.timeout || 20000
+      );
     } catch (error) {
       lastError = error;
+      if (error?.message === "請求逾時") throw error;
+      continue; // 連不上這個站台，試下一個
     }
-  }
-
-  throw lastError;
-}
-
-async function callMiniMaxAt(endpoint, apiKey, prompt, model, opts = {}) {
-  const res = await fetchWithTimeout(
-    endpoint,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        messages: [{ role: "user", name: "user", content: prompt }],
-        temperature: 0.7,
-        reasoning_split: true,
-      }),
-    },
-    opts.timeout ? opts.timeout + 15000 : 20000
-  );
-
-  const text_raw = await res.text();
-  if (!res.ok) {
-    let err = {};
-    try {
-      err = JSON.parse(text_raw);
-    } catch (_) {}
-    const baseMsg = err?.base_resp?.status_msg || err?.error?.message || err?.message;
-    throw new Error(
-      baseMsg || `MiniMax API 錯誤 ${res.status}: ${text_raw.slice(0, 200)}`
+    const textRaw = await res.text();
+    let json = null;
+    try { json = JSON.parse(textRaw); } catch (_) {}
+    const errorMessage =
+      json?.error?.message || json?.message || json?.base_resp?.status_msg || "";
+    if (!res.ok) {
+      lastError = new Error(errorMessage || `${name} API 錯誤 ${res.status}: ${textRaw.slice(0, 200)}`);
+      // 401/403/404 多半是金鑰屬於另一個站台，換下一個；其他錯誤（額度、格式）直接回報
+      if ([401, 403, 404].includes(res.status)) continue;
+      throw lastError;
+    }
+    if (json?.base_resp?.status_code !== undefined && json.base_resp.status_code !== 0) {
+      lastError = new Error(`${name} API 錯誤 ${json.base_resp.status_code}: ${errorMessage || "未知錯誤"}`);
+      if (json.base_resp.status_code === 1004) continue; // MiniMax：金鑰驗證失敗
+      throw lastError;
+    }
+    if (!json) throw new Error(`${name} 回應格式錯誤: ${textRaw.slice(0, 200)}`);
+    const text = stripThinkingTags(
+      extractMessageText(json?.choices?.[0]?.message?.content) ||
+        json?.choices?.[0]?.text ||
+        ""
     );
+    if (!text) throw new Error(`${name} 回應為空`);
+    preferredEndpoint[provider] = endpoint;
+    return text.trim();
   }
-
-  let json;
-  try {
-    json = JSON.parse(text_raw);
-  } catch (_) {
-    throw new Error(`MiniMax 回應格式錯誤: ${text_raw.slice(0, 200)}`);
-  }
-
-  const text = extractMiniMaxText(json);
-  if (!text) {
-    throw new Error("MiniMax 回應為空");
-  }
-  return text;
-}
-
-async function callOpenAICompat(
-  { model, endpoint, requestOptions = {} },
-  apiKey,
-  prompt,
-  opts = {}
-) {
-  const res = await fetchWithTimeout(
-    endpoint(),
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.2,
-        ...requestOptions,
-        ...(opts.maxTokens ? { max_tokens: opts.maxTokens } : {}),
-      }),
-    },
-    opts.timeout || 15000
-  );
-  const text_raw = await res.text();
-  if (!res.ok) {
-    let err = {};
-    try { err = JSON.parse(text_raw); } catch (_) {}
-    throw new Error(
-      err.error?.message || err.message || `API 錯誤 ${res.status}: ${text_raw.slice(0, 200)}`
-    );
-  }
-  const json = JSON.parse(text_raw);
-  // MiniMax 錯誤格式：base_resp.status_code
-  if (json?.base_resp?.status_code !== undefined && json?.base_resp?.status_code !== 0) {
-    throw new Error(`MiniMax API 錯誤 ${json?.base_resp?.status_code}: ${json?.base_resp?.status_msg || "未知錯誤"}`);
-  }
-  // 各家 OpenAI 相容 API 可能的多種回應格式
-  const text =
-    extractMessageText(json?.choices?.[0]?.message?.content) ||
-    json?.choices?.[0]?.text ||
-    extractMessageText(json?.data?.choices?.[0]?.message?.content) ||
-    json?.data?.text ||
-    json?.text ||
-    json?.output?.text ||
-    json?.result?.text ||
-    json?.response?.text ||
-    extractMessageText(json?.reply?.content) ||
-    extractMessageText(json?.choices?.[0]?.content) ||
-    extractMessageText(json?.data?.[0]?.message?.content) ||
-    "";
-  if (!text) throw new Error(`API 回應為空，回應: ${text_raw.slice(0, 300)}`);
-  return text.trim();
+  throw lastError || new Error(`${name} 無法連線`);
 }
 
 async function callClaude(apiKey, prompt, opts = {}) {
@@ -615,7 +544,7 @@ async function callClaude(apiKey, prompt, opts = {}) {
       },
       body: JSON.stringify({
         model,
-        max_tokens: opts.maxTokens || 1024,
+        max_tokens: opts.maxTokens || SINGLE_MAX_TOKENS,
         messages: [{ role: "user", content: prompt }],
       }),
     },
