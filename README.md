@@ -78,6 +78,8 @@ API 金鑰只會儲存在 `chrome.storage.sync`，不會傳送給所選模型服
   - `activeTab` + `scripting`：安裝或更新擴充功能前就已開啟的分頁還沒有內容腳本，按下「全頁翻譯」時才把翻譯程式注入到「目前這一頁」。`activeTab` 只在你親手點選選單後、對該分頁暫時有效，不會讓擴充功能讀取其他分頁。
   - 內容腳本在所有網頁上注入選字按鈕；背景程式只能連線到上表列出的 API 網域。
 
+完整的隱私權政策：https://jayishandsome.github.io/Translate-Master/privacy.html
+
 發現安全性問題時，請在 GitHub 以私下回報（Security → Report a vulnerability）的方式聯絡，不要開公開 issue。
 
 ## 常見問題

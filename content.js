@@ -1639,6 +1639,8 @@
   }
 
   function onBarClick(e) {
+    // 只接受使用者真正的點擊，網頁上的程式不能代按（例如「重試」會送出請求）
+    if (!e.isTrusted) return;
     const act = e.target.closest("[data-act]")?.dataset.act;
     if (!act) return;
     e.stopPropagation();
