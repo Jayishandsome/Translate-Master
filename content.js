@@ -5,6 +5,8 @@
     style: "ctx-trans-style",
     btn: "ctx-trans-floating-btn",
     pop: "ctx-trans-popover",
+    bar: "ctx-page-bar",
+    pageStyle: "ctx-page-style",
   };
   const B = `#${IDS.btn}`;
   const P = `#${IDS.pop}`;
@@ -1042,7 +1044,7 @@
     const target = elementOfTarget(e.target);
     if (!target) return;
     // 點到自己的浮窗就跳過
-    if (target.closest(`#${IDS.btn}`) || target.closest(`#${IDS.pop}`)) return;
+    if (target.closest(`#${IDS.btn}`) || target.closest(`#${IDS.pop}`) || target.closest(`#${IDS.bar}`)) return;
 
     await refreshState();
     if (!isFeatureEnabled) return;
@@ -1209,6 +1211,438 @@
 
   // 防止氣泡內點擊冒泡關掉自己
   pop.addEventListener("mousedown", (e) => e.stopPropagation());
+
+  // ----------------------------------------------------------------------
+  // 全頁翻譯（右鍵選單）
+  // 一律用 Chrome 內建翻譯在裝置上處理：整頁文字量大，不送到 AI 服務商。
+  // 每個段落的譯文放在 <ctx-tr> 元素裡；「譯文」模式暫時清空原文的文字節點，
+  // 「對照」模式保留原文、譯文顯示在下方；「還原」把一切復原。
+  // 只翻譯捲動到附近的段落，之後動態載入的內容也會接著翻。
+  // ----------------------------------------------------------------------
+  const PB = `#${IDS.bar}`;
+  const pageStyle = document.createElement("style");
+  pageStyle.id = IDS.pageStyle;
+  pageStyle.textContent = `
+    ctx-tr { display: inline; font: inherit; color: inherit; letter-spacing: inherit; text-transform: none; }
+    html.ctx-page-bi ctx-tr {
+      display: block; margin: .35em 0 0; padding: 0 0 0 .65em;
+      border-left: 2px solid rgba(200, 55, 45, .55); opacity: .92;
+    }
+
+    ${PB} {
+      --pb-paper: #fbf8f1; --pb-paper-2: #efe9dc; --pb-ink: #1b1a17; --pb-ink-2: #5c574d;
+      --pb-vermilion: #c8372d; --pb-seal-text: #fbf7ef; --pb-focus: rgba(200, 55, 45, .38);
+      all: initial; position: fixed; z-index: 2147483646; right: 16px; bottom: 16px;
+      display: none; align-items: center; gap: 10px; box-sizing: border-box;
+      max-width: calc(100vw - 32px); min-height: 46px; padding: 7px 7px 7px 10px;
+      color: var(--pb-ink); background: var(--pb-paper); border: 1px solid var(--pb-ink); border-radius: 4px;
+      box-shadow: 0 1px 0 rgba(27, 26, 23, .06), 0 16px 34px -16px rgba(60, 40, 20, .5);
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+      font-size: 12.5px; line-height: 1.35; -webkit-font-smoothing: antialiased;
+    }
+    ${PB} * { box-sizing: border-box; margin: 0; padding: 0; border: 0; background: none; font: inherit; color: inherit; letter-spacing: normal; text-transform: none; }
+    ${PB} svg { display: block; width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+    ${PB} .ctx-pb-seal { flex: none; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 3px; transform: rotate(-4deg);
+      color: var(--pb-seal-text); background: var(--pb-vermilion);
+      font: 900 14px/1 "Iowan Old Style", "Songti TC", "Noto Serif TC", "PMingLiU", serif; }
+    ${PB} .ctx-pb-text { display: flex; flex-direction: column; min-width: 0; }
+    ${PB} .ctx-pb-title { font: 700 13.5px/1.3 "Iowan Old Style", "Songti TC", "Noto Serif TC", "PMingLiU", serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    ${PB} .ctx-pb-sub { margin-top: 1px; color: var(--pb-ink-2); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    ${PB} button { cursor: pointer; height: 28px; border-radius: 3px; white-space: nowrap; font-weight: 600; }
+    ${PB} button:focus-visible { outline: 3px solid var(--pb-focus); outline-offset: 1px; }
+    ${PB} .ctx-pb-seg { flex: none; display: flex; border: 1px solid var(--pb-ink); border-radius: 3px; overflow: hidden; }
+    ${PB} .ctx-pb-seg button { border-radius: 0; padding: 0 10px; height: 26px; }
+    ${PB} .ctx-pb-seg button[aria-pressed="true"] { color: var(--pb-paper); background: var(--pb-ink); }
+    ${PB} .ctx-pb-btn { flex: none; padding: 0 11px; border: 1px solid var(--pb-ink); }
+    ${PB} .ctx-pb-btn.primary { color: var(--pb-seal-text); background: var(--pb-vermilion); border-color: var(--pb-vermilion); }
+    ${PB} .ctx-pb-x { flex: none; width: 28px; display: grid; place-items: center; color: var(--pb-ink-2); }
+    ${PB}[data-kind="error"] .ctx-pb-title, ${PB}[data-kind="retry"] .ctx-pb-title { color: var(--pb-vermilion); }
+    @media (hover: hover) and (pointer: fine) {
+      ${PB} .ctx-pb-seg button[aria-pressed="false"]:hover, ${PB} .ctx-pb-btn:not(.primary):hover, ${PB} .ctx-pb-x:hover { background: var(--pb-paper-2); color: var(--pb-ink); }
+    }
+    @media (prefers-color-scheme: dark) {
+      ${PB} { --pb-paper: #211f1b; --pb-paper-2: #2e2b26; --pb-ink: #ede6d8; --pb-ink-2: #b4ac9c;
+        --pb-vermilion: #e0604c; --pb-seal-text: #1a1815; --pb-focus: rgba(238, 122, 102, .45);
+        box-shadow: 0 16px 34px -14px rgba(0, 0, 0, .75); }
+      html.ctx-page-bi ctx-tr { border-left-color: rgba(238, 122, 102, .6); }
+    }
+  `;
+  (document.head || document.documentElement).appendChild(pageStyle);
+
+  const PAGE_SKIP = [
+    "script", "style", "noscript", "template", "textarea", "input", "select", "option", "button",
+    "code", "pre", "kbd", "samp", "svg", "math", "iframe", "canvas", "video", "audio", "ctx-tr",
+    "[contenteditable='']", "[contenteditable='true']", "[translate='no']", ".notranslate",
+    `#${IDS.btn}`, `#${IDS.pop}`, `#${IDS.bar}`,
+  ].join(",");
+
+  const page = {
+    active: false, starting: false, token: 0, mode: "translated",
+    source: "", knownSource: "", target: "", translator: null,
+    entries: [], queued: new WeakSet(), pending: new Map(), queue: [], running: 0, done: 0,
+    io: null, mo: null, barState: null,
+  };
+  const displayCache = new WeakMap();
+
+  function isBlockLevel(el) {
+    if (displayCache.has(el)) return displayCache.get(el);
+    const d = getComputedStyle(el).display;
+    const block = !(d.startsWith("inline") || d === "contents" || d.startsWith("ruby"));
+    displayCache.set(el, block);
+    return block;
+  }
+
+  function blockOf(el) {
+    while (el && el !== document.body && el !== document.documentElement) {
+      if (isBlockLevel(el)) return el;
+      el = el.parentElement;
+    }
+    return null;
+  }
+
+  // 把文字節點依「最近的區塊元素」分組，每組就是一個翻譯單位（通常是一個段落）
+  function collectBlocks(root) {
+    const groups = new Map();
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode(node) {
+        if (!/\S/.test(node.data)) return NodeFilter.FILTER_REJECT;
+        const parent = node.parentElement;
+        if (!parent || parent.closest(PAGE_SKIP)) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      },
+    });
+    let node;
+    while ((node = walker.nextNode())) {
+      const block = blockOf(node.parentElement);
+      if (!block || page.queued.has(block)) continue;
+      if (!groups.has(block)) groups.set(block, []);
+      groups.get(block).push(node);
+    }
+    const items = [];
+    for (const [block, nodes] of groups) {
+      const text = nodes.map((n) => n.data).join("").replace(/\s+/g, " ").trim();
+      if (text.length < 2 || !/\p{L}/u.test(text)) continue;
+      // 目標是中文時，已經是中文的段落就不用翻
+      if (page.target.startsWith("zh") && /^[\p{Script=Han}\p{P}\p{S}\p{N}\s]+$/u.test(text)) continue;
+      items.push({ block, nodes, text });
+    }
+    return items;
+  }
+
+  function watch(items) {
+    for (const item of items) {
+      page.queued.add(item.block);
+      page.pending.set(item.block, item);
+      page.io.observe(item.block);
+    }
+  }
+
+  function pump() {
+    while (page.running < 3 && page.queue.length) {
+      const item = page.queue.shift();
+      const token = page.token;
+      page.running++;
+      page.translator.translate(item.text)
+        .then((out) => {
+          out = String(out || "").trim();
+          if (token === page.token && out) applyItem(item, out);
+        })
+        .catch(() => {})
+        .finally(() => {
+          if (token !== page.token) return;
+          page.running--;
+          updateProgress();
+          pump();
+        });
+    }
+  }
+
+  function applyItem(item, translated) {
+    if (!item.block.isConnected) return;
+    const el = document.createElement("ctx-tr");
+    el.setAttribute("translate", "no");
+    el.setAttribute("lang", page.target);
+    el.textContent = translated;
+    item.block.appendChild(el);
+    item.el = el;
+    item.originals = item.nodes.map((n) => n.data);
+    if (page.mode === "translated") item.nodes.forEach((n) => { n.data = ""; });
+    page.entries.push(item);
+    page.done++;
+  }
+
+  function setMode(mode) {
+    page.mode = mode;
+    document.documentElement.classList.toggle("ctx-page-bi", mode === "bilingual");
+    for (const item of page.entries) {
+      item.nodes.forEach((n, i) => { n.data = mode === "translated" ? "" : item.originals[i]; });
+    }
+    renderBar();
+  }
+
+  function restorePage() {
+    page.token++;
+    page.active = false;
+    page.io?.disconnect();
+    page.mo?.disconnect();
+    page.queue = [];
+    page.running = 0;
+    page.pending.clear();
+    for (const item of page.entries) {
+      item.nodes.forEach((n, i) => { n.data = item.originals[i]; });
+      item.el?.remove();
+    }
+    page.entries = [];
+    page.queued = new WeakSet();
+    page.done = 0;
+    document.documentElement.classList.remove("ctx-page-bi");
+    page.translator?.destroy?.();
+    page.translator = null;
+    barMessage("info", "已還原原文");
+  }
+
+  // -------- status bar
+  let bar = null;
+  let barTimer = null;
+
+  function ensureBar() {
+    if (bar?.isConnected) return bar;
+    bar = document.createElement("div");
+    bar.id = IDS.bar;
+    bar.setAttribute("role", "status");
+    bar.setAttribute("aria-live", "polite");
+    bar.addEventListener("mousedown", (e) => e.stopPropagation());
+    bar.addEventListener("click", onBarClick);
+    document.documentElement.appendChild(bar);
+    return bar;
+  }
+
+  function hideBar() {
+    clearTimeout(barTimer);
+    if (bar) bar.style.display = "none";
+  }
+
+  function barMessage(kind, title, sub = "") {
+    page.barState = { kind, title, sub };
+    renderBar();
+  }
+
+  function progressText() {
+    const busy = page.running > 0 || page.queue.length > 0;
+    return `本機翻譯・${busy ? "翻譯中，" : ""}已翻譯 ${page.done} 段`;
+  }
+
+  function renderBar() {
+    if (page.active) {
+      const target = TARGET_NAMES[activeTargetLanguage] || "繁體中文";
+      const source = languageName(page.source);
+      page.barState = { kind: "progress", title: source ? `${source} → ${target}` : `譯為${target}`, sub: progressText() };
+    }
+    const s = page.barState;
+    if (!s) return;
+    const b = ensureBar();
+    clearTimeout(barTimer);
+    let actions = "";
+    if (s.kind === "progress") {
+      actions = `
+        <span class="ctx-pb-seg" role="group" aria-label="顯示方式">
+          <button type="button" data-act="translated" aria-pressed="${page.mode === "translated"}">譯文</button>
+          <button type="button" data-act="bilingual" aria-pressed="${page.mode === "bilingual"}">對照</button>
+        </span>
+        <button type="button" class="ctx-pb-btn" data-act="restore">還原</button>`;
+    } else if (s.kind === "download" || s.kind === "retry") {
+      actions = `<button type="button" class="ctx-pb-btn primary" data-act="download">${s.kind === "retry" ? "再試一次" : "下載並翻譯"}</button>`;
+    }
+    b.innerHTML = `
+      <span class="ctx-pb-seal" aria-hidden="true">文</span>
+      <span class="ctx-pb-text"><span class="ctx-pb-title">${escapeHtml(s.title)}</span>${s.sub ? `<span class="ctx-pb-sub">${escapeHtml(s.sub)}</span>` : ""}</span>
+      ${actions}
+      <button type="button" class="ctx-pb-x" data-act="close" title="關閉" aria-label="關閉">${ICONS.close}</button>`;
+    b.dataset.kind = s.kind;
+    b.style.display = "flex";
+    if (s.kind === "info") barTimer = setTimeout(hideBar, 3200);
+  }
+
+  function updateProgress() {
+    const sub = bar?.querySelector(".ctx-pb-sub");
+    if (page.active && sub) sub.textContent = progressText();
+  }
+
+  function onBarClick(e) {
+    const act = e.target.closest("[data-act]")?.dataset.act;
+    if (!act) return;
+    e.stopPropagation();
+    if (act === "close") hideBar();
+    else if (act === "restore") restorePage();
+    else if (act === "download") startPageTranslation({ gesture: true, source: page.knownSource });
+    else if (act === "translated" || act === "bilingual") setMode(act);
+  }
+
+  // -------- start
+  async function detectPageLanguage(sample, gesture) {
+    try {
+      if ("LanguageDetector" in globalThis) {
+        const availability = await LanguageDetector.availability();
+        if (availability === "available" || gesture || navigator.userActivation?.isActive) {
+          // 偵測模型若要下載，顯示進度；卡住超過 15 秒就改用網頁標示的語言，不讓狀態列一直停在準備中
+          const detecting = (async () => {
+            const detector = await LanguageDetector.create({
+              monitor(m) {
+                m.addEventListener("downloadprogress", (event) => {
+                  barMessage("working", `正在準備語言偵測 ${Math.round(event.loaded * 100)}%`);
+                });
+              },
+            });
+            const [top] = await detector.detect(sample);
+            detector.destroy?.();
+            return top?.confidence >= 0.4 ? normalizeLanguageCode(top.detectedLanguage) : "";
+          })();
+          detecting.catch(() => {});
+          const detected = await Promise.race([detecting, new Promise((resolve) => setTimeout(() => resolve(""), 15000))]);
+          if (detected) return detected;
+        }
+      }
+    } catch (_) {}
+    return pageLanguage();
+  }
+
+  async function startPageTranslation({ gesture = false, source: knownSource = "" } = {}) {
+    if (page.active) { renderBar(); return; }
+    if (page.starting) return;
+    page.starting = true;
+    try {
+      await refreshState();
+      if (!("Translator" in globalThis)) {
+        barMessage("error", "全頁翻譯需要 Chrome 內建翻譯", "請使用桌面版 Chrome 138 以上。");
+        return;
+      }
+      page.target = BUILTIN_TARGETS[activeTargetLanguage] || "zh-Hant";
+      const targetName = TARGET_NAMES[activeTargetLanguage] || "繁體中文";
+      barMessage("working", "正在準備全頁翻譯…");
+
+      const items = collectBlocks(document.body);
+      if (!items.length) {
+        barMessage("info", "這個頁面沒有需要翻譯的文字");
+        return;
+      }
+      // 從下載提示按進來時已經知道語言，直接建立翻譯器，趁使用者這一下點擊還有效
+      const sample = items.slice(0, 60).map((i) => i.text).join("\n").slice(0, 2500);
+      const source = knownSource || await detectPageLanguage(sample, gesture);
+      if (!source) {
+        if (!gesture) barMessage("download", "需要先準備語言偵測", "按一下開始，準備好後就會翻譯。");
+        else barMessage("error", "無法判斷這個頁面的語言");
+        return;
+      }
+      if (source === page.target) {
+        barMessage("info", `這個頁面已經是${targetName}`);
+        return;
+      }
+
+      const options = { sourceLanguage: source, targetLanguage: page.target };
+      let availability = "unavailable";
+      try { availability = await Translator.availability(options); } catch (_) {}
+      if (availability === "unavailable") {
+        barMessage("error", `Chrome 還不支援${languageName(source)}翻成${targetName}`);
+        return;
+      }
+      // 語言套件還沒下載時，Chrome 要求由使用者親手按一下才能開始下載
+      const askToDownload = () => {
+        page.knownSource = source;
+        barMessage("download", `第一次翻譯${languageName(source)}`, "需要先下載語言套件，之後就不用再下載。");
+      };
+      if (availability !== "available" && !navigator.userActivation?.isActive) {
+        askToDownload();
+        return;
+      }
+      if (availability !== "available") barMessage("working", "正在下載語言套件…");
+      try {
+        // 下載超過 60 秒都沒有任何進度，就當作失敗，讓使用者可以重試
+        let lastProgress = Date.now();
+        let watchdog = null;
+        const creating = Translator.create({
+          ...options,
+          monitor(m) {
+            m.addEventListener("downloadprogress", (event) => {
+              lastProgress = Date.now();
+              barMessage("working", `正在下載語言套件 ${Math.round(event.loaded * 100)}%`);
+            });
+          },
+        });
+        const stalled = new Promise((_, reject) => {
+          watchdog = setInterval(() => {
+            if (Date.now() - lastProgress > 60000) reject(new Error("stalled"));
+          }, 2000);
+        });
+        try {
+          page.translator = await Promise.race([creating, stalled]);
+        } catch (error) {
+          creating.then((late) => late?.destroy?.(), () => {});
+          throw error;
+        } finally {
+          clearInterval(watchdog);
+        }
+      } catch (error) {
+        if (error?.name === "NotAllowedError") {
+          askToDownload();
+        } else {
+          page.knownSource = source;
+          barMessage("retry", "語言套件下載失敗", "請檢查網路連線後再試一次。");
+        }
+        return;
+      }
+
+      page.active = true;
+      page.source = source;
+      page.token++;
+      page.done = 0;
+      page.mode = "translated";
+      document.documentElement.classList.remove("ctx-page-bi");
+      page.io = new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          page.io.unobserve(entry.target);
+          const item = page.pending.get(entry.target);
+          page.pending.delete(entry.target);
+          if (item) page.queue.push(item);
+        }
+        pump();
+        updateProgress();
+      }, { rootMargin: "700px 0px" });
+      watch(items);
+
+      // 之後動態載入的內容（無限捲動、單頁應用）也接著翻
+      let added = [];
+      let rescanTimer = null;
+      page.mo = new MutationObserver((mutations) => {
+        for (const m of mutations) {
+          for (const n of m.addedNodes) {
+            if (n.nodeType === 1 && n.localName !== "ctx-tr" && !n.closest?.(`#${IDS.bar}, #${IDS.pop}, #${IDS.btn}`)) added.push(n);
+          }
+        }
+        if (!added.length) return;
+        clearTimeout(rescanTimer);
+        rescanTimer = setTimeout(() => {
+          const roots = added.filter((n) => n.isConnected); added = [];
+          if (page.active) roots.forEach((root) => watch(collectBlocks(root)));
+        }, 500);
+      });
+      page.mo.observe(document.body, { childList: true, subtree: true });
+      renderBar();
+    } finally {
+      page.starting = false;
+    }
+  }
+
+  if (globalThis.chrome?.runtime?.onMessage) {
+    chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+      if (sender?.id && sender.id !== chrome.runtime.id) return false;
+      if (msg?.action === "translatePage") {
+        startPageTranslation();
+        sendResponse({ ok: true });
+      }
+      return false;
+    });
+  }
 
   // ESC 關閉
   document.addEventListener("keydown", (e) => {

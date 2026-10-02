@@ -320,6 +320,32 @@
   .select-wrap,
   .secret-wrap { position: relative; }
 
+  .key-row { display: flex; align-items: flex-end; gap: 10px; }
+  .key-row .secret-wrap { flex: 1; min-width: 0; }
+
+  .key-save {
+    flex: none;
+    height: 32px;
+    margin-bottom: 2px;
+    padding: 0 14px;
+    color: var(--ink);
+    background: transparent;
+    border: 1.5px solid var(--ink);
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: var(--serif);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .14em;
+    white-space: nowrap;
+    transition: background 140ms ease, color 140ms ease, border-color 140ms ease, opacity 140ms ease;
+  }
+  .key-save.is-dirty { color: var(--seal-text); background: var(--vermilion); border-color: var(--vermilion); }
+  .key-save.is-saved { color: var(--vermilion-text); border-color: var(--vermilion); }
+  .key-save:disabled { cursor: default; }
+  .key-save:disabled:not(.is-saved) { opacity: .4; }
+  .key-save:not(:disabled):active { transform: translateY(1px); }
+
   select,
   input {
     width: 100%;
@@ -506,6 +532,7 @@
     .sense:hover .sense-title { text-decoration: underline; text-decoration-color: var(--dots); text-underline-offset: 3px; }
     select:hover { border-bottom-color: var(--vermilion); }
     .key-toggle:hover { color: var(--ink); border-color: var(--ink); }
+    .key-save.is-dirty:hover { filter: brightness(1.08); }
     .field-link:hover { text-decoration-thickness: 2px; }
   }
 
@@ -611,16 +638,13 @@
 
       <div class="ai-fields" id="ai-fields" hidden>
         <div>
-          <label class="field-label" for="provider-select">
-            <span>模型</span>
-            <span class="field-meta" id="model-note">Gemini 2.0 Flash</span>
-          </label>
+          <label class="field-label" for="provider-select">模型</label>
           <div class="select-wrap">
             <select id="provider-select">
               <option value="gemini">Gemini · Google</option>
               <option value="openai">OpenAI</option>
               <option value="claude">Claude · Anthropic</option>
-              <option value="deepseek">DeepSeek V4 Flash</option>
+              <option value="deepseek">DeepSeek</option>
               <option value="kimi">Kimi · Moonshot</option>
               <option value="minimax">MiniMax</option>
             </select>
@@ -632,9 +656,12 @@
             <label for="api-key">API 金鑰</label>
             <a class="field-link" id="key-link" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">取得金鑰</a>
           </div>
-          <div class="secret-wrap">
-            <input type="password" id="api-key" placeholder="貼上 API 金鑰" autocomplete="off" spellcheck="false" aria-describedby="api-key-help">
-            <button class="key-toggle" id="key-visibility" type="button" aria-label="顯示 API 金鑰" aria-pressed="false">顯示</button>
+          <div class="key-row">
+            <div class="secret-wrap">
+              <input type="password" id="api-key" placeholder="貼上 API 金鑰" autocomplete="off" spellcheck="false" aria-describedby="api-key-help">
+              <button class="key-toggle" id="key-visibility" type="button" aria-label="顯示 API 金鑰" aria-pressed="false">顯示</button>
+            </div>
+            <button class="key-save" id="key-save" type="button" disabled>儲存</button>
           </div>
           <p class="field-help" id="api-key-help"></p>
         </div>

@@ -57,6 +57,37 @@ const LANGUAGES = {
 };
 
 // ---------------------------------------------------------------------------
+// 右鍵選單：全頁翻譯（在頁面上用 Chrome 內建翻譯處理，不會送到 AI 服務商）
+
+const PAGE_MENU_ID = "ctx-translate-page";
+
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.contextMenus.removeAll(() => {
+    chrome.contextMenus.create({ id: PAGE_MENU_ID, title: "全頁翻譯", contexts: ["page"] });
+  });
+});
+
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId === PAGE_MENU_ID && tab?.id !== undefined) requestPageTranslation(tab.id);
+});
+
+async function requestPageTranslation(tabId) {
+  try {
+    await chrome.tabs.sendMessage(tabId, { action: "translatePage" });
+    return;
+  } catch (_) {
+    // 這個分頁是在安裝或更新擴充功能之前打開的，還沒有內容腳本：
+    // 點右鍵選單時 Chrome 會暫時授權這個分頁（activeTab），在這裡補注入一次。
+  }
+  try {
+    await chrome.scripting.executeScript({ target: { tabId }, files: ["content.js"] });
+    await chrome.tabs.sendMessage(tabId, { action: "translatePage" });
+  } catch (_) {
+    // chrome:// 頁面、線上應用程式商店等禁止擴充功能的頁面，無法翻譯
+  }
+}
+
+// ---------------------------------------------------------------------------
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   // 只接受本擴充功能自己的內容腳本與頁面
