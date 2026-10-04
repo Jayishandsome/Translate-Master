@@ -266,7 +266,15 @@
     "message": "Nothing on this page needs translating"
   },
   "pageAlready": {
-    "message": "This page is already in $P1$",
+    "message": "This page is already in $P1$. Nothing to translate.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "pageForeignDirection": {
+    "message": "Other languages → $P1$",
     "placeholders": {
       "p1": {
         "content": "$1"
@@ -616,7 +624,7 @@
     "message": "Change the target language or connect your own AI model. Tip: pin it to the toolbar from the puzzle-piece menu."
   },
   "tryHint": {
-    "message": "Try it here: select a sentence below, or double-click the word “bank”"
+    "message": "Try it here: select a sentence below, double-click the word “bank”, or right-click and choose “Translate full page”"
   },
   "privacyPolicy": {
     "message": "Privacy policy"

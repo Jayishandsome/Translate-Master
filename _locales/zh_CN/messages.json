@@ -266,7 +266,15 @@
     "message": "这个页面没有需要翻译的文字"
   },
   "pageAlready": {
-    "message": "这个页面已经是$P1$",
+    "message": "这个页面已经是$P1$，没有需要翻译的段落",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "pageForeignDirection": {
+    "message": "外文段落 → $P1$",
     "placeholders": {
       "p1": {
         "content": "$1"
@@ -616,7 +624,7 @@
     "message": "可以换译文语言，或接上你自己的 AI 模型。建议先在拼图图标里把它固定到工具栏。"
   },
   "tryHint": {
-    "message": "在这里试试看：选中下面的句子，或双击 bank 这个词"
+    "message": "在这里试试看：选中下面的句子、双击 bank 这个词，或右键选「全页翻译」"
   },
   "privacyPolicy": {
     "message": "隐私政策"

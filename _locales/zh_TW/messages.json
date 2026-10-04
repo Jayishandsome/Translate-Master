@@ -266,7 +266,15 @@
     "message": "這個頁面沒有需要翻譯的文字"
   },
   "pageAlready": {
-    "message": "這個頁面已經是$P1$",
+    "message": "這個頁面已經是$P1$，沒有需要翻譯的段落",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "pageForeignDirection": {
+    "message": "外文段落 → $P1$",
     "placeholders": {
       "p1": {
         "content": "$1"
@@ -616,7 +624,7 @@
     "message": "可以換譯文語言，或接上你自己的 AI 模型。建議先在拼圖圖示裡把它釘選到工具列。"
   },
   "tryHint": {
-    "message": "在這裡試試看：選取下面的句子，或雙擊 bank 這個字"
+    "message": "在這裡試試看：選取下面的句子、雙擊 bank 這個字，或按右鍵選「全頁翻譯」"
   },
   "privacyPolicy": {
     "message": "隱私權政策"

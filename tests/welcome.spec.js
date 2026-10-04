@@ -1,6 +1,6 @@
 // 安裝後的說明頁：檢查本機翻譯，並可以直接試用選字翻譯
 const { test, expect } = require("@playwright/test");
-const { openFixture, selectText } = require("./helpers");
+const { openFixture, selectText, translatePage } = require("./helpers");
 
 test("檢查本機翻譯", async ({ context }) => {
   const { page, errors } = await openFixture(context, null, "ext/welcome.html");
@@ -21,4 +21,13 @@ test("英文介面的說明頁", async ({ context }) => {
   const { page } = await openFixture(context, null, "ext/welcome.html", { ui: "en" });
   await expect(page.locator("h1")).toHaveText("Context Translator");
   await expect(page.locator(".steps li").first()).toContainText("Select text");
+});
+
+test("在說明頁按全頁翻譯：只翻英文範例句，標題不翻", async ({ context }) => {
+  const { page } = await openFixture(context, null, "ext/welcome.html");
+  await translatePage(page);
+  await expect(page.locator("#try p ctx-tr").first()).toContainText("WE RARELY NOTICE");
+  await expect(page.locator("#try p ctx-tr")).toHaveCount(2);
+  await expect(page.locator("header ctx-tr")).toHaveCount(0);
+  await expect(page.locator("#ctx-page-bar")).not.toContainText("已經是");
 });

@@ -98,3 +98,58 @@ test("英文介面的全頁翻譯狀態列", async ({ context }) => {
   await expect(page.locator("#ctx-page-bar")).toContainText("Side by side");
   await expect(page.locator("#ctx-page-bar")).toContainText("translated");
 });
+
+// 頁面本身已經是譯文語言（像說明頁、中文新聞引用英文）：不再直接說「已經是中文」，而是只翻外文段落
+test("本機：中文頁面只翻夾在裡面的外文段落", async ({ context }) => {
+  const { page, errors } = await openFixture(context, null, "pages/mixed-zh.html");
+  await translatePage(page);
+  await expect(tr(page, "#en")).toHaveText("WE RARELY NOTICE HOW MUCH OF THE INTERNET WAS WRITTEN FOR SOMEONE ELSE.");
+  await expect(page.locator("#ctx-page-bar")).toContainText("外文段落 → 繁體中文");
+  await expect(page.locator("#ctx-page-bar")).toContainText("1");
+  // 中文段落（包括夾著幾個英文單字的）和很短的英文都不動
+  await expect(page.locator("main ctx-tr")).toHaveCount(1);
+  await page.click("#ctx-page-bar [data-act=restore]");
+  await expect(page.locator("ctx-tr")).toHaveCount(0);
+  await expect(page.locator("#en")).toHaveText("We rarely notice how much of the internet was written for someone else.");
+  expect(errors).toEqual([]);
+});
+
+test("AI：中文頁面只把外文段落送出去", async ({ context }) => {
+  const { page } = await openFixture(context, null, "pages/mixed-zh.html", { provider: "gemini" });
+  await translatePage(page);
+  await expect(tr(page, "#en")).toHaveText("AI譯:We rarely notice how much of the internet was written for someone else.");
+  await page.waitForTimeout(300);
+  const sent = await page.evaluate(() => window.__stub.sent.filter((m) => m.action === "translateBatch").flatMap((m) => m.texts));
+  expect(sent).toEqual(["We rarely notice how much of the internet was written for someone else."]);
+});
+
+test("沒有語言偵測模型時，用文字判斷哪些段落是外文", async ({ context }) => {
+  const { page } = await openFixture(context, null, "pages/mixed-zh.html", { detector: "unavailable" });
+  await translatePage(page);
+  await expect(tr(page, "#en")).toHaveText("WE RARELY NOTICE HOW MUCH OF THE INTERNET WAS WRITTEN FOR SOMEONE ELSE.");
+  await expect(page.locator("main ctx-tr")).toHaveCount(1);
+});
+
+test("整頁都是譯文語言時才說不用翻", async ({ context }) => {
+  const { page } = await openFixture(context, null, "pages/mixed-zh.html", { provider: "gemini" });
+  await page.evaluate(() => document.getElementById("en").remove());
+  await translatePage(page);
+  await expect(page.locator("#ctx-page-bar")).toContainText("這個頁面已經是繁體中文，沒有需要翻譯的段落");
+  expect(await page.evaluate(() => window.__stub.sent.filter((m) => m.action === "translateBatch").length)).toBe(0);
+});
+
+test("本機：中文頁面的外文段落第一次要下載語言套件，按一下之後一樣只翻外文", async ({ context }) => {
+  await context.addInitScript(() => {
+    let last = 0;
+    addEventListener("mousedown", (e) => { if (e.isTrusted) last = Date.now(); }, true);
+    Object.defineProperty(navigator, "userActivation", { configurable: true, get: () => ({ isActive: Date.now() - last < 5000, hasBeenActive: last > 0 }) });
+  });
+  const { page } = await openFixture(context, null, "pages/mixed-zh.html", { avail: "downloadable" });
+  await translatePage(page);
+  const btn = page.locator("#ctx-page-bar [data-act=download]");
+  await expect(btn).toBeVisible();
+  await btn.click();
+  await expect(tr(page, "#en")).toHaveText("WE RARELY NOTICE HOW MUCH OF THE INTERNET WAS WRITTEN FOR SOMEONE ELSE.");
+  await expect(page.locator("#ctx-page-bar")).toContainText("外文段落");
+  await expect(page.locator("main ctx-tr")).toHaveCount(1);
+});

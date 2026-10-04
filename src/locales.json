@@ -352,9 +352,14 @@
   "en": "Nothing on this page needs translating"
  },
  "pageAlready": {
-  "zh_TW": "這個頁面已經是$1",
-  "zh_CN": "这个页面已经是$1",
-  "en": "This page is already in $1"
+  "zh_TW": "這個頁面已經是$1，沒有需要翻譯的段落",
+  "zh_CN": "这个页面已经是$1，没有需要翻译的段落",
+  "en": "This page is already in $1. Nothing to translate."
+ },
+ "pageForeignDirection": {
+  "zh_TW": "外文段落 → $1",
+  "zh_CN": "外文段落 → $1",
+  "en": "Other languages → $1"
  },
  "pageNeedDetector": {
   "zh_TW": "需要先準備語言偵測",
@@ -752,9 +757,9 @@
   "en": "Change the target language or connect your own AI model. Tip: pin it to the toolbar from the puzzle-piece menu."
  },
  "tryHint": {
-  "zh_TW": "在這裡試試看：選取下面的句子，或雙擊 bank 這個字",
-  "zh_CN": "在这里试试看：选中下面的句子，或双击 bank 这个词",
-  "en": "Try it here: select a sentence below, or double-click the word “bank”"
+  "zh_TW": "在這裡試試看：選取下面的句子、雙擊 bank 這個字，或按右鍵選「全頁翻譯」",
+  "zh_CN": "在这里试试看：选中下面的句子、双击 bank 这个词，或右键选「全页翻译」",
+  "en": "Try it here: select a sentence below, double-click the word “bank”, or right-click and choose “Translate full page”"
  },
  "privacyPolicy": {
   "zh_TW": "隱私權政策",

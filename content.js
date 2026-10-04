@@ -1333,6 +1333,7 @@
     active: false, starting: false, token: 0, mode: "translated",
     engine: "builtin", source: "", knownSource: "", target: "", translator: null, failed: [], lastError: "",
     inflight: new Map(), translators: new Map(), detector: null, skippedOther: 0,
+    foreignOnly: false, knownForeignOnly: false, checking: 0,
     entries: [], queued: new WeakSet(), pending: new Map(), queue: [], running: 0, done: 0,
     io: null, mo: null, barState: null,
   };
@@ -1565,8 +1566,94 @@
         if (top?.confidence >= 0.6) source = normalizeLanguageCode(top.detectedLanguage) || source;
       } catch (_) {}
     }
-    if (source === page.target || (source.startsWith("zh") && page.target.startsWith("zh"))) return "";
+    if (sameLanguage(source, page.target)) return "";
     return source;
+  }
+
+  // 繁中、簡中互相不算「外文」：逐段翻譯本來就略過中文→中文
+  function sameLanguage(a, b) {
+    return a === b || (a.startsWith("zh") && b.startsWith("zh"));
+  }
+
+  // 沒有語言偵測模型時，用文字的書寫系統粗略判斷一段是不是外文。
+  // 拉丁字母以「字」為單位，大約四個字母算一個，避免中文段落裡夾幾個英文單字就被當成英文。
+  const SCRIPTS = [
+    ["han", /[\u3400-\u9fff\uf900-\ufaff]/g, 1], ["kana", /[\u3040-\u30ff]/g, 3], ["hangul", /[\uac00-\ud7af]/g, 1],
+    ["cyrillic", /[\u0400-\u04ff]/g, 0.25], ["thai", /[\u0e00-\u0e7f]/g, 0.25], ["latin", /[A-Za-z\u00c0-\u024f]/g, 0.25],
+  ];
+  const SCRIPT_LANGUAGE = { han: "zh", kana: "ja", hangul: "ko", cyrillic: "ru", thai: "th", latin: "en" };
+
+  function mainScript(text) {
+    let best = "", score = 0;
+    for (const [name, re, weight] of SCRIPTS) {
+      const n = (text.match(re) || []).length * weight;
+      if (n > score) { best = name; score = n; }
+    }
+    return best;
+  }
+
+  function targetScripts(target) {
+    if (target.startsWith("zh")) return ["han"];
+    return { ja: ["han", "kana"], ko: ["hangul", "han"], ru: ["cyrillic"], th: ["thai"] }[target] || ["latin"];
+  }
+
+  // 這一段如果是譯文語言以外的語言，回傳那個語言；拿不準就當作不是外文，不翻
+  async function foreignLanguageOf(text, detector) {
+    if (text.length < 12) return "";
+    if (detector) {
+      try {
+        const [top] = await detector.detect(text);
+        if (!(top?.confidence >= 0.6)) return "";
+        const lang = normalizeLanguageCode(top.detectedLanguage);
+        return lang && lang !== "und" && !sameLanguage(lang, page.target) ? lang : "";
+      } catch (_) {}
+    }
+    const script = mainScript(text);
+    return script && !targetScripts(page.target).includes(script) ? SCRIPT_LANGUAGE[script] : "";
+  }
+
+  async function availableDetector() {
+    try {
+      if ("LanguageDetector" in globalThis && (await LanguageDetector.availability()) === "available") {
+        return await LanguageDetector.create();
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  // 頁面本身已經是譯文語言時（例如中文頁面裡夾著英文段落），找出外文段落最常見的語言；沒有就回傳空字串
+  async function findForeign(items) {
+    const detector = await availableDetector();
+    const counts = new Map();
+    try {
+      for (const item of items.slice(0, 300)) {
+        const lang = await foreignLanguageOf(item.text, detector);
+        if (lang) counts.set(lang, (counts.get(lang) || 0) + 1);
+      }
+    } finally {
+      detector?.destroy?.();
+    }
+    return [...counts].sort((a, b) => b[1] - a[1])[0]?.[0] || "";
+  }
+
+  // 段落進到畫面附近就排進翻譯佇列；只翻外文段落時，先確認這段是外文，順便記下它的語言
+  function enqueue(item) {
+    if (!page.foreignOnly) {
+      page.queue.push(item);
+      return;
+    }
+    const token = page.token;
+    page.checking++;
+    foreignLanguageOf(item.text, page.detector).then((lang) => {
+      if (token !== page.token) return;
+      page.checking--;
+      if (lang) {
+        item.source = lang;
+        page.queue.push(item);
+        pump();
+      }
+      updateProgress();
+    });
   }
 
   function translatorFor(source) {
@@ -1585,7 +1672,7 @@
   }
 
   async function translateBuiltinItem(item, token) {
-    const source = await sourceOf(item.text);
+    const source = item.source || await sourceOf(item.text);
     if (!source) return null;
     const translator = await translatorFor(source);
     if (!translator) {
@@ -1728,6 +1815,8 @@
     page.mo?.disconnect();
     page.queue = [];
     page.running = 0;
+    page.checking = 0;
+    page.foreignOnly = false;
     page.failed = [];
     page.lastError = "";
     page.inflight = new Map();
@@ -1775,7 +1864,7 @@
     renderBar();
   }
 
-  const pageBusy = () => page.running > 0 || page.queue.length > 0;
+  const pageBusy = () => page.running > 0 || page.queue.length > 0 || page.checking > 0;
   const engineName = () => (page.engine === "builtin" ? t("engineBuiltinShort") : PROVIDER_NAMES[page.engine] || t("aiModel"));
 
   function progressText() {
@@ -1789,11 +1878,11 @@
   function renderBar() {
     if (page.active) {
       const target = targetName();
-      const source = languageName(page.source);
+      const source = page.foreignOnly ? "" : languageName(page.source);
       const showRetry = page.failed.length > 0 && !pageBusy();
       page.barState = !page.done && showRetry
         ? { kind: "failed", title: t("pageFailedTitle"), sub: `${engineName()}: ${page.lastError}`, retry: true }
-        : { kind: "progress", title: source ? `${source} → ${target}` : t("directionTo", [target]), sub: progressText(), retry: showRetry };
+        : { kind: "progress", title: page.foreignOnly ? t("pageForeignDirection", [target]) : source ? `${source} → ${target}` : t("directionTo", [target]), sub: progressText(), retry: showRetry };
     }
     const s = page.barState;
     if (!s) return;
@@ -1835,7 +1924,7 @@
     if (act === "close") hideBar();
     else if (act === "restore") restorePage();
     else if (act === "retryFailed") retryFailed();
-    else if (act === "download") startPageTranslation({ gesture: true, source: page.knownSource });
+    else if (act === "download") startPageTranslation({ gesture: true, source: page.knownSource, foreignOnly: page.knownForeignOnly });
     else if (act === "translated" || act === "bilingual") setMode(act);
   }
 
@@ -1867,7 +1956,7 @@
     return pageLanguage();
   }
 
-  async function startPageTranslation({ gesture = false, source: knownSource = "" } = {}) {
+  async function startPageTranslation({ gesture = false, source: knownSource = "", foreignOnly = false } = {}) {
     if (page.active) { renderBar(); return; }
     if (page.starting) return;
     page.starting = true;
@@ -1891,10 +1980,18 @@
       }
       const sample = items.slice(0, 60).map((i) => i.text).join("\n").slice(0, 2500);
       if (engine !== "builtin") {
-        // AI 會自己判斷原文語言；這裡只在不必下載模型時偵測，用來顯示方向、略過已是目標語言的頁面
+        // AI 會自己判斷原文語言；這裡只在不必下載模型時偵測，用來顯示方向。
+        // 頁面本身已經是譯文語言時，只把夾在裡面的外文段落送出去
         const source = await detectPageLanguage(sample, false, false);
-        if (source && source === page.target) {
-          barMessage("info", t("pageAlready", [targetLabel]));
+        if (source && sameLanguage(source, page.target)) {
+          const foreign = await findForeign(items);
+          if (!foreign) {
+            barMessage("info", t("pageAlready", [targetLabel]));
+            return;
+          }
+          page.detector?.destroy?.();
+          page.detector = await availableDetector();
+          beginPage(engine, foreign, items, true);
           return;
         }
         beginPage(engine, source, items);
@@ -1902,15 +1999,24 @@
       }
 
       // 從下載提示按進來時已經知道語言，直接建立翻譯器，趁使用者這一下點擊還有效
-      const source = knownSource || await detectPageLanguage(sample, gesture);
+      let source = knownSource;
+      let onlyForeign = Boolean(knownSource && foreignOnly);
       if (!source) {
-        if (!gesture) barMessage("download", t("pageNeedDetector"), t("pageNeedDetectorSub"));
-        else barMessage("error", t("pageUnknownLang"));
-        return;
-      }
-      if (source === page.target) {
-        barMessage("info", t("pageAlready", [targetLabel]));
-        return;
+        source = await detectPageLanguage(sample, gesture);
+        if (!source) {
+          if (!gesture) barMessage("download", t("pageNeedDetector"), t("pageNeedDetectorSub"));
+          else barMessage("error", t("pageUnknownLang"));
+          return;
+        }
+        // 頁面本身已經是譯文語言：只翻夾在裡面的外文段落，先用最常見的那個外文建立翻譯器
+        if (sameLanguage(source, page.target)) {
+          source = await findForeign(items);
+          if (!source) {
+            barMessage("info", t("pageAlready", [targetLabel]));
+            return;
+          }
+          onlyForeign = true;
+        }
       }
 
       const options = { sourceLanguage: source, targetLanguage: page.target };
@@ -1923,6 +2029,7 @@
       // 語言套件還沒下載時，Chrome 要求由使用者親手按一下才能開始下載
       const askToDownload = () => {
         page.knownSource = source;
+        page.knownForeignOnly = onlyForeign;
         barMessage("download", t("pageFirstTime", [languageName(source)]), t("pageFirstTimeSub"));
       };
       if (availability !== "available" && !navigator.userActivation?.isActive) {
@@ -1961,6 +2068,7 @@
           askToDownload();
         } else {
           page.knownSource = source;
+          page.knownForeignOnly = onlyForeign;
           barMessage("retry", t("pagePackFailed"), t("pagePackFailedSub"));
         }
         return;
@@ -1973,16 +2081,18 @@
           page.detector = await LanguageDetector.create();
         }
       } catch (_) {}
-      beginPage("builtin", source, items);
+      beginPage("builtin", source, items, onlyForeign);
     } finally {
       page.starting = false;
     }
   }
 
-  function beginPage(engine, source, items) {
+  function beginPage(engine, source, items, foreignOnly = false) {
     page.engine = engine;
     page.active = true;
     page.source = source;
+    page.foreignOnly = foreignOnly;
+    page.checking = 0;
     page.token++;
     page.done = 0;
     page.failed = [];
@@ -1997,7 +2107,7 @@
         page.io.unobserve(entry.target);
         const item = page.pending.get(entry.target);
         page.pending.delete(entry.target);
-        if (item) page.queue.push(item);
+        if (item) enqueue(item);
       }
       pump();
       updateProgress();
