@@ -587,16 +587,85 @@
     *, *::before, *::after { transition-duration: 0.01ms !important; }
     .status, .status.show { transform: rotate(-6deg); }
   }
+
+  /* ---------- 金鑰只存本機、進階 ---------- */
+
+  .check-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    color: var(--ink-2);
+    font-family: var(--sans);
+    font-size: 11.5px;
+    line-height: 1.4;
+    cursor: pointer;
+  }
+  .check-line input { position: absolute; opacity: 0; width: 1px; height: 1px; padding: 0; }
+  .check-box {
+    flex: none;
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid var(--ink-2);
+    border-radius: 2px;
+    display: grid;
+    place-items: center;
+  }
+  .check-line input:checked + .check-box { background: var(--vermilion); border-color: var(--vermilion); }
+  .check-line input:checked + .check-box::after {
+    content: "";
+    width: 7px;
+    height: 4px;
+    margin-top: -2px;
+    border: solid var(--seal-text);
+    border-width: 0 0 1.6px 1.6px;
+    transform: rotate(-45deg);
+  }
+  .check-line input:focus-visible + .check-box { outline: 3px solid var(--focus); outline-offset: 1px; }
+
+  .advanced { margin-top: 2px; }
+  .advanced summary {
+    width: max-content;
+    color: var(--ink-2);
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+    list-style: none;
+  }
+  .advanced summary::-webkit-details-marker { display: none; }
+  .advanced summary::before { content: "＋ "; color: var(--vermilion-text); }
+  .advanced[open] summary::before { content: "－ "; }
+  .advanced summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .advanced .field-label { margin-top: 10px; }
+  .advanced input { padding-right: 0; }
+
+  /* 英文介面：「註」改成 Note */
+  html:lang(en) .footnote::before,
+  html:lang(en) .field-help::before { content: "Note · "; }
+  html:lang(en) .field-help.is-warning::before { content: "※ "; }
+  html:lang(en) .field-help { padding-left: 0; text-indent: 0; }
+
+  .help-link {
+    color: var(--ink-2);
+    font-size: 12px;
+    text-decoration: underline;
+    text-decoration-color: var(--dots);
+    text-underline-offset: 3px;
+  }
+  .help-link:hover { color: var(--ink); }
+  .help-link:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 2px; }
 </style>
 </head>
 <body>
   <header class="masthead">
     <div class="kicker-row">
-      <span>Context Translator</span>
+      <span data-i18n="kicker">Context Translator</span>
       <span class="edition" id="edition"></span>
     </div>
     <div class="masthead-main">
-      <h1 class="app-title">隨選翻譯</h1>
+      <h1 class="app-title" data-i18n="appName">隨選翻譯</h1>
       <img class="seal" src="icons/icon128.png" alt="" width="36" height="36">
     </div>
     <div class="double-rule" aria-hidden="true"></div>
@@ -605,40 +674,40 @@
   <main class="main">
     <section class="entry toggle-entry">
       <div>
-        <h2 class="entry-heading" id="toggle-label">選字翻譯</h2>
-        <p class="entry-desc" id="app-state">選取文字後，旁邊會出現翻譯按鈕</p>
+        <h2 class="entry-heading" id="toggle-label" data-i18n="popupToggle">選字翻譯</h2>
+        <p class="entry-desc" id="app-state"></p>
       </div>
       <button class="switch on" id="toggle-switch" type="button" role="switch" aria-checked="true" aria-labelledby="toggle-label" aria-describedby="app-state"></button>
     </section>
 
     <section class="entry" aria-labelledby="engine-title">
-      <h2 class="entry-heading" id="engine-title"><span class="entry-num" aria-hidden="true">壹</span>翻譯引擎</h2>
+      <h2 class="entry-heading" id="engine-title"><span class="entry-num" aria-hidden="true" data-i18n="numeralOne">壹</span><span data-i18n="popupEngine">翻譯引擎</span></h2>
 
       <fieldset class="senses" id="engine-mode" data-value="builtin">
-        <legend>翻譯引擎</legend>
+        <legend data-i18n="popupEngine">翻譯引擎</legend>
         <label class="sense">
           <input type="radio" name="engine" value="builtin" checked>
           <span class="sense-mark" aria-hidden="true"></span>
           <span class="sense-body">
-            <span class="sense-title">本機翻譯</span>
-            <span class="sense-desc">Chrome 內建・免金鑰・文字不離開裝置</span>
+            <span class="sense-title" data-i18n="engineBuiltin">本機翻譯</span>
+            <span class="sense-desc" data-i18n="engineBuiltinDesc">Chrome 內建・免金鑰・文字不離開裝置</span>
           </span>
         </label>
         <label class="sense">
           <input type="radio" name="engine" value="ai">
           <span class="sense-mark" aria-hidden="true"></span>
           <span class="sense-body">
-            <span class="sense-title">AI 模型</span>
-            <span class="sense-desc">會參考上下文，譯得更準・需 API 金鑰</span>
+            <span class="sense-title" data-i18n="engineAI">AI 模型</span>
+            <span class="sense-desc" data-i18n="engineAIDesc">會參考上下文，譯得更準・需 API 金鑰</span>
           </span>
         </label>
       </fieldset>
 
-      <p class="footnote" id="builtin-info">首次使用某個語言時，Chrome 需要先下載語言套件。</p>
+      <p class="footnote" id="builtin-info" data-i18n="builtinInfo">首次使用某個語言時，Chrome 需要先下載語言套件。</p>
 
       <div class="ai-fields" id="ai-fields" hidden>
         <div>
-          <label class="field-label" for="provider-select">模型</label>
+          <label class="field-label" for="provider-select" data-i18n="providerLabel">模型</label>
           <div class="select-wrap">
             <select id="provider-select">
               <option value="gemini">Gemini · Google</option>
@@ -653,39 +722,43 @@
 
         <div id="api-key-field">
           <div class="field-label">
-            <label for="api-key">API 金鑰</label>
-            <a class="field-link" id="key-link" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">取得金鑰</a>
+            <label for="api-key" data-i18n="apiKeyLabel">API 金鑰</label>
+            <a class="field-link" id="key-link" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" data-i18n="getKey">取得金鑰</a>
           </div>
           <div class="key-row">
             <div class="secret-wrap">
-              <input type="password" id="api-key" placeholder="貼上 API 金鑰" autocomplete="off" spellcheck="false" aria-describedby="api-key-help">
-              <button class="key-toggle" id="key-visibility" type="button" aria-label="顯示 API 金鑰" aria-pressed="false">顯示</button>
+              <input type="password" id="api-key" autocomplete="off" spellcheck="false" aria-describedby="api-key-help">
+              <button class="key-toggle" id="key-visibility" type="button" aria-pressed="false"></button>
             </div>
-            <button class="key-save" id="key-save" type="button" disabled>儲存</button>
+            <button class="key-save" id="key-save" type="button" disabled data-i18n="save">儲存</button>
           </div>
           <p class="field-help" id="api-key-help"></p>
+          <label class="check-line">
+            <input type="checkbox" id="key-local">
+            <span class="check-box" aria-hidden="true"></span>
+            <span data-i18n="keyLocalOnly">金鑰只存在這台電腦，不跟著 Chrome 同步</span>
+          </label>
         </div>
+
+        <details class="advanced" id="advanced">
+          <summary data-i18n="advanced">進階</summary>
+          <label class="field-label" for="model-input" data-i18n="customModelLabel">自訂模型名稱</label>
+          <input type="text" id="model-input" autocomplete="off" spellcheck="false" aria-describedby="model-help">
+          <p class="field-help" id="model-help" data-i18n="customModelHelp">服務商停用預設模型時，可以在這裡改填新的模型名稱。留空就使用預設模型。</p>
+        </details>
       </div>
     </section>
 
     <section class="entry" aria-labelledby="lang-title">
-      <h2 class="entry-heading" id="lang-title"><span class="entry-num" aria-hidden="true">貳</span>語言</h2>
+      <h2 class="entry-heading" id="lang-title"><span class="entry-num" aria-hidden="true" data-i18n="numeralTwo">貳</span><span data-i18n="popupLanguage">語言</span></h2>
       <div class="lang-line">
-        <span class="lang-caption lang-cap-from">原文</span>
-        <label class="lang-caption lang-cap-to" for="lang-select">譯文</label>
-        <span class="lang-value">自動偵測</span>
+        <span class="lang-caption lang-cap-from" data-i18n="langFrom">原文</span>
+        <label class="lang-caption lang-cap-to" for="lang-select" data-i18n="langTo">譯文</label>
+        <span class="lang-value" data-i18n="langAuto">自動偵測</span>
         <svg class="lang-arrow" viewBox="0 0 22 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 6h19M15 1.5 20 6l-5 4.5"/></svg>
         <div class="lang-to-wrap">
           <div class="select-wrap lang-to">
-            <select id="lang-select">
-              <option value="zh-TW">繁體中文</option>
-              <option value="zh-CN">简体中文</option>
-              <option value="en">English</option>
-              <option value="ko">한국어</option>
-              <option value="fr">Français</option>
-              <option value="de">Deutsch</option>
-              <option value="es">Español</option>
-            </select>
+            <select id="lang-select"></select>
           </div>
         </div>
       </div>
@@ -693,7 +766,8 @@
   </main>
 
   <footer class="colophon">
-    <span>今日已翻譯<span class="usage-value" id="quota-text">0</span>次</span>
+    <span><span data-i18n="usageBefore">今日已翻譯</span><span class="usage-value" id="quota-text">0</span><span data-i18n="usageAfter">次</span></span>
+    <a class="help-link" id="help-link" href="welcome.html" data-i18n="help">使用說明</a>
     <p class="status" id="status-msg" role="status" aria-live="polite"></p>
   </footer>
 

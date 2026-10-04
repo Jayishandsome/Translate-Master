@@ -1,0 +1,663 @@
+{
+  "extName": {
+    "message": "随选翻译 — Context Translator",
+    "description": "Extension name"
+  },
+  "extDescription": {
+    "message": "选中网页文字即可翻译，也能右键翻译整页；默认使用 Chrome 内置模型，无需 API 密钥，在设备上处理。"
+  },
+  "actionTitle": {
+    "message": "随选翻译设置"
+  },
+  "menuTranslatePage": {
+    "message": "全页翻译"
+  },
+  "htmlLang": {
+    "message": "zh-Hans",
+    "description": "BCP 47 language tag for <html lang>"
+  },
+  "appName": {
+    "message": "随选翻译"
+  },
+  "btnTranslateLabel": {
+    "message": "翻译选中内容"
+  },
+  "btnTranslate": {
+    "message": "翻译"
+  },
+  "popoverLabel": {
+    "message": "翻译结果"
+  },
+  "dragHint": {
+    "message": "拖动移动"
+  },
+  "copyTranslation": {
+    "message": "复制译文"
+  },
+  "copied": {
+    "message": "译文已复制"
+  },
+  "closeEsc": {
+    "message": "关闭（Esc）"
+  },
+  "closeResult": {
+    "message": "关闭翻译结果"
+  },
+  "langZhHant": {
+    "message": "繁体中文"
+  },
+  "langZhHans": {
+    "message": "简体中文"
+  },
+  "engineBuiltinName": {
+    "message": "Chrome 内置翻译"
+  },
+  "engineBuiltinShort": {
+    "message": "本机翻译"
+  },
+  "aiModel": {
+    "message": "AI 模型"
+  },
+  "directionTo": {
+    "message": "译为$P1$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "modeBuiltin": {
+    "message": "Chrome 内置翻译・本机处理"
+  },
+  "modeAI": {
+    "message": "$P1$・上下文翻译",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "modeNano": {
+    "message": "Chrome 内置・本机语境解释"
+  },
+  "labelSource": {
+    "message": "原文"
+  },
+  "labelTranslation": {
+    "message": "译文"
+  },
+  "wordLookup": {
+    "message": "单词查询"
+  },
+  "wordLookupFrom": {
+    "message": "$P1$・单词查询",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "contextNote": {
+    "message": "语境说明"
+  },
+  "loadingDefault": {
+    "message": "正在翻译…"
+  },
+  "loadingBuiltin": {
+    "message": "正在准备本机翻译…"
+  },
+  "loadingAI": {
+    "message": "正在理解上下文并翻译…"
+  },
+  "loadingDetect": {
+    "message": "正在检测原文语言…"
+  },
+  "loadingDetectorProgress": {
+    "message": "正在准备语言检测 $P1$%",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "loadingPackDownload": {
+    "message": "正在下载本机语言包…"
+  },
+  "loadingPackProgress": {
+    "message": "正在下载本机语言包 $P1$%",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "loadingTranslating": {
+    "message": "正在本机翻译…"
+  },
+  "errTitle": {
+    "message": "无法完成翻译"
+  },
+  "errUnknown": {
+    "message": "发生未知错误，请稍后再试"
+  },
+  "errGeneric": {
+    "message": "无法翻译"
+  },
+  "errNoSelection": {
+    "message": "请先选中要翻译的文字"
+  },
+  "errTimeout": {
+    "message": "等待太久没有响应，请稍后再试"
+  },
+  "errEmptyBuiltin": {
+    "message": "翻译结果为空，请换一段文字后再试"
+  },
+  "errEmptyAI": {
+    "message": "翻译结果为空，请换一段文字或检查模型设置"
+  },
+  "errNoResponse": {
+    "message": "无法获取翻译结果，请重新加载扩展程序后再试"
+  },
+  "errExtensionUpdated": {
+    "message": "扩展程序已更新，请刷新此页面后再试"
+  },
+  "errNoBuiltin": {
+    "message": "此版本的 Chrome 尚未提供内置翻译。请更新桌面版 Chrome，或在设置中选择其他翻译方式。"
+  },
+  "errNoDetector": {
+    "message": "Chrome 无法使用本机语言检测，请在设置中选择其他翻译方式。"
+  },
+  "errUnknownSource": {
+    "message": "无法判断原文语言，请选中较完整的句子后再试。"
+  },
+  "errPairUnsupported": {
+    "message": "Chrome 尚未支持这组语言，请在设置中选择其他翻译方式。"
+  },
+  "errPackFailed": {
+    "message": "语言包下载失败，请检查网络后再试。"
+  },
+  "errBatch": {
+    "message": "翻译失败"
+  },
+  "pageRestored": {
+    "message": "已还原原文"
+  },
+  "pageCancelled": {
+    "message": "已取消全页翻译"
+  },
+  "pageProgress": {
+    "message": "$P1$・已翻译 $P2$ 段",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "pageProgressBusy": {
+    "message": "$P1$・翻译中，已翻译 $P2$ 段",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "pageSkipped": {
+    "message": "，$P1$ 段其他语言未翻",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "pageFailedCount": {
+    "message": "，$P1$ 段失败：$P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "pageFailedTitle": {
+    "message": "全页翻译失败"
+  },
+  "retry": {
+    "message": "重试"
+  },
+  "viewMode": {
+    "message": "显示方式"
+  },
+  "viewTranslated": {
+    "message": "译文"
+  },
+  "viewBilingual": {
+    "message": "对照"
+  },
+  "cancel": {
+    "message": "取消"
+  },
+  "restore": {
+    "message": "还原"
+  },
+  "tryAgain": {
+    "message": "再试一次"
+  },
+  "downloadAndTranslate": {
+    "message": "下载并翻译"
+  },
+  "close": {
+    "message": "关闭"
+  },
+  "pageNeedsBuiltin": {
+    "message": "全页翻译需要 Chrome 内置翻译"
+  },
+  "pageNeedsBuiltinSub": {
+    "message": "请使用桌面版 Chrome 138 以上，或在设置中改用 AI 模型。"
+  },
+  "pagePreparing": {
+    "message": "正在准备全页翻译…"
+  },
+  "pageNothing": {
+    "message": "这个页面没有需要翻译的文字"
+  },
+  "pageAlready": {
+    "message": "这个页面已经是$P1$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "pageNeedDetector": {
+    "message": "需要先准备语言检测"
+  },
+  "pageNeedDetectorSub": {
+    "message": "点一下开始，准备好后就会翻译。"
+  },
+  "pageUnknownLang": {
+    "message": "无法判断这个页面的语言"
+  },
+  "pagePairUnsupported": {
+    "message": "Chrome 还不支持$P1$翻成$P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "pageFirstTime": {
+    "message": "第一次翻译$P1$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "pageFirstTimeSub": {
+    "message": "需要先下载语言包，之后就不用再下载。"
+  },
+  "pagePackDownloading": {
+    "message": "正在下载语言包…"
+  },
+  "pagePackProgress": {
+    "message": "正在下载语言包 $P1$%",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "pagePackFailed": {
+    "message": "语言包下载失败"
+  },
+  "pagePackFailedSub": {
+    "message": "请检查网络连接后再试一次。"
+  },
+  "errReloadForBuiltin": {
+    "message": "请刷新当前网页，以启用 Chrome 内置翻译。"
+  },
+  "errNoKey": {
+    "message": "未设置 $P1$ 的 API 密钥",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "errModelCustomGone": {
+    "message": "找不到模型「$P1$」。请到设置的「高级」确认模型名称是否正确，或清空改回默认模型。",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "errModelGone": {
+    "message": "$P1$ 已停用模型「$P2$」或暂时无法使用。请更新扩展程序，或到设置的「高级」改填其他模型名称。",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "errNoText": {
+    "message": "未选中翻译文字"
+  },
+  "errNoParagraphs": {
+    "message": "没有要翻译的段落"
+  },
+  "errApiStatus": {
+    "message": "$P1$ API 错误 $P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "errNoOutput": {
+    "message": "$P1$ 无法生成翻译（$P2$）",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "errEmptyReply": {
+    "message": "$P1$ 返回为空",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "errBadReply": {
+    "message": "$P1$ 返回格式错误：$P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "errConnect": {
+    "message": "$P1$ 无法连接",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "errRequestTimeout": {
+    "message": "请求超时"
+  },
+  "numeralOne": {
+    "message": "壹"
+  },
+  "numeralTwo": {
+    "message": "贰"
+  },
+  "popupToggle": {
+    "message": "选字翻译"
+  },
+  "toggleOnDesc": {
+    "message": "选中文字后，旁边会出现翻译按钮"
+  },
+  "toggleOffDesc": {
+    "message": "已暂停。选中文字时不会出现翻译按钮"
+  },
+  "popupEngine": {
+    "message": "翻译引擎"
+  },
+  "engineBuiltin": {
+    "message": "本机翻译"
+  },
+  "engineBuiltinDesc": {
+    "message": "Chrome 内置・无需密钥・文字不离开设备"
+  },
+  "engineAI": {
+    "message": "AI 模型"
+  },
+  "engineAIDesc": {
+    "message": "会参考上下文，译得更准・需 API 密钥"
+  },
+  "builtinInfo": {
+    "message": "首次使用某个语言时，Chrome 需要先下载语言包。"
+  },
+  "providerLabel": {
+    "message": "模型"
+  },
+  "apiKeyLabel": {
+    "message": "API 密钥"
+  },
+  "getKey": {
+    "message": "获取密钥"
+  },
+  "getKeyLabel": {
+    "message": "到 $P1$ 获取 API 密钥",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "keyPlaceholder": {
+    "message": "粘贴 $P1$ API 密钥",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "save": {
+    "message": "保存"
+  },
+  "keySavedButton": {
+    "message": "已保存"
+  },
+  "keyClearedButton": {
+    "message": "已清除"
+  },
+  "show": {
+    "message": "显示"
+  },
+  "hide": {
+    "message": "隐藏"
+  },
+  "showKeyLabel": {
+    "message": "显示 API 密钥"
+  },
+  "hideKeyLabel": {
+    "message": "隐藏 API 密钥"
+  },
+  "keyUnsaved": {
+    "message": "密钥还没保存，点「保存」后才会生效。"
+  },
+  "keyStoredSync": {
+    "message": "密钥存在你的 Chrome 同步空间，只会发送给 $P1$。",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "keyStoredLocal": {
+    "message": "密钥只存在这台电脑，只会发送给 $P1$。",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "keyMissing": {
+    "message": "填入密钥并保存前，翻译会暂时使用 Chrome 内置翻译。"
+  },
+  "keyLocalOnly": {
+    "message": "密钥只存在这台电脑，不随 Chrome 同步"
+  },
+  "advanced": {
+    "message": "高级"
+  },
+  "customModelLabel": {
+    "message": "自定义模型名称"
+  },
+  "customModelHelp": {
+    "message": "服务商停用默认模型时，可以在这里改填新的模型名称。留空就使用默认模型。"
+  },
+  "popupLanguage": {
+    "message": "语言"
+  },
+  "langFrom": {
+    "message": "原文"
+  },
+  "langTo": {
+    "message": "译文"
+  },
+  "langAuto": {
+    "message": "自动检测"
+  },
+  "usageBefore": {
+    "message": "今日已翻译"
+  },
+  "usageAfter": {
+    "message": "次"
+  },
+  "help": {
+    "message": "使用说明"
+  },
+  "stampSaved": {
+    "message": "已存"
+  },
+  "stampCleared": {
+    "message": "已清除"
+  },
+  "stampOn": {
+    "message": "开"
+  },
+  "stampOff": {
+    "message": "停"
+  },
+  "welcomeLead": {
+    "message": "谢谢你安装随选翻译。三个用法，一分钟就会。"
+  },
+  "welcomeCheckTitle": {
+    "message": "你的 Chrome 准备好了吗"
+  },
+  "checking": {
+    "message": "检查中…"
+  },
+  "checkTranslatorTitle": {
+    "message": "本机翻译"
+  },
+  "translatorReady": {
+    "message": "可以使用（Chrome $P1$）。",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "translatorFirstUse": {
+    "message": "可以使用（Chrome $P1$）。第一次翻译某个语言时，Chrome 会先下载语言包。",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "translatorMissing": {
+    "message": "需要桌面版 Chrome 138 以上，你目前是 Chrome $P1$。可以先在设置中改用 AI 模型。",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "translatorPairMissing": {
+    "message": "这台电脑的 Chrome 暂时不支持当前的译文语言，可以在设置中换一个语言，或改用 AI 模型。"
+  },
+  "checkNanoTitle": {
+    "message": "本机语境解释（Gemini Nano）"
+  },
+  "nanoReady": {
+    "message": "已就绪。查单词时，会在这台电脑上根据句子说明词义。"
+  },
+  "nanoDownloadable": {
+    "message": "可以下载。模型有好几 GB，下载一次之后查单词时就会说明语境，无需 API 密钥。"
+  },
+  "nanoDownloading": {
+    "message": "Chrome 正在下载模型，完成后会自动启用。"
+  },
+  "nanoProgress": {
+    "message": "正在下载模型 $P1$%…",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nanoFailed": {
+    "message": "下载没有完成，请确认网络和硬盘空间后再试一次。"
+  },
+  "nanoUnsupported": {
+    "message": "这台电脑或这个 Chrome 版本不支持（需要较好的显卡或内存）。查单词时会显示一般译文，或使用你设置的 AI 模型。"
+  },
+  "nanoDownload": {
+    "message": "下载模型"
+  },
+  "welcomeHowTitle": {
+    "message": "怎么用"
+  },
+  "stepSelectTitle": {
+    "message": "选中文字，点旁边的「文 翻译」"
+  },
+  "stepSelectDesc": {
+    "message": "译文会出现在旁边的浮窗。只选一个单词时，会根据句子说明它在这里的意思。"
+  },
+  "stepPageTitle": {
+    "message": "在网页上点右键，选「全页翻译」"
+  },
+  "stepPageDesc": {
+    "message": "只翻你看得到的段落，滚到哪里翻到哪里。右下角可以切换「对照」或「还原」。"
+  },
+  "stepSettingsTitle": {
+    "message": "点工具栏的「文」图标调整设置"
+  },
+  "stepSettingsDesc": {
+    "message": "可以换译文语言，或接上你自己的 AI 模型。建议先在拼图图标里把它固定到工具栏。"
+  },
+  "tryHint": {
+    "message": "在这里试试看：选中下面的句子，或双击 bank 这个词"
+  },
+  "privacyPolicy": {
+    "message": "隐私政策"
+  },
+  "feedback": {
+    "message": "反馈问题"
+  },
+  "kicker": {
+    "message": "Context Translator",
+    "description": "Small line above the title; shows the other-language name"
+  }
+}

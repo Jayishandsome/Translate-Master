@@ -1,0 +1,820 @@
+{
+ "extName": {
+  "zh_TW": "隨選翻譯 — Context Translator",
+  "zh_CN": "随选翻译 — Context Translator",
+  "en": "Context Translator",
+  "description": "Extension name"
+ },
+ "extDescription": {
+  "zh_TW": "選取網頁文字即可翻譯，也能右鍵翻譯整頁；預設使用 Chrome 內建模型，免 API 金鑰並在裝置上處理。",
+  "zh_CN": "选中网页文字即可翻译，也能右键翻译整页；默认使用 Chrome 内置模型，无需 API 密钥，在设备上处理。",
+  "en": "Select text on any page to translate it, or right-click to translate the whole page. Uses Chrome's built-in on-device translation by default, no API key needed."
+ },
+ "actionTitle": {
+  "zh_TW": "隨選翻譯設定",
+  "zh_CN": "随选翻译设置",
+  "en": "Context Translator settings"
+ },
+ "menuTranslatePage": {
+  "zh_TW": "全頁翻譯",
+  "zh_CN": "全页翻译",
+  "en": "Translate full page"
+ },
+ "htmlLang": {
+  "zh_TW": "zh-Hant",
+  "zh_CN": "zh-Hans",
+  "en": "en",
+  "description": "BCP 47 language tag for <html lang>"
+ },
+ "appName": {
+  "zh_TW": "隨選翻譯",
+  "zh_CN": "随选翻译",
+  "en": "Context Translator"
+ },
+ "btnTranslateLabel": {
+  "zh_TW": "翻譯選取內容",
+  "zh_CN": "翻译选中内容",
+  "en": "Translate selection"
+ },
+ "btnTranslate": {
+  "zh_TW": "翻譯",
+  "zh_CN": "翻译",
+  "en": "Translate"
+ },
+ "popoverLabel": {
+  "zh_TW": "翻譯結果",
+  "zh_CN": "翻译结果",
+  "en": "Translation"
+ },
+ "dragHint": {
+  "zh_TW": "拖曳移動",
+  "zh_CN": "拖动移动",
+  "en": "Drag to move"
+ },
+ "copyTranslation": {
+  "zh_TW": "複製譯文",
+  "zh_CN": "复制译文",
+  "en": "Copy translation"
+ },
+ "copied": {
+  "zh_TW": "譯文已複製",
+  "zh_CN": "译文已复制",
+  "en": "Translation copied"
+ },
+ "closeEsc": {
+  "zh_TW": "關閉（Esc）",
+  "zh_CN": "关闭（Esc）",
+  "en": "Close (Esc)"
+ },
+ "closeResult": {
+  "zh_TW": "關閉翻譯結果",
+  "zh_CN": "关闭翻译结果",
+  "en": "Close translation"
+ },
+ "langZhHant": {
+  "zh_TW": "繁體中文",
+  "zh_CN": "繁体中文",
+  "en": "Traditional Chinese"
+ },
+ "langZhHans": {
+  "zh_TW": "簡體中文",
+  "zh_CN": "简体中文",
+  "en": "Simplified Chinese"
+ },
+ "engineBuiltinName": {
+  "zh_TW": "Chrome 內建翻譯",
+  "zh_CN": "Chrome 内置翻译",
+  "en": "Chrome built-in translation"
+ },
+ "engineBuiltinShort": {
+  "zh_TW": "本機翻譯",
+  "zh_CN": "本机翻译",
+  "en": "On-device"
+ },
+ "aiModel": {
+  "zh_TW": "AI 模型",
+  "zh_CN": "AI 模型",
+  "en": "AI model"
+ },
+ "directionTo": {
+  "zh_TW": "譯為$1",
+  "zh_CN": "译为$1",
+  "en": "Into $1"
+ },
+ "modeBuiltin": {
+  "zh_TW": "Chrome 內建翻譯・本機處理",
+  "zh_CN": "Chrome 内置翻译・本机处理",
+  "en": "Chrome built-in · on this device"
+ },
+ "modeAI": {
+  "zh_TW": "$1・上下文翻譯",
+  "zh_CN": "$1・上下文翻译",
+  "en": "$1 · context-aware"
+ },
+ "modeNano": {
+  "zh_TW": "Chrome 內建・本機語境解釋",
+  "zh_CN": "Chrome 内置・本机语境解释",
+  "en": "Chrome built-in · on-device context"
+ },
+ "labelSource": {
+  "zh_TW": "原文",
+  "zh_CN": "原文",
+  "en": "Original"
+ },
+ "labelTranslation": {
+  "zh_TW": "譯文",
+  "zh_CN": "译文",
+  "en": "Translation"
+ },
+ "wordLookup": {
+  "zh_TW": "單字查詢",
+  "zh_CN": "单词查询",
+  "en": "Word lookup"
+ },
+ "wordLookupFrom": {
+  "zh_TW": "$1・單字查詢",
+  "zh_CN": "$1・单词查询",
+  "en": "$1 · word lookup"
+ },
+ "contextNote": {
+  "zh_TW": "語境說明",
+  "zh_CN": "语境说明",
+  "en": "In this context"
+ },
+ "loadingDefault": {
+  "zh_TW": "正在翻譯…",
+  "zh_CN": "正在翻译…",
+  "en": "Translating…"
+ },
+ "loadingBuiltin": {
+  "zh_TW": "正在準備本機翻譯…",
+  "zh_CN": "正在准备本机翻译…",
+  "en": "Getting on-device translation ready…"
+ },
+ "loadingAI": {
+  "zh_TW": "正在理解上下文並翻譯…",
+  "zh_CN": "正在理解上下文并翻译…",
+  "en": "Reading the context and translating…"
+ },
+ "loadingDetect": {
+  "zh_TW": "正在偵測原文語言…",
+  "zh_CN": "正在检测原文语言…",
+  "en": "Detecting the language…"
+ },
+ "loadingDetectorProgress": {
+  "zh_TW": "正在準備語言偵測 $1%",
+  "zh_CN": "正在准备语言检测 $1%",
+  "en": "Preparing language detection $1%"
+ },
+ "loadingPackDownload": {
+  "zh_TW": "正在下載本機語言套件…",
+  "zh_CN": "正在下载本机语言包…",
+  "en": "Downloading the language pack…"
+ },
+ "loadingPackProgress": {
+  "zh_TW": "正在下載本機語言套件 $1%",
+  "zh_CN": "正在下载本机语言包 $1%",
+  "en": "Downloading the language pack $1%"
+ },
+ "loadingTranslating": {
+  "zh_TW": "正在本機翻譯…",
+  "zh_CN": "正在本机翻译…",
+  "en": "Translating on this device…"
+ },
+ "errTitle": {
+  "zh_TW": "無法完成翻譯",
+  "zh_CN": "无法完成翻译",
+  "en": "Couldn't translate"
+ },
+ "errUnknown": {
+  "zh_TW": "發生未知錯誤，請稍後再試",
+  "zh_CN": "发生未知错误，请稍后再试",
+  "en": "Something went wrong. Please try again."
+ },
+ "errGeneric": {
+  "zh_TW": "無法翻譯",
+  "zh_CN": "无法翻译",
+  "en": "Couldn't translate"
+ },
+ "errNoSelection": {
+  "zh_TW": "請先選取要翻譯的文字",
+  "zh_CN": "请先选中要翻译的文字",
+  "en": "Select some text first."
+ },
+ "errTimeout": {
+  "zh_TW": "等待太久沒有回應，請稍後再試",
+  "zh_CN": "等待太久没有响应，请稍后再试",
+  "en": "No response for too long. Please try again later."
+ },
+ "errEmptyBuiltin": {
+  "zh_TW": "翻譯結果為空，請換一段文字後再試",
+  "zh_CN": "翻译结果为空，请换一段文字后再试",
+  "en": "The translation came back empty. Try different text."
+ },
+ "errEmptyAI": {
+  "zh_TW": "翻譯結果為空，請換一段文字或檢查模型設定",
+  "zh_CN": "翻译结果为空，请换一段文字或检查模型设置",
+  "en": "The translation came back empty. Try different text or check the model settings."
+ },
+ "errNoResponse": {
+  "zh_TW": "無法取得翻譯結果，請重新載入擴充功能後再試",
+  "zh_CN": "无法获取翻译结果，请重新加载扩展程序后再试",
+  "en": "Couldn't get a translation. Reload the extension and try again."
+ },
+ "errExtensionUpdated": {
+  "zh_TW": "擴充功能已更新，請重新整理此頁面後再試",
+  "zh_CN": "扩展程序已更新，请刷新此页面后再试",
+  "en": "The extension was updated. Reload this page and try again."
+ },
+ "errNoBuiltin": {
+  "zh_TW": "此版本的 Chrome 尚未提供內建翻譯。請更新桌面版 Chrome，或在設定中選擇其他翻譯方式。",
+  "zh_CN": "此版本的 Chrome 尚未提供内置翻译。请更新桌面版 Chrome，或在设置中选择其他翻译方式。",
+  "en": "This version of Chrome has no built-in translation. Update desktop Chrome, or choose another engine in the settings."
+ },
+ "errNoDetector": {
+  "zh_TW": "Chrome 無法使用本機語言偵測，請在設定中選擇其他翻譯方式。",
+  "zh_CN": "Chrome 无法使用本机语言检测，请在设置中选择其他翻译方式。",
+  "en": "Chrome can't detect languages on this device. Choose another engine in the settings."
+ },
+ "errUnknownSource": {
+  "zh_TW": "無法判斷原文語言，請選取較完整的句子後再試。",
+  "zh_CN": "无法判断原文语言，请选中较完整的句子后再试。",
+  "en": "Couldn't tell which language this is. Try selecting a longer sentence."
+ },
+ "errPairUnsupported": {
+  "zh_TW": "Chrome 尚未支援這組語言，請在設定中選擇其他翻譯方式。",
+  "zh_CN": "Chrome 尚未支持这组语言，请在设置中选择其他翻译方式。",
+  "en": "Chrome doesn't support this language pair yet. Choose another engine in the settings."
+ },
+ "errPackFailed": {
+  "zh_TW": "語言套件下載失敗，請檢查網路後再試。",
+  "zh_CN": "语言包下载失败，请检查网络后再试。",
+  "en": "The language pack failed to download. Check your connection and try again."
+ },
+ "errBatch": {
+  "zh_TW": "翻譯失敗",
+  "zh_CN": "翻译失败",
+  "en": "Translation failed"
+ },
+ "pageRestored": {
+  "zh_TW": "已還原原文",
+  "zh_CN": "已还原原文",
+  "en": "Original restored"
+ },
+ "pageCancelled": {
+  "zh_TW": "已取消全頁翻譯",
+  "zh_CN": "已取消全页翻译",
+  "en": "Full-page translation cancelled"
+ },
+ "pageProgress": {
+  "zh_TW": "$1・已翻譯 $2 段",
+  "zh_CN": "$1・已翻译 $2 段",
+  "en": "$1 · $2 translated"
+ },
+ "pageProgressBusy": {
+  "zh_TW": "$1・翻譯中，已翻譯 $2 段",
+  "zh_CN": "$1・翻译中，已翻译 $2 段",
+  "en": "$1 · translating, $2 done"
+ },
+ "pageSkipped": {
+  "zh_TW": "，$1 段其他語言未翻",
+  "zh_CN": "，$1 段其他语言未翻",
+  "en": ", $1 in other languages skipped"
+ },
+ "pageFailedCount": {
+  "zh_TW": "，$1 段失敗：$2",
+  "zh_CN": "，$1 段失败：$2",
+  "en": ", $1 failed: $2"
+ },
+ "pageFailedTitle": {
+  "zh_TW": "全頁翻譯失敗",
+  "zh_CN": "全页翻译失败",
+  "en": "Full-page translation failed"
+ },
+ "retry": {
+  "zh_TW": "重試",
+  "zh_CN": "重试",
+  "en": "Retry"
+ },
+ "viewMode": {
+  "zh_TW": "顯示方式",
+  "zh_CN": "显示方式",
+  "en": "View"
+ },
+ "viewTranslated": {
+  "zh_TW": "譯文",
+  "zh_CN": "译文",
+  "en": "Translated"
+ },
+ "viewBilingual": {
+  "zh_TW": "對照",
+  "zh_CN": "对照",
+  "en": "Side by side"
+ },
+ "cancel": {
+  "zh_TW": "取消",
+  "zh_CN": "取消",
+  "en": "Cancel"
+ },
+ "restore": {
+  "zh_TW": "還原",
+  "zh_CN": "还原",
+  "en": "Restore"
+ },
+ "tryAgain": {
+  "zh_TW": "再試一次",
+  "zh_CN": "再试一次",
+  "en": "Try again"
+ },
+ "downloadAndTranslate": {
+  "zh_TW": "下載並翻譯",
+  "zh_CN": "下载并翻译",
+  "en": "Download & translate"
+ },
+ "close": {
+  "zh_TW": "關閉",
+  "zh_CN": "关闭",
+  "en": "Close"
+ },
+ "pageNeedsBuiltin": {
+  "zh_TW": "全頁翻譯需要 Chrome 內建翻譯",
+  "zh_CN": "全页翻译需要 Chrome 内置翻译",
+  "en": "Full-page translation needs Chrome's built-in translation"
+ },
+ "pageNeedsBuiltinSub": {
+  "zh_TW": "請使用桌面版 Chrome 138 以上，或在設定改用 AI 模型。",
+  "zh_CN": "请使用桌面版 Chrome 138 以上，或在设置中改用 AI 模型。",
+  "en": "Use desktop Chrome 138 or later, or switch to an AI model in the settings."
+ },
+ "pagePreparing": {
+  "zh_TW": "正在準備全頁翻譯…",
+  "zh_CN": "正在准备全页翻译…",
+  "en": "Preparing full-page translation…"
+ },
+ "pageNothing": {
+  "zh_TW": "這個頁面沒有需要翻譯的文字",
+  "zh_CN": "这个页面没有需要翻译的文字",
+  "en": "Nothing on this page needs translating"
+ },
+ "pageAlready": {
+  "zh_TW": "這個頁面已經是$1",
+  "zh_CN": "这个页面已经是$1",
+  "en": "This page is already in $1"
+ },
+ "pageNeedDetector": {
+  "zh_TW": "需要先準備語言偵測",
+  "zh_CN": "需要先准备语言检测",
+  "en": "Language detection needs to be set up"
+ },
+ "pageNeedDetectorSub": {
+  "zh_TW": "按一下開始，準備好後就會翻譯。",
+  "zh_CN": "点一下开始，准备好后就会翻译。",
+  "en": "Click to start; translation begins when it's ready."
+ },
+ "pageUnknownLang": {
+  "zh_TW": "無法判斷這個頁面的語言",
+  "zh_CN": "无法判断这个页面的语言",
+  "en": "Couldn't tell which language this page is in"
+ },
+ "pagePairUnsupported": {
+  "zh_TW": "Chrome 還不支援$1翻成$2",
+  "zh_CN": "Chrome 还不支持$1翻成$2",
+  "en": "Chrome can't translate $1 into $2 yet"
+ },
+ "pageFirstTime": {
+  "zh_TW": "第一次翻譯$1",
+  "zh_CN": "第一次翻译$1",
+  "en": "First time translating $1"
+ },
+ "pageFirstTimeSub": {
+  "zh_TW": "需要先下載語言套件，之後就不用再下載。",
+  "zh_CN": "需要先下载语言包，之后就不用再下载。",
+  "en": "A language pack needs to download once."
+ },
+ "pagePackDownloading": {
+  "zh_TW": "正在下載語言套件…",
+  "zh_CN": "正在下载语言包…",
+  "en": "Downloading the language pack…"
+ },
+ "pagePackProgress": {
+  "zh_TW": "正在下載語言套件 $1%",
+  "zh_CN": "正在下载语言包 $1%",
+  "en": "Downloading the language pack $1%"
+ },
+ "pagePackFailed": {
+  "zh_TW": "語言套件下載失敗",
+  "zh_CN": "语言包下载失败",
+  "en": "The language pack failed to download"
+ },
+ "pagePackFailedSub": {
+  "zh_TW": "請檢查網路連線後再試一次。",
+  "zh_CN": "请检查网络连接后再试一次。",
+  "en": "Check your connection and try again."
+ },
+ "errReloadForBuiltin": {
+  "zh_TW": "請重新整理目前網頁，以啟用 Chrome 內建翻譯。",
+  "zh_CN": "请刷新当前网页，以启用 Chrome 内置翻译。",
+  "en": "Reload this page to use Chrome's built-in translation."
+ },
+ "errNoKey": {
+  "zh_TW": "未設定 $1 的 API 金鑰",
+  "zh_CN": "未设置 $1 的 API 密钥",
+  "en": "No API key set for $1"
+ },
+ "errModelCustomGone": {
+  "zh_TW": "找不到模型「$1」。請到設定的「進階」確認模型名稱是否正確，或清空改回預設模型。",
+  "zh_CN": "找不到模型「$1」。请到设置的「高级」确认模型名称是否正确，或清空改回默认模型。",
+  "en": "Model “$1” wasn't found. Check the model name under Advanced in the settings, or clear it to use the default."
+ },
+ "errModelGone": {
+  "zh_TW": "$1 已停用模型「$2」或暫時無法使用。請更新擴充功能，或到設定的「進階」改填其他模型名稱。",
+  "zh_CN": "$1 已停用模型「$2」或暂时无法使用。请更新扩展程序，或到设置的「高级」改填其他模型名称。",
+  "en": "$1 has retired the model “$2”, or it's unavailable right now. Update the extension, or enter another model name under Advanced in the settings."
+ },
+ "errNoText": {
+  "zh_TW": "未選取翻譯文字",
+  "zh_CN": "未选中翻译文字",
+  "en": "No text selected"
+ },
+ "errNoParagraphs": {
+  "zh_TW": "沒有要翻譯的段落",
+  "zh_CN": "没有要翻译的段落",
+  "en": "No paragraphs to translate"
+ },
+ "errApiStatus": {
+  "zh_TW": "$1 API 錯誤 $2",
+  "zh_CN": "$1 API 错误 $2",
+  "en": "$1 API error $2"
+ },
+ "errNoOutput": {
+  "zh_TW": "$1 無法產生翻譯（$2）",
+  "zh_CN": "$1 无法生成翻译（$2）",
+  "en": "$1 couldn't produce a translation ($2)"
+ },
+ "errEmptyReply": {
+  "zh_TW": "$1 回應為空",
+  "zh_CN": "$1 返回为空",
+  "en": "$1 returned an empty reply"
+ },
+ "errBadReply": {
+  "zh_TW": "$1 回應格式錯誤：$2",
+  "zh_CN": "$1 返回格式错误：$2",
+  "en": "$1 sent an unexpected reply: $2"
+ },
+ "errConnect": {
+  "zh_TW": "$1 無法連線",
+  "zh_CN": "$1 无法连接",
+  "en": "Couldn't connect to $1"
+ },
+ "errRequestTimeout": {
+  "zh_TW": "請求逾時",
+  "zh_CN": "请求超时",
+  "en": "The request timed out"
+ },
+ "numeralOne": {
+  "zh_TW": "壹",
+  "zh_CN": "壹",
+  "en": "1"
+ },
+ "numeralTwo": {
+  "zh_TW": "貳",
+  "zh_CN": "贰",
+  "en": "2"
+ },
+ "popupToggle": {
+  "zh_TW": "選字翻譯",
+  "zh_CN": "选字翻译",
+  "en": "Translate on select"
+ },
+ "toggleOnDesc": {
+  "zh_TW": "選取文字後，旁邊會出現翻譯按鈕",
+  "zh_CN": "选中文字后，旁边会出现翻译按钮",
+  "en": "A Translate button appears next to selected text"
+ },
+ "toggleOffDesc": {
+  "zh_TW": "已暫停。選取文字時不會出現翻譯按鈕",
+  "zh_CN": "已暂停。选中文字时不会出现翻译按钮",
+  "en": "Paused. No button appears when you select text"
+ },
+ "popupEngine": {
+  "zh_TW": "翻譯引擎",
+  "zh_CN": "翻译引擎",
+  "en": "Engine"
+ },
+ "engineBuiltin": {
+  "zh_TW": "本機翻譯",
+  "zh_CN": "本机翻译",
+  "en": "On-device"
+ },
+ "engineBuiltinDesc": {
+  "zh_TW": "Chrome 內建・免金鑰・文字不離開裝置",
+  "zh_CN": "Chrome 内置・无需密钥・文字不离开设备",
+  "en": "Chrome built-in · no key · text stays on your device"
+ },
+ "engineAI": {
+  "zh_TW": "AI 模型",
+  "zh_CN": "AI 模型",
+  "en": "AI model"
+ },
+ "engineAIDesc": {
+  "zh_TW": "會參考上下文，譯得更準・需 API 金鑰",
+  "zh_CN": "会参考上下文，译得更准・需 API 密钥",
+  "en": "Reads the context for better results · needs an API key"
+ },
+ "builtinInfo": {
+  "zh_TW": "首次使用某個語言時，Chrome 需要先下載語言套件。",
+  "zh_CN": "首次使用某个语言时，Chrome 需要先下载语言包。",
+  "en": "The first time you use a language, Chrome downloads a language pack."
+ },
+ "providerLabel": {
+  "zh_TW": "模型",
+  "zh_CN": "模型",
+  "en": "Provider"
+ },
+ "apiKeyLabel": {
+  "zh_TW": "API 金鑰",
+  "zh_CN": "API 密钥",
+  "en": "API key"
+ },
+ "getKey": {
+  "zh_TW": "取得金鑰",
+  "zh_CN": "获取密钥",
+  "en": "Get a key"
+ },
+ "getKeyLabel": {
+  "zh_TW": "到 $1 取得 API 金鑰",
+  "zh_CN": "到 $1 获取 API 密钥",
+  "en": "Get an API key from $1"
+ },
+ "keyPlaceholder": {
+  "zh_TW": "貼上 $1 API 金鑰",
+  "zh_CN": "粘贴 $1 API 密钥",
+  "en": "Paste your $1 API key"
+ },
+ "save": {
+  "zh_TW": "儲存",
+  "zh_CN": "保存",
+  "en": "Save"
+ },
+ "keySavedButton": {
+  "zh_TW": "已儲存",
+  "zh_CN": "已保存",
+  "en": "Saved"
+ },
+ "keyClearedButton": {
+  "zh_TW": "已清除",
+  "zh_CN": "已清除",
+  "en": "Cleared"
+ },
+ "show": {
+  "zh_TW": "顯示",
+  "zh_CN": "显示",
+  "en": "Show"
+ },
+ "hide": {
+  "zh_TW": "隱藏",
+  "zh_CN": "隐藏",
+  "en": "Hide"
+ },
+ "showKeyLabel": {
+  "zh_TW": "顯示 API 金鑰",
+  "zh_CN": "显示 API 密钥",
+  "en": "Show API key"
+ },
+ "hideKeyLabel": {
+  "zh_TW": "隱藏 API 金鑰",
+  "zh_CN": "隐藏 API 密钥",
+  "en": "Hide API key"
+ },
+ "keyUnsaved": {
+  "zh_TW": "金鑰還沒儲存，按「儲存」後才會生效。",
+  "zh_CN": "密钥还没保存，点「保存」后才会生效。",
+  "en": "The key isn't saved yet. It takes effect after you click Save."
+ },
+ "keyStoredSync": {
+  "zh_TW": "金鑰存在你的 Chrome 同步空間，只會傳給 $1。",
+  "zh_CN": "密钥存在你的 Chrome 同步空间，只会发送给 $1。",
+  "en": "The key is kept in your Chrome sync storage and sent only to $1."
+ },
+ "keyStoredLocal": {
+  "zh_TW": "金鑰只存在這台電腦，只會傳給 $1。",
+  "zh_CN": "密钥只存在这台电脑，只会发送给 $1。",
+  "en": "The key is kept only on this computer and sent only to $1."
+ },
+ "keyMissing": {
+  "zh_TW": "填入金鑰並儲存前，翻譯會暫時使用 Chrome 內建翻譯。",
+  "zh_CN": "填入密钥并保存前，翻译会暂时使用 Chrome 内置翻译。",
+  "en": "Until you save a key, translations use Chrome's built-in translation."
+ },
+ "keyLocalOnly": {
+  "zh_TW": "金鑰只存在這台電腦，不跟著 Chrome 同步",
+  "zh_CN": "密钥只存在这台电脑，不随 Chrome 同步",
+  "en": "Keep keys on this computer only (don't sync)"
+ },
+ "advanced": {
+  "zh_TW": "進階",
+  "zh_CN": "高级",
+  "en": "Advanced"
+ },
+ "customModelLabel": {
+  "zh_TW": "自訂模型名稱",
+  "zh_CN": "自定义模型名称",
+  "en": "Custom model name"
+ },
+ "customModelHelp": {
+  "zh_TW": "服務商停用預設模型時，可以在這裡改填新的模型名稱。留空就使用預設模型。",
+  "zh_CN": "服务商停用默认模型时，可以在这里改填新的模型名称。留空就使用默认模型。",
+  "en": "If the provider retires the default model, enter a new model name here. Leave empty to use the default."
+ },
+ "popupLanguage": {
+  "zh_TW": "語言",
+  "zh_CN": "语言",
+  "en": "Languages"
+ },
+ "langFrom": {
+  "zh_TW": "原文",
+  "zh_CN": "原文",
+  "en": "From"
+ },
+ "langTo": {
+  "zh_TW": "譯文",
+  "zh_CN": "译文",
+  "en": "To"
+ },
+ "langAuto": {
+  "zh_TW": "自動偵測",
+  "zh_CN": "自动检测",
+  "en": "Detect"
+ },
+ "usageBefore": {
+  "zh_TW": "今日已翻譯",
+  "zh_CN": "今日已翻译",
+  "en": "Today"
+ },
+ "usageAfter": {
+  "zh_TW": "次",
+  "zh_CN": "次",
+  "en": "translations"
+ },
+ "help": {
+  "zh_TW": "使用說明",
+  "zh_CN": "使用说明",
+  "en": "Help"
+ },
+ "stampSaved": {
+  "zh_TW": "已存",
+  "zh_CN": "已存",
+  "en": "Saved"
+ },
+ "stampCleared": {
+  "zh_TW": "已清除",
+  "zh_CN": "已清除",
+  "en": "Cleared"
+ },
+ "stampOn": {
+  "zh_TW": "開",
+  "zh_CN": "开",
+  "en": "On"
+ },
+ "stampOff": {
+  "zh_TW": "停",
+  "zh_CN": "停",
+  "en": "Off"
+ },
+ "welcomeLead": {
+  "zh_TW": "謝謝你安裝隨選翻譯。三個用法，一分鐘就會。",
+  "zh_CN": "谢谢你安装随选翻译。三个用法，一分钟就会。",
+  "en": "Thanks for installing Context Translator. Three things to know, one minute to learn."
+ },
+ "welcomeCheckTitle": {
+  "zh_TW": "你的 Chrome 準備好了嗎",
+  "zh_CN": "你的 Chrome 准备好了吗",
+  "en": "Is your Chrome ready?"
+ },
+ "checking": {
+  "zh_TW": "檢查中…",
+  "zh_CN": "检查中…",
+  "en": "Checking…"
+ },
+ "checkTranslatorTitle": {
+  "zh_TW": "本機翻譯",
+  "zh_CN": "本机翻译",
+  "en": "On-device translation"
+ },
+ "translatorReady": {
+  "zh_TW": "可以使用（Chrome $1）。",
+  "zh_CN": "可以使用（Chrome $1）。",
+  "en": "Ready (Chrome $1)."
+ },
+ "translatorFirstUse": {
+  "zh_TW": "可以使用（Chrome $1）。第一次翻譯某個語言時，Chrome 會先下載語言套件。",
+  "zh_CN": "可以使用（Chrome $1）。第一次翻译某个语言时，Chrome 会先下载语言包。",
+  "en": "Ready (Chrome $1). The first time you translate a language, Chrome downloads a language pack."
+ },
+ "translatorMissing": {
+  "zh_TW": "需要桌面版 Chrome 138 以上，你目前是 Chrome $1。可以先在設定改用 AI 模型。",
+  "zh_CN": "需要桌面版 Chrome 138 以上，你目前是 Chrome $1。可以先在设置中改用 AI 模型。",
+  "en": "Needs desktop Chrome 138 or later; you have Chrome $1. You can use an AI model in the settings instead."
+ },
+ "translatorPairMissing": {
+  "zh_TW": "這台電腦的 Chrome 暫時不支援目前的譯文語言，可以在設定換一個語言，或改用 AI 模型。",
+  "zh_CN": "这台电脑的 Chrome 暂时不支持当前的译文语言，可以在设置中换一个语言，或改用 AI 模型。",
+  "en": "Chrome on this computer doesn't support your target language yet. Pick another one, or use an AI model."
+ },
+ "checkNanoTitle": {
+  "zh_TW": "本機語境解釋（Gemini Nano）",
+  "zh_CN": "本机语境解释（Gemini Nano）",
+  "en": "On-device context (Gemini Nano)"
+ },
+ "nanoReady": {
+  "zh_TW": "已就緒。查單字時，會在這台電腦上依照句子說明詞義。",
+  "zh_CN": "已就绪。查单词时，会在这台电脑上根据句子说明词义。",
+  "en": "Ready. Word lookups explain the meaning in context, right on this computer."
+ },
+ "nanoDownloadable": {
+  "zh_TW": "可以下載。模型有好幾 GB，下載一次之後查單字時就會說明語境，不需要 API 金鑰。",
+  "zh_CN": "可以下载。模型有好几 GB，下载一次之后查单词时就会说明语境，无需 API 密钥。",
+  "en": "Available to download. The model is several GB; once it's downloaded, word lookups explain the context without an API key."
+ },
+ "nanoDownloading": {
+  "zh_TW": "Chrome 正在下載模型，完成後就會自動啟用。",
+  "zh_CN": "Chrome 正在下载模型，完成后会自动启用。",
+  "en": "Chrome is downloading the model; it turns on automatically when done."
+ },
+ "nanoProgress": {
+  "zh_TW": "正在下載模型 $1%…",
+  "zh_CN": "正在下载模型 $1%…",
+  "en": "Downloading the model $1%…"
+ },
+ "nanoFailed": {
+  "zh_TW": "下載沒有完成，請確認網路和硬碟空間後再試一次。",
+  "zh_CN": "下载没有完成，请确认网络和硬盘空间后再试一次。",
+  "en": "The download didn't finish. Check your connection and disk space, then try again."
+ },
+ "nanoUnsupported": {
+  "zh_TW": "這台電腦或這個 Chrome 版本不支援（需要較好的顯示卡或記憶體）。查單字時會顯示一般譯文，或使用你設定的 AI 模型。",
+  "zh_CN": "这台电脑或这个 Chrome 版本不支持（需要较好的显卡或内存）。查单词时会显示一般译文，或使用你设置的 AI 模型。",
+  "en": "Not supported on this computer or Chrome version (it needs a capable GPU or enough memory). Word lookups show a regular translation, or use your AI model."
+ },
+ "nanoDownload": {
+  "zh_TW": "下載模型",
+  "zh_CN": "下载模型",
+  "en": "Download model"
+ },
+ "welcomeHowTitle": {
+  "zh_TW": "怎麼用",
+  "zh_CN": "怎么用",
+  "en": "How to use it"
+ },
+ "stepSelectTitle": {
+  "zh_TW": "選取文字，按旁邊的「文 翻譯」",
+  "zh_CN": "选中文字，点旁边的「文 翻译」",
+  "en": "Select text and click “文 Translate”"
+ },
+ "stepSelectDesc": {
+  "zh_TW": "譯文會出現在旁邊的浮窗。只選一個單字時，會依照句子說明它在這裡的意思。",
+  "zh_CN": "译文会出现在旁边的浮窗。只选一个单词时，会根据句子说明它在这里的意思。",
+  "en": "The translation appears in a small card. Select a single word to see what it means in that sentence."
+ },
+ "stepPageTitle": {
+  "zh_TW": "在網頁上按右鍵，選「全頁翻譯」",
+  "zh_CN": "在网页上点右键，选「全页翻译」",
+  "en": "Right-click a page and choose “Translate full page”"
+ },
+ "stepPageDesc": {
+  "zh_TW": "只翻你看得到的段落，捲到哪裡翻到哪裡。右下角可以切換「對照」或「還原」。",
+  "zh_CN": "只翻你看得到的段落，滚到哪里翻到哪里。右下角可以切换「对照」或「还原」。",
+  "en": "Only the paragraphs you can see are translated, more as you scroll. Use the bar at the bottom right to switch to side by side or restore the page."
+ },
+ "stepSettingsTitle": {
+  "zh_TW": "點工具列的「文」圖示調整設定",
+  "zh_CN": "点工具栏的「文」图标调整设置",
+  "en": "Click the “文” toolbar icon for settings"
+ },
+ "stepSettingsDesc": {
+  "zh_TW": "可以換譯文語言，或接上你自己的 AI 模型。建議先在拼圖圖示裡把它釘選到工具列。",
+  "zh_CN": "可以换译文语言，或接上你自己的 AI 模型。建议先在拼图图标里把它固定到工具栏。",
+  "en": "Change the target language or connect your own AI model. Tip: pin it to the toolbar from the puzzle-piece menu."
+ },
+ "tryHint": {
+  "zh_TW": "在這裡試試看：選取下面的句子，或雙擊 bank 這個字",
+  "zh_CN": "在这里试试看：选中下面的句子，或双击 bank 这个词",
+  "en": "Try it here: select a sentence below, or double-click the word “bank”"
+ },
+ "privacyPolicy": {
+  "zh_TW": "隱私權政策",
+  "zh_CN": "隐私政策",
+  "en": "Privacy policy"
+ },
+ "feedback": {
+  "zh_TW": "回報問題",
+  "zh_CN": "反馈问题",
+  "en": "Report a problem"
+ },
+ "kicker": {
+  "zh_TW": "Context Translator",
+  "zh_CN": "Context Translator",
+  "en": "隨選翻譯",
+  "description": "Small line above the title; shows the other-language name"
+ }
+}

@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>隨選翻譯 — Context Translator</title>
+<link rel="icon" href="icons/icon32.png">
+<style>
+  :root {
+    color-scheme: light dark;
+    --paper: #f7f3ea; --paper-2: #efe8d9; --sheet: #fbf8f1; --ink: #1b1a17; --ink-2: #4f4a41; --ink-3: #857e70;
+    --rule: rgba(27, 26, 23, .16); --vermilion: #c8372d; --vermilion-text: #a92c23; --seal-text: #fbf7ef;
+    --ok: #3d6b4a; --focus: rgba(200, 55, 45, .38);
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Songti TC", "Noto Serif TC", "Source Han Serif TC", "PMingLiU", Georgia, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --paper: #1a1815; --paper-2: #24211c; --sheet: #211f1b; --ink: #ede6d8; --ink-2: #c4bba9; --ink-3: #8f8778;
+      --rule: rgba(237, 230, 216, .16); --vermilion: #e0604c; --vermilion-text: #ee8574; --seal-text: #1a1815; --ok: #8fc29c; }
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--paper); }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.75 var(--sans); -webkit-font-smoothing: antialiased; }
+  .page { max-width: 760px; margin: 0 auto; padding: 48px 20px 72px; }
+  header { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; padding-bottom: 14px; border-bottom: 2px solid var(--ink); }
+  .kicker { display: block; font: 600 11px/1 var(--sans); letter-spacing: .22em; color: var(--ink-3); text-transform: uppercase; }
+  h1 { margin: 8px 0 0; font: 700 34px/1.2 var(--serif); letter-spacing: .04em; }
+  .seal { flex: none; width: 52px; height: 52px; display: grid; place-items: center; border-radius: 7px; transform: rotate(-4deg);
+    background: var(--vermilion); color: var(--seal-text); font: 900 31px/1 var(--serif); box-shadow: inset 0 0 0 2px var(--paper), inset 0 0 0 3.5px var(--seal-text); }
+  .lead { margin: 22px 0 0; font: 400 19px/1.7 var(--serif); color: var(--ink-2); }
+
+  h2 { margin: 44px 0 12px; font: 700 21px/1.4 var(--serif); display: flex; align-items: baseline; gap: 10px; }
+  h2 .no { color: var(--vermilion-text); font-size: 17px; }
+
+  .checks { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--rule); }
+  .check { display: grid; grid-template-columns: 22px 1fr auto; gap: 4px 12px; align-items: start; padding: 14px 2px; border-bottom: 1px solid var(--rule); }
+  .check .mark { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font: 700 13px/1 var(--sans);
+    border: 1.5px solid var(--ink-3); color: var(--ink-3); margin-top: 2px; }
+  .check[data-state="ok"] .mark { border-color: var(--ok); color: var(--ok); }
+  .check[data-state="warn"] .mark, .check[data-state="off"] .mark { border-color: var(--vermilion); color: var(--vermilion-text); }
+  .check b { display: block; font-weight: 700; }
+  .check .desc { display: block; color: var(--ink-2); font-size: 14.5px; }
+  .check button { align-self: center; height: 32px; padding: 0 14px; border-radius: 3px; border: 1px solid var(--vermilion);
+    background: var(--vermilion); color: var(--seal-text); font: 600 13px/1 var(--sans); cursor: pointer; }
+  .check button[hidden] { display: none; }
+  .check button:disabled { opacity: .6; cursor: default; }
+  button:focus-visible, a:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+  .steps { margin: 0; padding: 0; list-style: none; counter-reset: step; }
+  .steps li { position: relative; padding: 0 0 18px 44px; }
+  .steps li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 2px; width: 28px; height: 28px;
+    border-radius: 50%; border: 1.5px solid var(--ink); display: grid; place-items: center; font: 700 14px/1 var(--serif); }
+  .steps b { display: block; font: 700 17px/1.5 var(--serif); }
+  .steps span { color: var(--ink-2); }
+  kbd { font: 600 13px/1 var(--sans); padding: 2px 6px; border: 1px solid var(--rule); border-bottom-width: 2px; border-radius: 3px; background: var(--sheet); }
+
+  .try { margin-top: 8px; padding: 22px 24px; background: var(--sheet); border: 1px solid var(--rule); border-left: 3px solid var(--vermilion); border-radius: 0 4px 4px 0; }
+  .try p { margin: 0; font: 400 19px/1.7 Georgia, "Iowan Old Style", serif; }
+  .try p + p { margin-top: 14px; }
+  .try .hint { display: block; margin-bottom: 10px; font: 600 12px/1 var(--sans); letter-spacing: .14em; color: var(--ink-3); }
+
+  footer { margin-top: 56px; padding-top: 16px; border-top: 2px solid var(--ink); color: var(--ink-3); font-size: 13.5px; display: flex; flex-wrap: wrap; gap: 6px 18px; }
+  footer a { color: var(--ink-2); }
+  @media (max-width: 520px) { h1 { font-size: 28px; } .check { grid-template-columns: 22px 1fr; } .check button { grid-column: 2; justify-self: start; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <div><span class="kicker" data-i18n="kicker">Context Translator</span><h1 data-i18n="appName">隨選翻譯</h1></div>
+    <div class="seal" aria-hidden="true">文</div>
+  </header>
+  <p class="lead" data-i18n="welcomeLead">謝謝你安裝隨選翻譯。三個用法，一分鐘就會。</p>
+
+  <h2><span class="no" data-i18n="numeralOne">壹</span><span data-i18n="welcomeCheckTitle">你的 Chrome 準備好了嗎</span></h2>
+  <ul class="checks">
+    <li class="check" id="check-translator" data-state="wait">
+      <span class="mark" aria-hidden="true">…</span>
+      <span><b data-i18n="checkTranslatorTitle">本機翻譯</b><span class="desc" data-i18n="checking">檢查中…</span></span>
+    </li>
+    <li class="check" id="check-nano" data-state="wait">
+      <span class="mark" aria-hidden="true">…</span>
+      <span><b data-i18n="checkNanoTitle">本機語境解釋（Gemini Nano）</b><span class="desc" data-i18n="checking">檢查中…</span></span>
+      <button type="button" id="nano-download" hidden data-i18n="nanoDownload">下載模型</button>
+    </li>
+  </ul>
+
+  <h2><span class="no" data-i18n="numeralTwo">貳</span><span data-i18n="welcomeHowTitle">怎麼用</span></h2>
+  <ol class="steps">
+    <li><b data-i18n="stepSelectTitle">選取文字，按旁邊的「文 翻譯」</b><span data-i18n="stepSelectDesc">譯文會出現在旁邊的浮窗。只選一個單字時，會依照句子說明它在這裡的意思。</span></li>
+    <li><b data-i18n="stepPageTitle">在網頁上按右鍵，選「全頁翻譯」</b><span data-i18n="stepPageDesc">只翻你看得到的段落，捲到哪裡翻到哪裡。右下角可以切換「對照」或「還原」。</span></li>
+    <li><b data-i18n="stepSettingsTitle">點工具列的「文」圖示調整設定</b><span data-i18n="stepSettingsDesc">可以換譯文語言，或接上你自己的 AI 模型。建議先在拼圖圖示裡把它釘選到工具列。</span></li>
+  </ol>
+
+  <div class="try" id="try">
+    <span class="hint" data-i18n="tryHint">在這裡試試看：選取下面的句子，或雙擊 bank 這個字</span>
+    <p lang="en">We rarely notice how much of the internet was written for someone else — in a language we only half understand.</p>
+    <p lang="en">She waited on the bank until the river calmed.</p>
+  </div>
+
+  <footer>
+    <a href="https://jayishandsome.github.io/Translate-Master/privacy.html" target="_blank" rel="noopener" data-i18n="privacyPolicy">隱私權政策</a>
+    <a href="https://github.com/Jayishandsome/Translate-Master" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://github.com/Jayishandsome/Translate-Master/issues" target="_blank" rel="noopener" data-i18n="feedback">回報問題</a>
+  </footer>
+</div>
+<script src="welcome.js"></script>
+<script src="content.js"></script>
+</body>
+</html>

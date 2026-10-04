@@ -6,7 +6,9 @@
 
 ## 一、套件
 
-上傳 `translate-master-2.8.0.zip`（只包含擴充功能本身的檔案：`manifest.json`、`background.js`、`content.js`、`popup.html`、`popup.js`、`icons/`、`LICENSE`）。
+上傳 `translate-master-3.0.0.zip`（用 `npm run package` 產生在 `dist/`，只包含擴充功能本身的檔案：`manifest.json`、`background.js`、`content.js`、`popup.html`、`popup.js`、`welcome.html`、`welcome.js`、`icons/`、`_locales/`、`LICENSE`）。
+
+> 3.0.0 起名稱和摘要改由 `_locales/` 依語言提供：繁中、簡中、英文各一份，商店會自動帶入。
 
 ---
 
@@ -36,10 +38,10 @@
 選取任何一段文字，旁邊就會出現翻譯按鈕。譯文直接顯示在浮窗裡，可以拖曳位置、一鍵複製。
 
 【按右鍵，整頁翻譯】
-在網頁上按右鍵，選「全頁翻譯」。只翻你看得到的段落，捲到哪裡、翻到哪裡；之後載入的內容也會接著翻。可以切換「譯文」或「對照」，讓原文和譯文逐段並列；按「還原」就恢復原樣。
+在網頁上按右鍵，選「全頁翻譯」。只翻你看得到的段落，捲到哪裡、翻到哪裡；之後載入的內容也會接著翻。段落裡的連結翻譯後一樣點得到。可以切換「譯文」或「對照」，讓原文和譯文逐段並列；按「還原」就恢復原樣。
 
 【查單字，也看上下文】
-使用 AI 模型時，查單字會依照句子判斷詞義，並附上簡短的語境說明。例如「river bank」裡的 bank 會翻成「河岸」，而不是「銀行」。
+查單字會依照句子判斷詞義，並附上簡短的語境說明。例如「river bank」裡的 bank 會翻成「河岸」，而不是「銀行」。電腦支援 Chrome 內建的 Gemini Nano 時，不用 API 金鑰也能在本機做到。
 
 【預設在你的裝置上翻譯】
 預設使用 Chrome 內建翻譯（桌面版 Chrome 138 以上），不需要 API 金鑰，文字不會離開你的電腦。
@@ -49,7 +51,8 @@
 
 【其他特色】
 ・自動偵測原文語言，不用先切換設定
-・譯文語言有 7 種可選，包括繁體中文、簡體中文和英文
+・14 種譯文語言，介面有繁體中文、簡體中文和英文
+・安裝後有說明頁，教用法並檢查你的 Chrome 能不能用本機翻譯
 ・紙本字典風介面，支援深色模式、鍵盤操作與減少動態效果
 ・免費、開放原始碼
 
@@ -68,10 +71,10 @@ SELECT TO TRANSLATE
 Select any text and a Translate button appears next to it. The translation shows up in a small card you can drag or copy.
 
 TRANSLATE THE WHOLE PAGE
-Right-click a page and choose “全頁翻譯” (Translate full page). Only the paragraphs you can see are translated, and more follow as you scroll, including content that loads later. Switch between translation-only and side-by-side views, or restore the original page in one click.
+Right-click a page and choose “Translate full page”. Only the paragraphs you can see are translated, and more follow as you scroll, including content that loads later. Links inside paragraphs stay clickable. Switch between translation-only and side-by-side views, or restore the original page in one click.
 
 WORDS IN CONTEXT
-With an AI model, looking up a word takes its sentence into account and adds a short note on the meaning in context — “bank” in “river bank” is translated as the riverside, not the financial institution.
+Looking up a word takes its sentence into account and adds a short note on the meaning in context — “bank” in “river bank” is translated as the riverside, not the financial institution. On computers that support Chrome's built-in Gemini Nano, this works on-device without an API key.
 
 ON-DEVICE BY DEFAULT
 Uses Chrome's built-in translation (desktop Chrome 138 or later). No API key needed, and your text never leaves your computer.
@@ -81,7 +84,8 @@ For more context-aware translations, optionally use your own API key from one of
 
 ALSO
 • Detects the source language automatically
-• Seven target languages, including Traditional Chinese, Simplified Chinese and English
+• 14 target languages; interface in English, Traditional Chinese and Simplified Chinese
+• A welcome page shows how to use it and checks whether your Chrome supports on-device translation
 • Paper-dictionary design with dark mode, keyboard support and reduced motion
 • Free and open source
 

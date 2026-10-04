@@ -1,0 +1,14 @@
+{
+  "name": "translate-master",
+  "private": true,
+  "description": "隨選翻譯 — Context Translator (Chrome extension)",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "check": "node scripts/build.mjs && git diff --exit-code -- content.js _locales",
+    "test": "playwright test",
+    "package": "node scripts/build.mjs && bash scripts/package.sh"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.0"
+  }
+}

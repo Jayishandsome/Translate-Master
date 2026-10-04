@@ -1,90 +1,41 @@
 // 隨選翻譯 — 設定視窗
 // 設定即時儲存；API 金鑰則要按「儲存」（或 Enter）才會寫入。存好時右下角會「蓋章」。
+// 介面文字都在 _locales/ 裡，依 Chrome 的介面語言顯示。
 
-const KEYS = [
-  "apiProvider",
-  "apiKeys",
-  "targetLang",
-  "isEnabled",
-  "usageDate",
-  "usageCount",
-];
+const t = (key, subs) => globalThis.chrome?.i18n?.getMessage(key, subs) || key;
 
 const AI_PROVIDERS = {
-  gemini: {
-    vendor: "Google",
-    placeholder: "貼上 Google AI Studio 金鑰",
-    keyUrl: "https://aistudio.google.com/app/apikey",
-  },
-  openai: {
-    vendor: "OpenAI",
-    placeholder: "貼上 OpenAI API 金鑰",
-    keyUrl: "https://platform.openai.com/api-keys",
-  },
-  claude: {
-    vendor: "Anthropic",
-    placeholder: "貼上 Anthropic API 金鑰",
-    keyUrl: "https://console.anthropic.com/",
-  },
-  deepseek: {
-    vendor: "DeepSeek",
-    placeholder: "貼上 DeepSeek API 金鑰",
-    keyUrl: "https://platform.deepseek.com/",
-  },
-  kimi: {
-    vendor: "Moonshot",
-    placeholder: "貼上 Kimi API 金鑰",
-    keyUrl: "https://platform.kimi.ai/",
-  },
-  minimax: {
-    vendor: "MiniMax",
-    placeholder: "貼上 MiniMax API 金鑰",
-    keyUrl: "https://platform.minimax.io/",
-  },
+  gemini: { vendor: "Google", keyUrl: "https://aistudio.google.com/app/apikey" },
+  openai: { vendor: "OpenAI", keyUrl: "https://platform.openai.com/api-keys" },
+  claude: { vendor: "Anthropic", keyUrl: "https://console.anthropic.com/" },
+  deepseek: { vendor: "DeepSeek", keyUrl: "https://platform.deepseek.com/" },
+  kimi: { vendor: "Moonshot", keyUrl: "https://platform.kimi.ai/" },
+  minimax: { vendor: "MiniMax", keyUrl: "https://platform.minimax.io/" },
 };
 
-const storage = {
-  get(keys) {
-    return new Promise((resolve) => {
-      if (globalThis.chrome?.storage?.sync) {
-        chrome.storage.sync.get(keys, (result) => resolve(result || {}));
-        return;
-      }
+// 譯文語言：用各語言自己的寫法顯示，任何介面語言的使用者都認得
+const TARGET_LANGUAGES = [
+  ["zh-TW", "繁體中文"], ["zh-CN", "简体中文"], ["en", "English"], ["ja", "日本語"], ["ko", "한국어"],
+  ["fr", "Français"], ["de", "Deutsch"], ["es", "Español"], ["pt", "Português"], ["it", "Italiano"],
+  ["ru", "Русский"], ["vi", "Tiếng Việt"], ["th", "ไทย"], ["id", "Bahasa Indonesia"],
+];
 
-      const result = {};
-      keys.forEach((key) => {
-        const value = localStorage.getItem(key);
-        if (value === null) return;
-        try {
-          result[key] = JSON.parse(value);
-        } catch {
-          result[key] = value;
-        }
-      });
-      resolve(result);
-    });
-  },
-
-  set(data) {
-    return new Promise((resolve) => {
-      if (globalThis.chrome?.storage?.sync) {
-        chrome.storage.sync.set(data, resolve);
-        return;
-      }
-
-      Object.entries(data).forEach(([key, value]) => {
-        localStorage.setItem(key, JSON.stringify(value));
-      });
-      resolve();
-    });
-  },
-};
+const sync = chrome.storage.sync;
+const local = chrome.storage.local;
 
 function today() {
   return new Date().toISOString().slice(0, 10);
 }
 
-function showSaved(message = "已存") {
+function applyI18n() {
+  document.documentElement.lang = t("htmlLang");
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    const text = t(el.dataset.i18n);
+    if (text !== el.dataset.i18n) el.textContent = text;
+  });
+}
+
+function showSaved(message = t("stampSaved")) {
   const element = document.getElementById("status-msg");
   element.textContent = message;
   element.classList.remove("show");
@@ -96,6 +47,8 @@ function showSaved(message = "已存") {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
+  applyI18n();
+
   const toggleSwitch = document.getElementById("toggle-switch");
   const appState = document.getElementById("app-state");
   const engineMode = document.getElementById("engine-mode");
@@ -108,14 +61,25 @@ document.addEventListener("DOMContentLoaded", async () => {
   const keyLink = document.getElementById("key-link");
   const visibilityButton = document.getElementById("key-visibility");
   const saveKeyButton = document.getElementById("key-save");
+  const keyLocal = document.getElementById("key-local");
+  const advanced = document.getElementById("advanced");
+  const modelInput = document.getElementById("model-input");
   const languageSelect = document.getElementById("lang-select");
+  const helpLink = document.getElementById("help-link");
 
   let isEnabled = true;
   let currentProvider = "builtin";
   let lastAiProvider = "gemini";
-  let apiKeys = {};
-  let savedKey = "";          // 目前服務商已儲存的金鑰
+  let keyStorage = "sync";      // 金鑰跟著 Chrome 同步（sync），或只存在這台電腦（local）
+  let savedKey = "";            // 目前服務商已儲存的金鑰
+  let customModels = {};
+  let defaultModels = {};
   let savedLabelTimer = null;
+
+  const keyArea = () => (keyStorage === "local" ? local : sync);
+  const readKeys = async () => (await keyArea().get("apiKeys")).apiKeys || {};
+
+  for (const [code, name] of TARGET_LANGUAGES) languageSelect.add(new Option(name, code));
 
   // ------------------------------------------------------------------
   // Render
@@ -125,9 +89,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     toggleSwitch.classList.toggle("on", isEnabled);
     toggleSwitch.setAttribute("aria-checked", String(isEnabled));
     document.body.classList.toggle("is-paused", !isEnabled);
-    appState.textContent = isEnabled
-      ? "選取文字後，旁邊會出現翻譯按鈕"
-      : "已暫停。選取文字時不會出現翻譯按鈕";
+    appState.textContent = isEnabled ? t("toggleOnDesc") : t("toggleOffDesc");
   };
 
   const isKeyDirty = () => apiKeyInput.value.trim() !== savedKey;
@@ -138,23 +100,28 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (dirty) {
       clearTimeout(savedLabelTimer);
       saveKeyButton.classList.remove("is-saved");
-      saveKeyButton.textContent = "儲存";
+      saveKeyButton.textContent = t("save");
     }
     saveKeyButton.disabled = !dirty;
     saveKeyButton.classList.toggle("is-dirty", dirty);
     apiKeyHelp.classList.toggle("is-warning", dirty || !savedKey);
     apiKeyHelp.textContent = dirty
-      ? "金鑰還沒儲存，按「儲存」後才會生效。"
+      ? t("keyUnsaved")
       : savedKey
-      ? `金鑰只存在你的 Chrome 同步空間，只會傳給 ${meta.vendor}。`
-      : "填入金鑰並儲存前，翻譯會暫時使用 Chrome 內建翻譯。";
+      ? t(keyStorage === "local" ? "keyStoredLocal" : "keyStoredSync", [meta.vendor])
+      : t("keyMissing");
   };
 
-  const resetKeyVisibility = () => {
-    apiKeyInput.type = "password";
-    visibilityButton.setAttribute("aria-pressed", "false");
-    visibilityButton.setAttribute("aria-label", "顯示 API 金鑰");
-    visibilityButton.textContent = "顯示";
+  const renderVisibility = (shown) => {
+    apiKeyInput.type = shown ? "text" : "password";
+    visibilityButton.setAttribute("aria-pressed", String(shown));
+    visibilityButton.setAttribute("aria-label", t(shown ? "hideKeyLabel" : "showKeyLabel"));
+    visibilityButton.textContent = t(shown ? "hide" : "show");
+  };
+
+  const renderModel = () => {
+    modelInput.value = customModels[lastAiProvider] || "";
+    modelInput.placeholder = defaultModels[lastAiProvider] || "";
   };
 
   const renderEngine = () => {
@@ -167,10 +134,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const meta = AI_PROVIDERS[lastAiProvider];
     providerSelect.value = lastAiProvider;
-    apiKeyInput.placeholder = meta.placeholder;
+    apiKeyInput.placeholder = t("keyPlaceholder", [meta.vendor]);
     keyLink.href = meta.keyUrl;
-    keyLink.setAttribute("aria-label", `到 ${meta.vendor} 取得 API 金鑰`);
+    keyLink.setAttribute("aria-label", t("getKeyLabel", [meta.vendor]));
+    keyLocal.checked = keyStorage === "local";
     renderKeyState();
+    renderModel();
   };
 
   // ------------------------------------------------------------------
@@ -178,72 +147,96 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ------------------------------------------------------------------
 
   const saveProvider = async () => {
-    await storage.set({ apiProvider: currentProvider });
+    await sync.set({ apiProvider: currentProvider });
     showSaved();
   };
 
   const saveKey = async () => {
     if (!isKeyDirty()) return;
-    const provider = lastAiProvider;
     const value = apiKeyInput.value.trim();
-    const latest = await storage.get(["apiKeys"]);
-    apiKeys = latest.apiKeys || {};
-    apiKeys[provider] = value;
-    await storage.set({ apiKeys });
+    const keys = await readKeys();
+    if (value) keys[lastAiProvider] = value;
+    else delete keys[lastAiProvider];
+    await keyArea().set({ apiKeys: keys });
     savedKey = value;
     apiKeyInput.value = value;
     renderKeyState();
     saveKeyButton.classList.add("is-saved");
-    saveKeyButton.textContent = value ? "已儲存" : "已清除";
+    saveKeyButton.textContent = t(value ? "keySavedButton" : "keyClearedButton");
     clearTimeout(savedLabelTimer);
     savedLabelTimer = setTimeout(() => {
       saveKeyButton.classList.remove("is-saved");
-      saveKeyButton.textContent = "儲存";
+      saveKeyButton.textContent = t("save");
     }, 1600);
-    showSaved(value ? "已存" : "已清除");
+    showSaved(t(value ? "stampSaved" : "stampCleared"));
+  };
+
+  // 換儲存位置：先把金鑰寫到新的地方、記下選擇，再刪掉舊的
+  const moveKeys = async (target) => {
+    if (target === keyStorage) return;
+    const keys = await readKeys();
+    const from = keyArea();
+    keyStorage = target;
+    await keyArea().set({ apiKeys: keys });
+    await sync.set({ keyStorage });
+    await from.remove("apiKeys");
+    renderKeyState();
+    showSaved();
+  };
+
+  const saveModel = async () => {
+    const value = modelInput.value.trim();
+    if ((customModels[lastAiProvider] || "") === value) return;
+    if (value) customModels[lastAiProvider] = value;
+    else delete customModels[lastAiProvider];
+    await sync.set({ customModels });
+    showSaved(t(value ? "stampSaved" : "stampCleared"));
   };
 
   // ------------------------------------------------------------------
   // Load
   // ------------------------------------------------------------------
 
-  const version = globalThis.chrome?.runtime?.getManifest?.().version;
+  const version = chrome.runtime.getManifest?.().version;
   if (version) document.getElementById("edition").textContent = `v${version}`;
 
-  const result = await storage.get(KEYS);
+  const result = await sync.get(["apiProvider", "targetLang", "isEnabled", "usageDate", "usageCount", "keyStorage", "customModels"]);
+  keyStorage = result.keyStorage === "local" ? "local" : "sync";
+  customModels = result.customModels || {};
+  const apiKeys = await readKeys();
 
-  apiKeys = result.apiKeys || {};
+  // 選了 AI 但還沒有金鑰時，顯示成本機翻譯（翻譯時本來就會先用本機翻譯）
   const storedProvider = result.apiProvider === "builtin" || AI_PROVIDERS[result.apiProvider]
     ? result.apiProvider
     : "builtin";
-  currentProvider = storedProvider === "builtin" || apiKeys[storedProvider]
-    ? storedProvider
-    : "builtin";
-  if (currentProvider !== result.apiProvider) {
-    await storage.set({ apiProvider: currentProvider });
-  }
+  currentProvider = storedProvider === "builtin" || apiKeys[storedProvider] ? storedProvider : "builtin";
+  if (currentProvider !== result.apiProvider) await sync.set({ apiProvider: currentProvider });
 
   lastAiProvider = AI_PROVIDERS[currentProvider]
     ? currentProvider
     : Object.keys(AI_PROVIDERS).find((id) => apiKeys[id]) || "gemini";
   savedKey = apiKeys[lastAiProvider] || "";
   apiKeyInput.value = savedKey;
+  advanced.open = Object.values(customModels).some(Boolean);
 
-  const supportedLanguages = [...languageSelect.options].map((option) => option.value);
-  const storedLanguage = supportedLanguages.includes(result.targetLang)
-    ? result.targetLang
-    : "zh-TW";
+  const supported = TARGET_LANGUAGES.map(([code]) => code);
+  const storedLanguage = supported.includes(result.targetLang) ? result.targetLang : "zh-TW";
   languageSelect.value = storedLanguage;
-  if (storedLanguage !== result.targetLang && result.targetLang) {
-    await storage.set({ targetLang: storedLanguage });
-  }
+  if (storedLanguage !== result.targetLang && result.targetLang) await sync.set({ targetLang: storedLanguage });
 
   isEnabled = result.isEnabled !== false;
   renderToggle();
+  renderVisibility(false);
   renderEngine();
 
   const usage = result.usageDate === today() ? Math.max(0, Number(result.usageCount) || 0) : 0;
   document.getElementById("quota-text").textContent = String(usage);
+
+  // 預設模型名稱由背景程式提供，當作「自訂模型」的提示文字
+  chrome.runtime.sendMessage({ action: "getProviders" }).then((reply) => {
+    defaultModels = Object.fromEntries(Object.entries(reply?.providers || {}).map(([id, p]) => [id, p.model]));
+    renderModel();
+  }, () => {});
 
   // ------------------------------------------------------------------
   // Events
@@ -252,8 +245,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   toggleSwitch.addEventListener("click", async () => {
     isEnabled = !isEnabled;
     renderToggle();
-    await storage.set({ isEnabled });
-    showSaved(isEnabled ? "開" : "停");
+    await sync.set({ isEnabled });
+    showSaved(t(isEnabled ? "stampOn" : "stampOff"));
   });
 
   engineRadios.forEach((radio) => {
@@ -268,11 +261,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   providerSelect.addEventListener("change", async () => {
     lastAiProvider = providerSelect.value;
     currentProvider = lastAiProvider;
-    const latest = await storage.get(["apiKeys"]);
-    apiKeys = latest.apiKeys || {};
-    savedKey = apiKeys[lastAiProvider] || "";
+    savedKey = (await readKeys())[lastAiProvider] || "";
     apiKeyInput.value = savedKey;
-    resetKeyVisibility();
+    renderVisibility(false);
     renderEngine();
     await saveProvider();
   });
@@ -282,17 +273,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (event.key === "Enter") { event.preventDefault(); saveKey(); }
   });
   saveKeyButton.addEventListener("click", saveKey);
+  visibilityButton.addEventListener("click", () => renderVisibility(apiKeyInput.type === "password"));
+  keyLocal.addEventListener("change", () => moveKeys(keyLocal.checked ? "local" : "sync"));
 
-  visibilityButton.addEventListener("click", () => {
-    const shouldShow = apiKeyInput.type === "password";
-    apiKeyInput.type = shouldShow ? "text" : "password";
-    visibilityButton.setAttribute("aria-pressed", String(shouldShow));
-    visibilityButton.setAttribute("aria-label", shouldShow ? "隱藏 API 金鑰" : "顯示 API 金鑰");
-    visibilityButton.textContent = shouldShow ? "隱藏" : "顯示";
+  modelInput.addEventListener("change", saveModel);
+  modelInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") { event.preventDefault(); saveModel(); }
   });
 
   languageSelect.addEventListener("change", async () => {
-    await storage.set({ targetLang: languageSelect.value });
+    await sync.set({ targetLang: languageSelect.value });
     showSaved();
+  });
+
+  helpLink.addEventListener("click", (event) => {
+    event.preventDefault();
+    chrome.tabs.create({ url: chrome.runtime.getURL("welcome.html") });
+    window.close();
   });
 });

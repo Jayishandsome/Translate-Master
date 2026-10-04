@@ -1,0 +1,663 @@
+{
+  "extName": {
+    "message": "Context Translator",
+    "description": "Extension name"
+  },
+  "extDescription": {
+    "message": "Select text on any page to translate it, or right-click to translate the whole page. Uses Chrome's built-in on-device translation by default, no API key needed."
+  },
+  "actionTitle": {
+    "message": "Context Translator settings"
+  },
+  "menuTranslatePage": {
+    "message": "Translate full page"
+  },
+  "htmlLang": {
+    "message": "en",
+    "description": "BCP 47 language tag for <html lang>"
+  },
+  "appName": {
+    "message": "Context Translator"
+  },
+  "btnTranslateLabel": {
+    "message": "Translate selection"
+  },
+  "btnTranslate": {
+    "message": "Translate"
+  },
+  "popoverLabel": {
+    "message": "Translation"
+  },
+  "dragHint": {
+    "message": "Drag to move"
+  },
+  "copyTranslation": {
+    "message": "Copy translation"
+  },
+  "copied": {
+    "message": "Translation copied"
+  },
+  "closeEsc": {
+    "message": "Close (Esc)"
+  },
+  "closeResult": {
+    "message": "Close translation"
+  },
+  "langZhHant": {
+    "message": "Traditional Chinese"
+  },
+  "langZhHans": {
+    "message": "Simplified Chinese"
+  },
+  "engineBuiltinName": {
+    "message": "Chrome built-in translation"
+  },
+  "engineBuiltinShort": {
+    "message": "On-device"
+  },
+  "aiModel": {
+    "message": "AI model"
+  },
+  "directionTo": {
+    "message": "Into $P1$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "modeBuiltin": {
+    "message": "Chrome built-in · on this device"
+  },
+  "modeAI": {
+    "message": "$P1$ · context-aware",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "modeNano": {
+    "message": "Chrome built-in · on-device context"
+  },
+  "labelSource": {
+    "message": "Original"
+  },
+  "labelTranslation": {
+    "message": "Translation"
+  },
+  "wordLookup": {
+    "message": "Word lookup"
+  },
+  "wordLookupFrom": {
+    "message": "$P1$ · word lookup",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "contextNote": {
+    "message": "In this context"
+  },
+  "loadingDefault": {
+    "message": "Translating…"
+  },
+  "loadingBuiltin": {
+    "message": "Getting on-device translation ready…"
+  },
+  "loadingAI": {
+    "message": "Reading the context and translating…"
+  },
+  "loadingDetect": {
+    "message": "Detecting the language…"
+  },
+  "loadingDetectorProgress": {
+    "message": "Preparing language detection $P1$%",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "loadingPackDownload": {
+    "message": "Downloading the language pack…"
+  },
+  "loadingPackProgress": {
+    "message": "Downloading the language pack $P1$%",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "loadingTranslating": {
+    "message": "Translating on this device…"
+  },
+  "errTitle": {
+    "message": "Couldn't translate"
+  },
+  "errUnknown": {
+    "message": "Something went wrong. Please try again."
+  },
+  "errGeneric": {
+    "message": "Couldn't translate"
+  },
+  "errNoSelection": {
+    "message": "Select some text first."
+  },
+  "errTimeout": {
+    "message": "No response for too long. Please try again later."
+  },
+  "errEmptyBuiltin": {
+    "message": "The translation came back empty. Try different text."
+  },
+  "errEmptyAI": {
+    "message": "The translation came back empty. Try different text or check the model settings."
+  },
+  "errNoResponse": {
+    "message": "Couldn't get a translation. Reload the extension and try again."
+  },
+  "errExtensionUpdated": {
+    "message": "The extension was updated. Reload this page and try again."
+  },
+  "errNoBuiltin": {
+    "message": "This version of Chrome has no built-in translation. Update desktop Chrome, or choose another engine in the settings."
+  },
+  "errNoDetector": {
+    "message": "Chrome can't detect languages on this device. Choose another engine in the settings."
+  },
+  "errUnknownSource": {
+    "message": "Couldn't tell which language this is. Try selecting a longer sentence."
+  },
+  "errPairUnsupported": {
+    "message": "Chrome doesn't support this language pair yet. Choose another engine in the settings."
+  },
+  "errPackFailed": {
+    "message": "The language pack failed to download. Check your connection and try again."
+  },
+  "errBatch": {
+    "message": "Translation failed"
+  },
+  "pageRestored": {
+    "message": "Original restored"
+  },
+  "pageCancelled": {
+    "message": "Full-page translation cancelled"
+  },
+  "pageProgress": {
+    "message": "$P1$ · $P2$ translated",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "pageProgressBusy": {
+    "message": "$P1$ · translating, $P2$ done",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "pageSkipped": {
+    "message": ", $P1$ in other languages skipped",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "pageFailedCount": {
+    "message": ", $P1$ failed: $P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "pageFailedTitle": {
+    "message": "Full-page translation failed"
+  },
+  "retry": {
+    "message": "Retry"
+  },
+  "viewMode": {
+    "message": "View"
+  },
+  "viewTranslated": {
+    "message": "Translated"
+  },
+  "viewBilingual": {
+    "message": "Side by side"
+  },
+  "cancel": {
+    "message": "Cancel"
+  },
+  "restore": {
+    "message": "Restore"
+  },
+  "tryAgain": {
+    "message": "Try again"
+  },
+  "downloadAndTranslate": {
+    "message": "Download & translate"
+  },
+  "close": {
+    "message": "Close"
+  },
+  "pageNeedsBuiltin": {
+    "message": "Full-page translation needs Chrome's built-in translation"
+  },
+  "pageNeedsBuiltinSub": {
+    "message": "Use desktop Chrome 138 or later, or switch to an AI model in the settings."
+  },
+  "pagePreparing": {
+    "message": "Preparing full-page translation…"
+  },
+  "pageNothing": {
+    "message": "Nothing on this page needs translating"
+  },
+  "pageAlready": {
+    "message": "This page is already in $P1$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "pageNeedDetector": {
+    "message": "Language detection needs to be set up"
+  },
+  "pageNeedDetectorSub": {
+    "message": "Click to start; translation begins when it's ready."
+  },
+  "pageUnknownLang": {
+    "message": "Couldn't tell which language this page is in"
+  },
+  "pagePairUnsupported": {
+    "message": "Chrome can't translate $P1$ into $P2$ yet",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "pageFirstTime": {
+    "message": "First time translating $P1$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "pageFirstTimeSub": {
+    "message": "A language pack needs to download once."
+  },
+  "pagePackDownloading": {
+    "message": "Downloading the language pack…"
+  },
+  "pagePackProgress": {
+    "message": "Downloading the language pack $P1$%",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "pagePackFailed": {
+    "message": "The language pack failed to download"
+  },
+  "pagePackFailedSub": {
+    "message": "Check your connection and try again."
+  },
+  "errReloadForBuiltin": {
+    "message": "Reload this page to use Chrome's built-in translation."
+  },
+  "errNoKey": {
+    "message": "No API key set for $P1$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "errModelCustomGone": {
+    "message": "Model “$P1$” wasn't found. Check the model name under Advanced in the settings, or clear it to use the default.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "errModelGone": {
+    "message": "$P1$ has retired the model “$P2$”, or it's unavailable right now. Update the extension, or enter another model name under Advanced in the settings.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "errNoText": {
+    "message": "No text selected"
+  },
+  "errNoParagraphs": {
+    "message": "No paragraphs to translate"
+  },
+  "errApiStatus": {
+    "message": "$P1$ API error $P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "errNoOutput": {
+    "message": "$P1$ couldn't produce a translation ($P2$)",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "errEmptyReply": {
+    "message": "$P1$ returned an empty reply",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "errBadReply": {
+    "message": "$P1$ sent an unexpected reply: $P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "errConnect": {
+    "message": "Couldn't connect to $P1$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "errRequestTimeout": {
+    "message": "The request timed out"
+  },
+  "numeralOne": {
+    "message": "1"
+  },
+  "numeralTwo": {
+    "message": "2"
+  },
+  "popupToggle": {
+    "message": "Translate on select"
+  },
+  "toggleOnDesc": {
+    "message": "A Translate button appears next to selected text"
+  },
+  "toggleOffDesc": {
+    "message": "Paused. No button appears when you select text"
+  },
+  "popupEngine": {
+    "message": "Engine"
+  },
+  "engineBuiltin": {
+    "message": "On-device"
+  },
+  "engineBuiltinDesc": {
+    "message": "Chrome built-in · no key · text stays on your device"
+  },
+  "engineAI": {
+    "message": "AI model"
+  },
+  "engineAIDesc": {
+    "message": "Reads the context for better results · needs an API key"
+  },
+  "builtinInfo": {
+    "message": "The first time you use a language, Chrome downloads a language pack."
+  },
+  "providerLabel": {
+    "message": "Provider"
+  },
+  "apiKeyLabel": {
+    "message": "API key"
+  },
+  "getKey": {
+    "message": "Get a key"
+  },
+  "getKeyLabel": {
+    "message": "Get an API key from $P1$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "keyPlaceholder": {
+    "message": "Paste your $P1$ API key",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "save": {
+    "message": "Save"
+  },
+  "keySavedButton": {
+    "message": "Saved"
+  },
+  "keyClearedButton": {
+    "message": "Cleared"
+  },
+  "show": {
+    "message": "Show"
+  },
+  "hide": {
+    "message": "Hide"
+  },
+  "showKeyLabel": {
+    "message": "Show API key"
+  },
+  "hideKeyLabel": {
+    "message": "Hide API key"
+  },
+  "keyUnsaved": {
+    "message": "The key isn't saved yet. It takes effect after you click Save."
+  },
+  "keyStoredSync": {
+    "message": "The key is kept in your Chrome sync storage and sent only to $P1$.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "keyStoredLocal": {
+    "message": "The key is kept only on this computer and sent only to $P1$.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "keyMissing": {
+    "message": "Until you save a key, translations use Chrome's built-in translation."
+  },
+  "keyLocalOnly": {
+    "message": "Keep keys on this computer only (don't sync)"
+  },
+  "advanced": {
+    "message": "Advanced"
+  },
+  "customModelLabel": {
+    "message": "Custom model name"
+  },
+  "customModelHelp": {
+    "message": "If the provider retires the default model, enter a new model name here. Leave empty to use the default."
+  },
+  "popupLanguage": {
+    "message": "Languages"
+  },
+  "langFrom": {
+    "message": "From"
+  },
+  "langTo": {
+    "message": "To"
+  },
+  "langAuto": {
+    "message": "Detect"
+  },
+  "usageBefore": {
+    "message": "Today"
+  },
+  "usageAfter": {
+    "message": "translations"
+  },
+  "help": {
+    "message": "Help"
+  },
+  "stampSaved": {
+    "message": "Saved"
+  },
+  "stampCleared": {
+    "message": "Cleared"
+  },
+  "stampOn": {
+    "message": "On"
+  },
+  "stampOff": {
+    "message": "Off"
+  },
+  "welcomeLead": {
+    "message": "Thanks for installing Context Translator. Three things to know, one minute to learn."
+  },
+  "welcomeCheckTitle": {
+    "message": "Is your Chrome ready?"
+  },
+  "checking": {
+    "message": "Checking…"
+  },
+  "checkTranslatorTitle": {
+    "message": "On-device translation"
+  },
+  "translatorReady": {
+    "message": "Ready (Chrome $P1$).",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "translatorFirstUse": {
+    "message": "Ready (Chrome $P1$). The first time you translate a language, Chrome downloads a language pack.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "translatorMissing": {
+    "message": "Needs desktop Chrome 138 or later; you have Chrome $P1$. You can use an AI model in the settings instead.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "translatorPairMissing": {
+    "message": "Chrome on this computer doesn't support your target language yet. Pick another one, or use an AI model."
+  },
+  "checkNanoTitle": {
+    "message": "On-device context (Gemini Nano)"
+  },
+  "nanoReady": {
+    "message": "Ready. Word lookups explain the meaning in context, right on this computer."
+  },
+  "nanoDownloadable": {
+    "message": "Available to download. The model is several GB; once it's downloaded, word lookups explain the context without an API key."
+  },
+  "nanoDownloading": {
+    "message": "Chrome is downloading the model; it turns on automatically when done."
+  },
+  "nanoProgress": {
+    "message": "Downloading the model $P1$%…",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nanoFailed": {
+    "message": "The download didn't finish. Check your connection and disk space, then try again."
+  },
+  "nanoUnsupported": {
+    "message": "Not supported on this computer or Chrome version (it needs a capable GPU or enough memory). Word lookups show a regular translation, or use your AI model."
+  },
+  "nanoDownload": {
+    "message": "Download model"
+  },
+  "welcomeHowTitle": {
+    "message": "How to use it"
+  },
+  "stepSelectTitle": {
+    "message": "Select text and click “文 Translate”"
+  },
+  "stepSelectDesc": {
+    "message": "The translation appears in a small card. Select a single word to see what it means in that sentence."
+  },
+  "stepPageTitle": {
+    "message": "Right-click a page and choose “Translate full page”"
+  },
+  "stepPageDesc": {
+    "message": "Only the paragraphs you can see are translated, more as you scroll. Use the bar at the bottom right to switch to side by side or restore the page."
+  },
+  "stepSettingsTitle": {
+    "message": "Click the “文” toolbar icon for settings"
+  },
+  "stepSettingsDesc": {
+    "message": "Change the target language or connect your own AI model. Tip: pin it to the toolbar from the puzzle-piece menu."
+  },
+  "tryHint": {
+    "message": "Try it here: select a sentence below, or double-click the word “bank”"
+  },
+  "privacyPolicy": {
+    "message": "Privacy policy"
+  },
+  "feedback": {
+    "message": "Report a problem"
+  },
+  "kicker": {
+    "message": "隨選翻譯",
+    "description": "Small line above the title; shows the other-language name"
+  }
+}

@@ -73,7 +73,7 @@
   <!-- ================================================================ 中文 -->
   <section class="policy" id="zh" lang="zh-Hant">
     <h1>隱私權政策</h1>
-    <p class="meta">生效日期：2026 年 10 月 2 日　・　適用版本：2.8.0 起</p>
+    <p class="meta">生效日期：2026 年 10 月 4 日　・　適用版本：3.0.0 起</p>
 
     <div class="summary">
       <p>重點摘要</p>
@@ -98,7 +98,7 @@
     <p>本擴充功能不使用 Cookie、不放廣告，也不載入任何第三方分析或追蹤程式。</p>
 
     <h2><span class="no">參</span>儲存在你瀏覽器裡的資料</h2>
-    <p>為了記住你的設定，本擴充功能使用 Chrome 提供的 <code>chrome.storage.sync</code> 儲存下列資料。如果你在 Chrome 開啟了同步功能，這些資料會由 Google 同步到你登入同一帳號的其他電腦；開發者無法讀取。</p>
+    <p>為了記住你的設定，本擴充功能使用 Chrome 提供的 <code>chrome.storage.sync</code> 儲存下列資料。如果你在 Chrome 開啟了同步功能，這些資料會由 Google 同步到你登入同一帳號的其他電腦；開發者無法讀取。你也可以在設定勾選「金鑰只存在這台電腦」，API 金鑰就改存在 <code>chrome.storage.local</code>，不會同步。</p>
     <div class="table"><table>
       <thead><tr><th>資料</th><th>用途</th></tr></thead>
       <tbody>
@@ -106,6 +106,8 @@
         <tr><td>翻譯引擎</td><td>本機翻譯，或你選的 AI 服務商</td></tr>
         <tr><td>API 金鑰</td><td>每家 AI 服務商分開保存，只在呼叫該服務商時使用</td></tr>
         <tr><td>譯文語言</td><td>要翻成哪一種語言</td></tr>
+        <tr><td>金鑰儲存位置</td><td>金鑰跟著 Chrome 同步，或只存在這台電腦</td></tr>
+        <tr><td>自訂模型名稱</td><td>你在「進階」填的模型名稱（選填）</td></tr>
         <tr><td>今日翻譯次數</td><td>日期與次數，只用來在設定視窗顯示，不會送出</td></tr>
       </tbody>
     </table></div>
@@ -115,10 +117,11 @@
     <h2><span class="no">肆</span>什麼時候會送出資料</h2>
     <h3>本機翻譯（預設）</h3>
     <p>使用 Chrome 內建的翻譯與語言偵測功能，在你的裝置上完成。第一次翻譯某個語言時，Chrome 可能會從 Google 下載語言套件；這個下載由 Chrome 處理，不包含你要翻譯的文字。本擴充功能在這個模式下不會送出任何網頁內容。</p>
+    <p>如果你的電腦支援，並在說明頁按了「下載模型」，查單字時還會用 Chrome 內建的 Gemini Nano 在你的電腦上判斷詞義。這也完全在裝置上處理，不會送出任何文字。</p>
 
     <h3>AI 模型（選用，需你自己的 API 金鑰）</h3>
     <ul>
-      <li><strong>選字翻譯：</strong>你按下「翻譯」時，選取的文字和它所在段落附近的文字（最多約 2,000 字）會送到你選的服務商，用來判斷詞義與上下文。</li>
+      <li><strong>選字翻譯：</strong>你按下「翻譯」時，選取的文字和它前後各約 200 字會送到你選的服務商，用來判斷詞義與上下文。</li>
       <li><strong>全頁翻譯：</strong>你在右鍵選單選擇「全頁翻譯」後，畫面附近的段落會連同網頁標題分批送出；往下捲動時才會送出後面的段落。網站的選單、導覽列、頁首頁尾與側欄不會送出。</li>
       <li>不會送出網頁網址或 Cookie；全頁翻譯也不會送出輸入框裡的內容。</li>
       <li>資料從你的瀏覽器<strong>直接</strong>傳到服務商，不經過開發者；API 金鑰放在請求標頭中，只傳給對應的服務商。</li>
@@ -160,7 +163,7 @@
   <!-- ================================================================ English -->
   <section class="policy" id="en" lang="en">
     <h1>Privacy Policy</h1>
-    <p class="meta">Effective date: October 2, 2026 · Applies to version 2.8.0 and later</p>
+    <p class="meta">Effective date: October 4, 2026 · Applies to version 3.0.0 and later</p>
 
     <div class="summary">
       <p>Summary</p>
@@ -185,7 +188,7 @@
     <p>The extension sets no cookies, shows no ads and loads no third-party analytics or tracking code.</p>
 
     <h2><span class="no">3</span>Data stored in your browser</h2>
-    <p>To remember your settings, the extension uses Chrome's <code>chrome.storage.sync</code>. If Chrome Sync is turned on, Google syncs this data to your other computers signed in to the same account; the developer cannot read it.</p>
+    <p>To remember your settings, the extension uses Chrome's <code>chrome.storage.sync</code>. If Chrome Sync is turned on, Google syncs this data to your other computers signed in to the same account; the developer cannot read it. If you tick “Keep keys on this computer only” in the settings, API keys are stored in <code>chrome.storage.local</code> instead and are not synced.</p>
     <div class="table"><table>
       <thead><tr><th>Data</th><th>Purpose</th></tr></thead>
       <tbody>
@@ -193,6 +196,8 @@
         <tr><td>Translation engine</td><td>On-device translation, or the AI provider you chose</td></tr>
         <tr><td>API keys</td><td>Kept per provider and used only when calling that provider</td></tr>
         <tr><td>Target language</td><td>The language to translate into</td></tr>
+        <tr><td>Key storage</td><td>Whether API keys sync with Chrome or stay on this computer</td></tr>
+        <tr><td>Custom model name</td><td>A model name you entered under Advanced (optional)</td></tr>
         <tr><td>Translations today</td><td>A date and a count, shown in the settings window only; never sent anywhere</td></tr>
       </tbody>
     </table></div>
@@ -202,10 +207,11 @@
     <h2><span class="no">4</span>When data is sent</h2>
     <h3>On-device translation (default)</h3>
     <p>Uses Chrome's built-in translation and language detection on your device. The first time you translate a language, Chrome may download a language pack from Google; Chrome handles that download and it does not contain the text you translate. In this mode the extension sends no page content anywhere.</p>
+    <p>If your computer supports it and you click “Download model” on the welcome page, word lookups also use Chrome's built-in Gemini Nano to work out the meaning in context. This also runs entirely on your device and sends no text anywhere.</p>
 
     <h3>AI models (optional, your own API key)</h3>
     <ul>
-      <li><strong>Selection translation:</strong> when you click Translate, the selected text and nearby text from its paragraph (up to about 2,000 characters) are sent to the provider you chose, to resolve word sense and context.</li>
+      <li><strong>Selection translation:</strong> when you click Translate, the selected text and about 200 characters on each side of it are sent to the provider you chose, to resolve word sense and context.</li>
       <li><strong>Full-page translation:</strong> after you choose “全頁翻譯” (Translate full page) from the right-click menu, paragraphs near the visible area are sent in batches together with the page title; later paragraphs are sent only as you scroll to them. Site menus, navigation bars, site headers and footers, and sidebars are not sent.</li>
       <li>Page URLs and cookies are never sent, and full-page translation skips form fields.</li>
       <li>Requests go <strong>directly</strong> from your browser to the provider, never through the developer. Your API key is sent in a request header, only to the matching provider.</li>
