@@ -18,6 +18,8 @@ async function launch({ lang = "en-US" } = {}) {
     args: [`--disable-extensions-except=${ROOT}`, `--load-extension=${ROOT}`, `--lang=${lang}`],
   });
   const sw = context.serviceWorkers()[0] || (await context.waitForEvent("serviceworker"));
+  // 背景程式剛啟動時，chrome.* API 可能還沒接上；等到可以用再開始測
+  await expect.poll(() => sw.evaluate(() => Boolean(globalThis.chrome?.storage?.sync)).catch(() => false)).toBe(true);
   return { context, sw };
 }
 
