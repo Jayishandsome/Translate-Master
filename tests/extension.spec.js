@@ -125,14 +125,6 @@ test("金鑰只存在這台電腦時，背景程式從本機讀取", async () =>
   await context.close();
 });
 
-test("沒有 Gemini Nano 時，本機語境解釋回報不可用而不是出錯", async () => {
-  const { context, sw } = await launch();
-  const reply = await sw.evaluate(() => explainWord("bank", "She waited on the bank.", "en"));
-  expect(reply.ok).toBe(false);
-  expect(await sw.evaluate(() => explainWord("bank", "x", "zh"))).toEqual({ ok: false, reason: "language" });
-  await context.close();
-});
-
 test("真正的內容腳本：AI 全頁翻譯，連結保留、網站框架不送出", async () => {
   const { context, sw } = await launch();
   await context.route("http://fixture.test/**", async (route) => {

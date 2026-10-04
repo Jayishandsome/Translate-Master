@@ -20,7 +20,6 @@
     sent: [],               // runtime.sendMessage payloads
     tabsCreated: [],
     translators: [],        // Translator.create options
-    explain: null,          // reply for explainWord, set by tests
     batchFail: Number(q.get("batchfail") || 0),
     batchError: q.get("batcherr") || "API key not valid. Please pass a valid API key.",
     messages: null,
@@ -87,7 +86,6 @@
       if (S.batchFail > 0) { S.batchFail--; return { success: false, error: S.batchError }; }
       return { success: true, data: msg.texts.map((t) => `AI譯:${t}`) };
     }
-    if (msg?.action === "explainWord") return S.explain || { ok: false, reason: "unavailable" };
     if (msg?.action === "getProviders") return { providers: { gemini: { model: "gemini-test-lite" }, openai: { model: "gpt-test" } } };
     if (msg?.action === "translate") {
       return { success: true, data: q.get("wordreply") ? "【翻譯】河岸；岸邊\n【上下文】這裡指河邊。" : `AI譯:${msg.text}` };
@@ -137,18 +135,6 @@
       };
     },
   };
-  // Gemini Nano（Prompt API）：?nano=downloadable / available 時才有
-  if (q.get("nano")) {
-    let nano = q.get("nano");
-    window.LanguageModel = {
-      availability: async () => nano,
-      create: async (opts = {}) => {
-        if (nano !== "available") opts.monitor?.({ addEventListener: (_, fn) => { fn({ loaded: 0.5 }); fn({ loaded: 1 }); } });
-        nano = "available";
-        return { destroy() {} };
-      },
-    };
-  }
   try {
     Object.defineProperty(navigator, "clipboard", { value: { writeText: (t) => { S.copied = t; return Promise.resolve(); } }, configurable: true });
   } catch (_) {}

@@ -122,17 +122,6 @@
         } else {
           incrementBuiltinUsage().catch(() => {});
           finish(() => showResult(text));
-          if (isWordLookup(currentSelection)) {
-            const lookup = currentSelection;
-            explainInContext(lookup, currentContext, lastBuiltinSource, activeTargetLanguage)
-              .then((found) => {
-                // 使用者已經關掉浮窗或換了別的字，就不更新
-                if (!found || lookup !== currentSelection || pop.getAttribute("aria-hidden") !== "false") return;
-                modeLabel.textContent = t("modeNano");
-                showResult(found.note ? `【翻譯】${found.sense}\n【上下文】${found.note}` : `【翻譯】${found.sense}`);
-              })
-              .catch(() => {});
-          }
         }
         return;
       }

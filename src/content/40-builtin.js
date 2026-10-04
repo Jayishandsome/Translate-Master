@@ -5,27 +5,6 @@
     await chrome.storage.sync.set({ usageDate: today, usageCount: next });
   }
 
-  let lastBuiltinSource = "";
-
-  // 查單字時，如果這台電腦有 Chrome 內建的 Gemini Nano，請它依句子判斷詞義（英文），
-  // 再用內建翻譯翻成譯文語言。沒有模型就什麼都不做，保留一般譯文。
-  async function explainInContext(word, context, source, targetCode) {
-    const reply = await chrome.runtime.sendMessage({ action: "explainWord", word, context, source });
-    if (!reply?.ok) return null;
-    const target = BUILTIN_TARGETS[targetCode] || "zh-Hant";
-    if (target === "en") return { sense: reply.sense, note: reply.note };
-    const options = { sourceLanguage: "en", targetLanguage: target };
-    if ((await Translator.availability(options)) !== "available") return null;
-    const translator = await Translator.create(options);
-    try {
-      const sense = String((await translator.translate(reply.sense)) || "").trim();
-      const note = reply.note ? String((await translator.translate(reply.note)) || "").trim() : "";
-      return sense ? { sense, note } : null;
-    } finally {
-      translator.destroy?.();
-    }
-  }
-
   async function translateWithBuiltin(text, context, targetCode) {
     if (!("Translator" in globalThis) || !("LanguageDetector" in globalThis)) {
       throw new Error(t("errNoBuiltin"));
@@ -65,7 +44,6 @@
       }
 
       setHeader("builtin", sourceLanguage);
-      lastBuiltinSource = sourceLanguage;
 
       if (sourceLanguage === targetLanguage) return text;
 

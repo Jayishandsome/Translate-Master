@@ -1,4 +1,4 @@
-// 選字翻譯：浮窗、送給 AI 的上下文大小、單字查詢（AI 與本機語境解釋）
+// 選字翻譯：浮窗、送給 AI 的上下文大小、單字查詢
 const { test, expect } = require("@playwright/test");
 const { openFixture, selectText } = require("./helpers");
 
@@ -38,23 +38,11 @@ test("AI：查單字顯示釋義與語境說明", async ({ context }) => {
   await expect(page.locator(".ctx-note")).toContainText("河邊");
 });
 
-test("本機：有 Gemini Nano 時，查單字會補上語境解釋", async ({ context }) => {
+test("本機：查單字顯示一般譯文", async ({ context }) => {
   const { page, errors } = await openFixture(context, null, "pages/word.html");
-  await page.evaluate(() => { window.__stub.explain = { ok: true, sense: "land beside a river", note: "The sentence mentions a river." }; });
-  await page.dblclick("#word");
-  await clickTranslate(page);
-  await expect(page.locator(".ctx-sense")).toContainText("LAND BESIDE A RIVER");
-  await expect(page.locator(".ctx-note")).toContainText("THE SENTENCE MENTIONS A RIVER.");
-  const msg = await page.evaluate(() => window.__stub.sent.find((m) => m.action === "explainWord"));
-  expect(msg.word).toBe("bank");
-  expect(msg.context).toContain("river");
-  expect(errors).toEqual([]);
-});
-
-test("本機：沒有 Gemini Nano 時，查單字照常顯示一般譯文", async ({ context }) => {
-  const { page } = await openFixture(context, null, "pages/word.html");
   await page.dblclick("#word");
   await clickTranslate(page);
   await expect(page.locator(".ctx-sense")).toContainText("BANK");
   await expect(page.locator(".ctx-note")).toHaveCount(0);
+  expect(errors).toEqual([]);
 });

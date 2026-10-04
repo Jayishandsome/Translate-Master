@@ -41,7 +41,7 @@
 在網頁上按右鍵，選「全頁翻譯」。只翻你看得到的段落，捲到哪裡、翻到哪裡；之後載入的內容也會接著翻。段落裡的連結翻譯後一樣點得到。可以切換「譯文」或「對照」，讓原文和譯文逐段並列；按「還原」就恢復原樣。
 
 【查單字，也看上下文】
-查單字會依照句子判斷詞義，並附上簡短的語境說明。例如「river bank」裡的 bank 會翻成「河岸」，而不是「銀行」。電腦支援 Chrome 內建的 Gemini Nano 時，不用 API 金鑰也能在本機做到。
+接上 AI 模型時，查單字會依照句子判斷詞義，並附上簡短的語境說明。例如「river bank」裡的 bank 會翻成「河岸」，而不是「銀行」。
 
 【預設在你的裝置上翻譯】
 預設使用 Chrome 內建翻譯（桌面版 Chrome 138 以上），不需要 API 金鑰，文字不會離開你的電腦。
@@ -74,7 +74,7 @@ TRANSLATE THE WHOLE PAGE
 Right-click a page and choose “Translate full page”. Only the paragraphs you can see are translated, and more follow as you scroll, including content that loads later. Links inside paragraphs stay clickable. Switch between translation-only and side-by-side views, or restore the original page in one click.
 
 WORDS IN CONTEXT
-Looking up a word takes its sentence into account and adds a short note on the meaning in context — “bank” in “river bank” is translated as the riverside, not the financial institution. On computers that support Chrome's built-in Gemini Nano, this works on-device without an API key.
+With an AI model, looking up a word takes its sentence into account and adds a short note on the meaning in context — “bank” in “river bank” is translated as the riverside, not the financial institution.
 
 ON-DEVICE BY DEFAULT
 Uses Chrome's built-in translation (desktop Chrome 138 or later). No API key needed, and your text never leaves your computer.

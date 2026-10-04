@@ -111,11 +111,6 @@
   "zh_CN": "$1・上下文翻译",
   "en": "$1 · context-aware"
  },
- "modeNano": {
-  "zh_TW": "Chrome 內建・本機語境解釋",
-  "zh_CN": "Chrome 内置・本机语境解释",
-  "en": "Chrome built-in · on-device context"
- },
  "labelSource": {
   "zh_TW": "原文",
   "zh_CN": "原文",
@@ -721,46 +716,6 @@
   "zh_CN": "这台电脑的 Chrome 暂时不支持当前的译文语言，可以在设置中换一个语言，或改用 AI 模型。",
   "en": "Chrome on this computer doesn't support your target language yet. Pick another one, or use an AI model."
  },
- "checkNanoTitle": {
-  "zh_TW": "本機語境解釋（Gemini Nano）",
-  "zh_CN": "本机语境解释（Gemini Nano）",
-  "en": "On-device context (Gemini Nano)"
- },
- "nanoReady": {
-  "zh_TW": "已就緒。查單字時，會在這台電腦上依照句子說明詞義。",
-  "zh_CN": "已就绪。查单词时，会在这台电脑上根据句子说明词义。",
-  "en": "Ready. Word lookups explain the meaning in context, right on this computer."
- },
- "nanoDownloadable": {
-  "zh_TW": "可以下載。模型有好幾 GB，下載一次之後查單字時就會說明語境，不需要 API 金鑰。",
-  "zh_CN": "可以下载。模型有好几 GB，下载一次之后查单词时就会说明语境，无需 API 密钥。",
-  "en": "Available to download. The model is several GB; once it's downloaded, word lookups explain the context without an API key."
- },
- "nanoDownloading": {
-  "zh_TW": "Chrome 正在下載模型，完成後就會自動啟用。",
-  "zh_CN": "Chrome 正在下载模型，完成后会自动启用。",
-  "en": "Chrome is downloading the model; it turns on automatically when done."
- },
- "nanoProgress": {
-  "zh_TW": "正在下載模型 $1%…",
-  "zh_CN": "正在下载模型 $1%…",
-  "en": "Downloading the model $1%…"
- },
- "nanoFailed": {
-  "zh_TW": "下載沒有完成，請確認網路和硬碟空間後再試一次。",
-  "zh_CN": "下载没有完成，请确认网络和硬盘空间后再试一次。",
-  "en": "The download didn't finish. Check your connection and disk space, then try again."
- },
- "nanoUnsupported": {
-  "zh_TW": "這台電腦或這個 Chrome 版本不支援（需要較好的顯示卡或記憶體）。查單字時會顯示一般譯文，或使用你設定的 AI 模型。",
-  "zh_CN": "这台电脑或这个 Chrome 版本不支持（需要较好的显卡或内存）。查单词时会显示一般译文，或使用你设置的 AI 模型。",
-  "en": "Not supported on this computer or Chrome version (it needs a capable GPU or enough memory). Word lookups show a regular translation, or use your AI model."
- },
- "nanoDownload": {
-  "zh_TW": "下載模型",
-  "zh_CN": "下载模型",
-  "en": "Download model"
- },
  "welcomeHowTitle": {
   "zh_TW": "怎麼用",
   "zh_CN": "怎么用",
@@ -772,9 +727,9 @@
   "en": "Select text and click “文 Translate”"
  },
  "stepSelectDesc": {
-  "zh_TW": "譯文會出現在旁邊的浮窗。只選一個單字時，會依照句子說明它在這裡的意思。",
-  "zh_CN": "译文会出现在旁边的浮窗。只选一个单词时，会根据句子说明它在这里的意思。",
-  "en": "The translation appears in a small card. Select a single word to see what it means in that sentence."
+  "zh_TW": "譯文會出現在旁邊的浮窗。用 AI 模型時，只選一個單字會依照句子說明它在這裡的意思。",
+  "zh_CN": "译文会出现在旁边的浮窗。使用 AI 模型时，只选一个单词会根据句子说明它在这里的意思。",
+  "en": "The translation appears in a small card. With an AI model, select a single word to see what it means in that sentence."
  },
  "stepPageTitle": {
   "zh_TW": "在網頁上按右鍵，選「全頁翻譯」",

@@ -33,18 +33,14 @@
   h2 .no { color: var(--vermilion-text); font-size: 17px; }
 
   .checks { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--rule); }
-  .check { display: grid; grid-template-columns: 22px 1fr auto; gap: 4px 12px; align-items: start; padding: 14px 2px; border-bottom: 1px solid var(--rule); }
+  .check { display: grid; grid-template-columns: 22px 1fr; gap: 4px 12px; align-items: start; padding: 14px 2px; border-bottom: 1px solid var(--rule); }
   .check .mark { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font: 700 13px/1 var(--sans);
     border: 1.5px solid var(--ink-3); color: var(--ink-3); margin-top: 2px; }
   .check[data-state="ok"] .mark { border-color: var(--ok); color: var(--ok); }
   .check[data-state="warn"] .mark, .check[data-state="off"] .mark { border-color: var(--vermilion); color: var(--vermilion-text); }
   .check b { display: block; font-weight: 700; }
   .check .desc { display: block; color: var(--ink-2); font-size: 14.5px; }
-  .check button { align-self: center; height: 32px; padding: 0 14px; border-radius: 3px; border: 1px solid var(--vermilion);
-    background: var(--vermilion); color: var(--seal-text); font: 600 13px/1 var(--sans); cursor: pointer; }
-  .check button[hidden] { display: none; }
-  .check button:disabled { opacity: .6; cursor: default; }
-  button:focus-visible, a:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  a:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 
   .steps { margin: 0; padding: 0; list-style: none; counter-reset: step; }
   .steps li { position: relative; padding: 0 0 18px 44px; }
@@ -61,7 +57,7 @@
 
   footer { margin-top: 56px; padding-top: 16px; border-top: 2px solid var(--ink); color: var(--ink-3); font-size: 13.5px; display: flex; flex-wrap: wrap; gap: 6px 18px; }
   footer a { color: var(--ink-2); }
-  @media (max-width: 520px) { h1 { font-size: 28px; } .check { grid-template-columns: 22px 1fr; } .check button { grid-column: 2; justify-self: start; } }
+  @media (max-width: 520px) { h1 { font-size: 28px; } }
 </style>
 </head>
 <body>
@@ -78,16 +74,11 @@
       <span class="mark" aria-hidden="true">…</span>
       <span><b data-i18n="checkTranslatorTitle">本機翻譯</b><span class="desc" data-i18n="checking">檢查中…</span></span>
     </li>
-    <li class="check" id="check-nano" data-state="wait">
-      <span class="mark" aria-hidden="true">…</span>
-      <span><b data-i18n="checkNanoTitle">本機語境解釋（Gemini Nano）</b><span class="desc" data-i18n="checking">檢查中…</span></span>
-      <button type="button" id="nano-download" hidden data-i18n="nanoDownload">下載模型</button>
-    </li>
   </ul>
 
   <h2><span class="no" data-i18n="numeralTwo">貳</span><span data-i18n="welcomeHowTitle">怎麼用</span></h2>
   <ol class="steps">
-    <li><b data-i18n="stepSelectTitle">選取文字，按旁邊的「文 翻譯」</b><span data-i18n="stepSelectDesc">譯文會出現在旁邊的浮窗。只選一個單字時，會依照句子說明它在這裡的意思。</span></li>
+    <li><b data-i18n="stepSelectTitle">選取文字，按旁邊的「文 翻譯」</b><span data-i18n="stepSelectDesc">譯文會出現在旁邊的浮窗。用 AI 模型時，只選一個單字會依照句子說明它在這裡的意思。</span></li>
     <li><b data-i18n="stepPageTitle">在網頁上按右鍵，選「全頁翻譯」</b><span data-i18n="stepPageDesc">只翻你看得到的段落，捲到哪裡翻到哪裡。右下角可以切換「對照」或「還原」。</span></li>
     <li><b data-i18n="stepSettingsTitle">點工具列的「文」圖示調整設定</b><span data-i18n="stepSettingsDesc">可以換譯文語言，或接上你自己的 AI 模型。建議先在拼圖圖示裡把它釘選到工具列。</span></li>
   </ol>

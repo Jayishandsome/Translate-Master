@@ -156,12 +156,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
 
-  if (request.action === "explainWord") {
-    explainWord(String(request.word || ""), String(request.context || ""), String(request.source || ""))
-      .then(sendResponse, () => sendResponse({ ok: false, reason: "error" }));
-    return true;
-  }
-
   if (request.action === "getProviders") {
     sendResponse({
       providers: Object.fromEntries(
@@ -172,64 +166,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return false;
   }
 });
-
-// ---------------------------------------------------------------------------
-// 本機語境解釋：Chrome 內建的 Gemini Nano（Prompt API）。
-// Prompt API 只在擴充功能自己的頁面和背景程式可用，內容腳本拿不到，所以由這裡代為呼叫。
-// 模型目前只支援少數語言，所以一律輸出英文，再由內容腳本用 Chrome 內建翻譯翻成譯文語言。
-// 模型要使用者在說明頁按一下才會下載；還沒下載或電腦不支援時直接回報，內容腳本就只顯示一般譯文。
-
-const NANO_INPUT_LANGS = ["en", "ja", "es", "de", "fr"];
-const NANO_SCHEMA = {
-  type: "object",
-  properties: {
-    sense: { type: "string", description: "Meaning of the word in this sentence, as a short English gloss of 1 to 5 words." },
-    note: { type: "string", description: "One short English sentence naming the clue in the sentence that shows this meaning." },
-  },
-  required: ["sense", "note"],
-  additionalProperties: false,
-};
-const nanoSessions = new Map();
-
-function nanoOptions(source) {
-  return {
-    expectedInputs: [{ type: "text", languages: [source] }],
-    expectedOutputs: [{ type: "text", languages: ["en"] }],
-  };
-}
-
-async function explainWord(word, context, source) {
-  if (!("LanguageModel" in self)) return { ok: false, reason: "unsupported" };
-  if (!word.trim() || !NANO_INPUT_LANGS.includes(source)) return { ok: false, reason: "language" };
-  const options = nanoOptions(source);
-  const availability = await LanguageModel.availability(options);
-  if (availability !== "available") return { ok: false, reason: availability };
-
-  if (!nanoSessions.has(source)) {
-    nanoSessions.set(source, LanguageModel.create({
-      ...options,
-      initialPrompts: [{
-        role: "system",
-        content: "You are a concise dictionary. Given a sentence and a word or short phrase taken from it, " +
-          "explain what the word means in that sentence. Answer in English, briefly, and never just repeat the word.",
-      }],
-    }).catch((error) => { nanoSessions.delete(source); throw error; }));
-  }
-  const session = await (await nanoSessions.get(source)).clone();
-  try {
-    const prompt = `Sentence: """${context.slice(0, 600)}"""\nWord or phrase: """${word.slice(0, 60)}"""`;
-    const raw = await Promise.race([
-      session.prompt(prompt, { responseConstraint: NANO_SCHEMA }),
-      new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 15000)),
-    ]);
-    const parsed = JSON.parse(raw);
-    const sense = String(parsed?.sense || "").trim().slice(0, 80);
-    const note = String(parsed?.note || "").trim().slice(0, 240);
-    return sense ? { ok: true, sense, note } : { ok: false, reason: "empty" };
-  } finally {
-    session.destroy?.();
-  }
-}
 
 // ---------------------------------------------------------------------------
 

@@ -77,9 +77,6 @@
       }
     }
   },
-  "modeNano": {
-    "message": "Chrome 内置・本机语境解释"
-  },
   "labelSource": {
     "message": "原文"
   },
@@ -597,35 +594,6 @@
   "translatorPairMissing": {
     "message": "这台电脑的 Chrome 暂时不支持当前的译文语言，可以在设置中换一个语言，或改用 AI 模型。"
   },
-  "checkNanoTitle": {
-    "message": "本机语境解释（Gemini Nano）"
-  },
-  "nanoReady": {
-    "message": "已就绪。查单词时，会在这台电脑上根据句子说明词义。"
-  },
-  "nanoDownloadable": {
-    "message": "可以下载。模型有好几 GB，下载一次之后查单词时就会说明语境，无需 API 密钥。"
-  },
-  "nanoDownloading": {
-    "message": "Chrome 正在下载模型，完成后会自动启用。"
-  },
-  "nanoProgress": {
-    "message": "正在下载模型 $P1$%…",
-    "placeholders": {
-      "p1": {
-        "content": "$1"
-      }
-    }
-  },
-  "nanoFailed": {
-    "message": "下载没有完成，请确认网络和硬盘空间后再试一次。"
-  },
-  "nanoUnsupported": {
-    "message": "这台电脑或这个 Chrome 版本不支持（需要较好的显卡或内存）。查单词时会显示一般译文，或使用你设置的 AI 模型。"
-  },
-  "nanoDownload": {
-    "message": "下载模型"
-  },
   "welcomeHowTitle": {
     "message": "怎么用"
   },
@@ -633,7 +601,7 @@
     "message": "选中文字，点旁边的「文 翻译」"
   },
   "stepSelectDesc": {
-    "message": "译文会出现在旁边的浮窗。只选一个单词时，会根据句子说明它在这里的意思。"
+    "message": "译文会出现在旁边的浮窗。使用 AI 模型时，只选一个单词会根据句子说明它在这里的意思。"
   },
   "stepPageTitle": {
     "message": "在网页上点右键，选「全页翻译」"

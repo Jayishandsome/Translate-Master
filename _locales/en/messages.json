@@ -77,9 +77,6 @@
       }
     }
   },
-  "modeNano": {
-    "message": "Chrome built-in · on-device context"
-  },
   "labelSource": {
     "message": "Original"
   },
@@ -597,35 +594,6 @@
   "translatorPairMissing": {
     "message": "Chrome on this computer doesn't support your target language yet. Pick another one, or use an AI model."
   },
-  "checkNanoTitle": {
-    "message": "On-device context (Gemini Nano)"
-  },
-  "nanoReady": {
-    "message": "Ready. Word lookups explain the meaning in context, right on this computer."
-  },
-  "nanoDownloadable": {
-    "message": "Available to download. The model is several GB; once it's downloaded, word lookups explain the context without an API key."
-  },
-  "nanoDownloading": {
-    "message": "Chrome is downloading the model; it turns on automatically when done."
-  },
-  "nanoProgress": {
-    "message": "Downloading the model $P1$%…",
-    "placeholders": {
-      "p1": {
-        "content": "$1"
-      }
-    }
-  },
-  "nanoFailed": {
-    "message": "The download didn't finish. Check your connection and disk space, then try again."
-  },
-  "nanoUnsupported": {
-    "message": "Not supported on this computer or Chrome version (it needs a capable GPU or enough memory). Word lookups show a regular translation, or use your AI model."
-  },
-  "nanoDownload": {
-    "message": "Download model"
-  },
   "welcomeHowTitle": {
     "message": "How to use it"
   },
@@ -633,7 +601,7 @@
     "message": "Select text and click “文 Translate”"
   },
   "stepSelectDesc": {
-    "message": "The translation appears in a small card. Select a single word to see what it means in that sentence."
+    "message": "The translation appears in a small card. With an AI model, select a single word to see what it means in that sentence."
   },
   "stepPageTitle": {
     "message": "Right-click a page and choose “Translate full page”"
