@@ -12,6 +12,8 @@
 
 ## 二、商店資訊（Store listing）
 
+> 說明文字裡不要列出 AI 服務商的品牌名稱。第一次送審時因為列了六家服務商的名稱，被判定為「關鍵字垃圾內容」（Yellow Argon）而退件。
+
 | 欄位 | 內容 |
 |---|---|
 | 名稱 | 由 manifest 帶入：隨選翻譯 — Context Translator |
@@ -43,11 +45,11 @@
 預設使用 Chrome 內建翻譯（桌面版 Chrome 138 以上），不需要 API 金鑰，文字不會離開你的電腦。
 
 【也能接上你的 AI 模型】
-可以改用 Gemini、OpenAI、Claude、DeepSeek、Kimi 或 MiniMax，使用你自己的 API 金鑰。金鑰只存在你的瀏覽器，請求直接送到你選的服務商。
+需要更貼近語境的譯文時，可以改用你自己的 AI 服務商 API 金鑰（支援 6 家主流服務商，在設定裡選擇）。金鑰只存在你的瀏覽器，請求直接送到你選的服務商。
 
 【其他特色】
 ・自動偵測原文語言，不用先切換設定
-・譯文語言：繁體中文、簡體中文、英文、韓文、法文、德文、西班牙文
+・譯文語言有 7 種可選，包括繁體中文、簡體中文和英文
 ・紙本字典風介面，支援深色模式、鍵盤操作與減少動態效果
 ・免費、開放原始碼
 
@@ -75,11 +77,11 @@ ON-DEVICE BY DEFAULT
 Uses Chrome's built-in translation (desktop Chrome 138 or later). No API key needed, and your text never leaves your computer.
 
 BRING YOUR OWN AI MODEL
-Optionally use Gemini, OpenAI, Claude, DeepSeek, Kimi or MiniMax with your own API key. The key stays in your browser and requests go straight to the provider you choose.
+For more context-aware translations, optionally use your own API key from one of six major AI providers, chosen in the settings. The key stays in your browser and requests go straight to the provider you choose.
 
 ALSO
 • Detects the source language automatically
-• Translates into Traditional Chinese, Simplified Chinese, English, Korean, French, German or Spanish
+• Seven target languages, including Traditional Chinese, Simplified Chinese and English
 • Paper-dictionary design with dark mode, keyboard support and reduced motion
 • Free and open source
 
