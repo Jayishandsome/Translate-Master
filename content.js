@@ -1065,13 +1065,86 @@
     return null;
   }
 
-  // 翻譯按鈕放在選取範圍最後一行的結尾，也就是滑鼠放開的位置附近
-  function selectionAnchor(range, e) {
-    const rects = range ? [...range.getClientRects()].filter((r) => r.width || r.height) : [];
-    const last = rects[rects.length - 1] || range?.getBoundingClientRect();
-    if (last && (last.width || last.height)) return { x: last.right, y: last.bottom };
-    return { x: e.clientX, y: e.clientY };
+  // 翻譯按鈕固定放在選取範圍「最後一個字」的右下方。
+  // 不直接用 range.getClientRects() 的最後一塊：三連擊整段、拖過行尾時，最後一塊常常是下一行的開頭或整個元素的框，
+  // 按鈕就會跳到別的地方。這裡從選取的結尾往回找最後一個看得到的字，量它的位置。
+  function lastCharRect(range) {
+    const root = range.commonAncestorContainer;
+    const walker = document.createTreeWalker(root.nodeType === Node.TEXT_NODE ? root.parentNode : root, NodeFilter.SHOW_TEXT);
+    let node = range.endContainer;
+    if (node.nodeType !== Node.TEXT_NODE && range.endOffset > 0) {
+      node = node.childNodes[range.endOffset - 1] || node;
+      while (node.lastChild) node = node.lastChild;
+    }
+    walker.currentNode = node;
+    if (node.nodeType !== Node.TEXT_NODE) node = walker.previousNode();
+    for (let steps = 0; node && steps < 500; steps++, node = walker.previousNode()) {
+      if (!range.intersectsNode(node)) break;
+      const end = node === range.endContainer ? range.endOffset : node.data.length;
+      const start = node === range.startContainer ? range.startOffset : 0;
+      for (let i = end - 1; i >= start; i--) {
+        if (!/\S/.test(node.data[i])) continue;
+        const code = node.data.charCodeAt(i);
+        const char = document.createRange();
+        char.setStart(node, i > start && code >= 0xdc00 && code <= 0xdfff ? i - 1 : i);
+        char.setEnd(node, i + 1);
+        const rects = [...char.getClientRects()].filter((r) => r.width > 0 && r.height > 0);
+        if (rects.length) {
+          const rtl = node.parentElement && getComputedStyle(node.parentElement).direction === "rtl";
+          return { rect: rects[rects.length - 1], rtl };
+        }
+        break; // 這個文字節點沒有顯示出來，換前一個
+      }
+    }
+    return null;
   }
+
+  // 找不到字的位置時（例如選取在輸入框裡），退回整個選取範圍最後一塊有大小的框，再不行就用滑鼠位置
+  function selectionEnd(range, pointer) {
+    if (range) {
+      const found = lastCharRect(range);
+      if (found) return found;
+      const rects = [...range.getClientRects()].filter((r) => r.width > 0 && r.height > 0);
+      if (rects.length) return { rect: rects[rects.length - 1], rtl: false };
+    }
+    if (!pointer) return null;
+    return { rect: { left: pointer.x, right: pointer.x, top: pointer.y, bottom: pointer.y, width: 0, height: 0 }, rtl: false, pointer: true };
+  }
+
+  const BUTTON_GAP_X = 4;
+  const BUTTON_GAP_Y = 6;
+  let buttonPointer = null;
+
+  function placeButton() {
+    const end = selectionEnd(savedRange, buttonPointer);
+    if (!end) return;
+    const { rect } = end;
+    const w = btn.offsetWidth;
+    const h = btn.offsetHeight;
+    let x = end.rtl ? rect.left - w - BUTTON_GAP_X : rect.right + BUTTON_GAP_X;
+    let y = rect.bottom + BUTTON_GAP_Y;
+    // 下面放不下（選到畫面最底下一行）就放在那一行上面
+    if (y + h > window.innerHeight - 8 && rect.top - h - BUTTON_GAP_Y >= 8) y = rect.top - h - BUTTON_GAP_Y;
+    x = Math.max(8, Math.min(x, window.innerWidth - w - 8));
+    y = Math.max(8, Math.min(y, window.innerHeight - h - 8));
+    btn.style.left = `${x}px`;
+    btn.style.top = `${y}px`;
+    // 選取處捲出畫面時先藏起來，捲回來再出現，不要黏在畫面邊緣
+    const offscreen = !end.pointer && (rect.bottom < 0 || rect.top > window.innerHeight || rect.right < 0 || rect.left > window.innerWidth);
+    btn.style.visibility = offscreen ? "hidden" : "";
+  }
+
+  // 捲動（包括網頁裡可以捲動的區塊）或改變視窗大小時，按鈕跟著選取的文字移動
+  let followFrame = 0;
+  function followSelection() {
+    if (btn.style.display !== "inline-flex" || followFrame) return;
+    followFrame = requestAnimationFrame(() => {
+      followFrame = 0;
+      if (btn.style.display === "inline-flex") placeButton();
+    });
+  }
+  window.addEventListener("scroll", followSelection, { capture: true, passive: true });
+  window.addEventListener("resize", followSelection, { passive: true });
 
   document.addEventListener("mouseup", async (e) => {
     if (!e.isTrusted) return;
@@ -1095,19 +1168,9 @@
     currentSelection = text;
     currentContext = context;
 
-    const range = sel.rangeCount > 0 ? sel.getRangeAt(0) : null;
-    const anchor = selectionAnchor(range, e);
-
-    btn.style.left = `${anchor.x + 6}px`;
-    btn.style.top = `${anchor.y + 8}px`;
+    buttonPointer = { x: e.clientX, y: e.clientY };
     showButton();
-    requestAnimationFrame(() => {
-      const buttonRect = btn.getBoundingClientRect();
-      const left = Math.max(8, Math.min(buttonRect.left, window.innerWidth - buttonRect.width - 8));
-      const top = Math.max(8, Math.min(buttonRect.top, window.innerHeight - buttonRect.height - 8));
-      btn.style.left = `${left}px`;
-      btn.style.top = `${top}px`;
-    });
+    placeButton();
     hidePopover();
   });
 
