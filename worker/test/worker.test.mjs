@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
-import worker, { QuotaCounter, cleanReply } from "../src/index.js";
+import worker, { QuotaCounter, cleanReply, ipGroup } from "../src/index.js";
 
 const EXT = "chrome-extension://abcdefghijklmnopabcdefghijklmnop";
 const INSTALL = "11111111-2222-3333-4444-555555555555";
@@ -35,7 +35,7 @@ function makeEnv(overrides = {}) {
     QUOTA: { idFromName: (n) => n, get: () => ({ fetch: (url, init) => quota.fetch(new Request(url, init)) }) },
     ...overrides,
   };
-  return { env, calls };
+  return { env, calls, quota };
 }
 
 const post = (env, body, { origin = EXT, ip = "203.0.113.7" } = {}) =>
@@ -143,4 +143,44 @@ test("清掉模型回覆裡的思考與程式碼框", () => {
   assert.equal(cleanReply({ response: "<think>hmm</think>\n河岸" }), "河岸");
   assert.equal(cleanReply({ choices: [{ message: { content: "```\n河岸\n```" } }] }), "河岸");
   assert.equal(cleanReply({ response: "<think>never closed" }), "");
+});
+
+test("IPv6 同一段 /64 算同一個來源，換位址也躲不掉 IP 上限", async () => {
+  assert.equal(ipGroup("2001:db8:abcd:12:1:2:3:4"), "2001:db8:abcd:12::/64");
+  assert.equal(ipGroup("2001:DB8:abcd:0012::99"), "2001:db8:abcd:12::/64");
+  assert.equal(ipGroup("2001:db8::1"), "2001:db8:0:0::/64");
+  assert.equal(ipGroup("::ffff:203.0.113.9"), "203.0.113.9");
+  assert.equal(ipGroup("203.0.113.9"), "203.0.113.9");
+  const { env } = makeEnv({ IP_DAILY_LIMIT: "3" });
+  for (let i = 0; i < 3; i++) {
+    assert.equal((await post(env, ask("bank", { installId: `bbbbbbbb-000${i}` }), { ip: `2001:db8:abcd:12::${i + 1}` })).status, 200);
+  }
+  assert.equal((await post(env, ask("bank", { installId: "bbbbbbbb-0009" }), { ip: "2001:db8:abcd:12:ffff::7" })).status, 429);
+  assert.equal((await post(env, ask("bank", { installId: "bbbbbbbb-0009" }), { ip: "2001:db8:abcd:13::1" })).status, 200);
+});
+
+test("不存原始 IP：只存加了當天隨機鹽值的雜湊，換日連鹽值一起刪掉", async () => {
+  const { env, quota } = makeEnv();
+  await post(env, ask(), { ip: "198.51.100.23" });
+  const rows = quota.sql.exec("SELECT key FROM usage").toArray().map((r) => r.key);
+  assert.equal(rows.length, 2);
+  assert.ok(rows.every((k) => !k.includes("198.51.100")));
+  const ipKey = rows.find((k) => k.startsWith("ip:"));
+  assert.match(ipKey, /^ip:[0-9a-f]{32}$/);
+  // 只用日期當鹽就能被暴力反推；確認雜湊不是 sha256(日期|IP)
+  const day = new Date().toISOString().slice(0, 10);
+  const { createHash } = await import("node:crypto");
+  assert.notEqual(ipKey, `ip:${createHash("sha256").update(`${day}|198.51.100.23`).digest("hex").slice(0, 32)}`);
+  assert.equal(quota.sql.exec("SELECT count(*) AS n FROM salts").toArray()[0].n, 1);
+  const next = await quota.fetch(new Request("https://quota/", { method: "POST", body: JSON.stringify({ op: "peek", day: "2099-01-01", keys: [{ key: "i:x", limit: 1 }] }) }));
+  assert.equal(next.status, 200);
+  assert.equal(quota.sql.exec("SELECT count(*) AS n FROM usage").toArray()[0].n, 0);
+  assert.equal(quota.sql.exec("SELECT count(*) AS n FROM salts WHERE day <> '2099-01-01'").toArray()[0].n, 0);
+});
+
+test("太大的請求直接拒絕，不解析", async () => {
+  const { env, calls } = makeEnv();
+  const res = await post(env, ask("bank", { context: "x".repeat(20000) }));
+  assert.equal(res.status, 413);
+  assert.equal(calls.length, 0);
 });

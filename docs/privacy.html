@@ -73,7 +73,7 @@
   <!-- ================================================================ 中文 -->
   <section class="policy" id="zh" lang="zh-Hant">
     <h1>隱私權政策</h1>
-    <p class="meta">生效日期：2026 年 10 月 15 日　・　適用版本：3.0.0 起</p>
+    <p class="meta">生效日期：2026 年 10 月 15 日　・　適用版本：3.1.0 起</p>
 
     <div class="summary">
       <p>重點摘要</p>
@@ -124,7 +124,7 @@
     <ul>
       <li><strong>只用在選字翻譯：</strong>你在設定選了「免費 AI」並按下「翻譯」時，選取的文字、它前後各約 200 字、譯文語言和安裝 ID，會送到開發者在 Cloudflare 上執行的伺服器（Cloudflare Workers），再交給 Cloudflare Workers AI 的模型翻譯。全頁翻譯不使用免費 AI，一律在裝置上翻譯。</li>
       <li><strong>不保存文字：</strong>伺服器不記錄、不保存你要翻譯的文字與譯文。</li>
-      <li><strong>計算次數：</strong>伺服器只記下當天的使用次數，對應安裝 ID 與你的 IP 位址的雜湊值（加上當天日期一起計算，無法還原成 IP，也無法跨日比對）；換日後就刪除。</li>
+      <li><strong>計算次數：</strong>伺服器只記下當天的使用次數，對應安裝 ID 與你的 IP 位址的雜湊值（IPv6 以同一段網路計算），不存原始 IP。雜湊加上每天隨機產生的鹽值，鹽值換日就和次數一起刪除，之後無法還原成 IP，也無法跨日比對。</li>
       <li>次數用完或服務暫時不能用時，這次的翻譯改在裝置上完成，不會送出。</li>
       <li>Cloudflare 處理這些資料的方式，依 <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare 隱私權政策</a>。</li>
     </ul>
@@ -173,7 +173,7 @@
   <!-- ================================================================ English -->
   <section class="policy" id="en" lang="en">
     <h1>Privacy Policy</h1>
-    <p class="meta">Effective date: October 15, 2026 · Applies to version 3.0.0 and later</p>
+    <p class="meta">Effective date: October 15, 2026 · Applies to version 3.1.0 and later</p>
 
     <div class="summary">
       <p>Summary</p>
@@ -224,7 +224,7 @@
     <ul>
       <li><strong>Selection translation only:</strong> when you choose Free AI in the settings and click Translate, the selected text, about 200 characters on each side of it, the target language and the install ID are sent to a server the developer runs on Cloudflare (Cloudflare Workers), which passes them to a Cloudflare Workers AI model for translation. Full-page translation never uses Free AI; it always runs on your device.</li>
       <li><strong>No text is kept:</strong> the server does not log or store the text you translate or the translation.</li>
-      <li><strong>Counting use:</strong> the server keeps only today's count, keyed by the install ID and a hash of your IP address (computed together with the date, so it cannot be turned back into an IP or linked across days). Counts are deleted when the day changes.</li>
+      <li><strong>Counting use:</strong> the server keeps only today's count, keyed by the install ID and a hash of your IP address (for IPv6, of your network block); the IP itself is never stored. The hash uses a random salt that changes every day and is deleted together with the counts, after which it cannot be turned back into an IP or linked across days.</li>
       <li>When the free translations are used up or the service is unavailable, that translation is done on your device instead and nothing is sent.</li>
       <li>Cloudflare handles this data under the <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare Privacy Policy</a>.</li>
     </ul>

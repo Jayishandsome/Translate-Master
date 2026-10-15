@@ -4,7 +4,7 @@
 // 擴充功能把選取的文字、前後文、譯文語言和一組隨機的安裝 ID 送到這裡；
 // 這裡先扣次數，再交給 Cloudflare Workers AI 翻譯，失敗就把次數還回去。
 //
-// - 只記每天的次數：安裝 ID、以及 IP 的雜湊（加上日期當鹽，隔天就對不起來），隔天自動刪掉。
+// - 只記每天的次數：安裝 ID、以及 IP 的雜湊（加上每天隨機產生的鹽值；鹽值換日就跟次數一起刪掉，之後無法還原）。
 // - 不記錄、不保存任何要翻譯的文字。
 // - 只接受 Chrome 擴充功能送來的請求（EXTENSION_IDS 有填就只接受那些擴充功能）。
 //
@@ -12,6 +12,7 @@
 
 const MAX_TEXT = 2000;
 const MAX_CONTEXT = 1200;
+const MAX_BODY = 16 * 1024;
 
 export default {
   async fetch(request, env) {
@@ -60,6 +61,22 @@ async function sha256(text) {
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+// IPv6 一個家庭或一台主機通常就有一整段 /64 位址，可以一直換；所以 IPv6 用前 64 位元（前 4 組）當作同一個來源
+export function ipGroup(ip) {
+  const value = String(ip || "").trim().toLowerCase();
+  if (!value.includes(":")) return value || "unknown";
+  const mapped = value.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
+  if (mapped) return mapped[1];
+  const compressed = value.includes("::");
+  const [head, tail = ""] = value.split("::");
+  const left = head ? head.split(":") : [];
+  const right = compressed && tail ? tail.split(":") : [];
+  const groups = compressed
+    ? [...left, ...Array(Math.max(0, 8 - left.length - right.length)).fill("0"), ...right]
+    : left;
+  return `${groups.slice(0, 4).map((g) => (parseInt(g, 16) || 0).toString(16)).join(":")}::/64`;
+}
+
 // 次數記在同一個 Durable Object 裡（SQLite），一次只處理一個請求，不會算錯
 async function counter(env, body) {
   const stub = env.QUOTA.get(env.QUOTA.idFromName("daily-quota"));
@@ -67,12 +84,12 @@ async function counter(env, body) {
   return res.json();
 }
 
-async function quotaKeys(request, env, installId, day) {
-  const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+// IP 不直接存：交給 Durable Object 用當天的隨機鹽值算雜湊，只存雜湊
+function quotaKeys(request, env, installId) {
   const { install, ip: ipLimit } = limits(env);
   return [
     { key: `i:${installId}`, limit: install },
-    { key: `ip:${(await sha256(`${day}|${ip}`)).slice(0, 32)}`, limit: ipLimit },
+    { ip: ipGroup(request.headers.get("CF-Connecting-IP")), limit: ipLimit },
   ];
 }
 
@@ -87,7 +104,11 @@ async function quota(url, env, cors) {
 }
 
 async function translate(request, env, cors) {
-  const body = await request.json().catch(() => null);
+  if (Number(request.headers.get("Content-Length") || 0) > MAX_BODY) return json({ error: "too_long" }, 413, cors);
+  const raw = await request.text().catch(() => "");
+  if (raw.length > MAX_BODY) return json({ error: "too_long" }, 413, cors);
+  let body = null;
+  try { body = JSON.parse(raw); } catch (_) {}
   const text = String(body?.text ?? "").trim();
   const context = String(body?.context ?? "").slice(0, MAX_CONTEXT);
   const target = String(body?.target ?? "");
@@ -95,7 +116,7 @@ async function translate(request, env, cors) {
   if (text.length > MAX_TEXT) return json({ error: "too_long", max: MAX_TEXT }, 413, cors);
 
   const day = today();
-  const keys = await quotaKeys(request, env, body.installId, day);
+  const keys = quotaKeys(request, env, body.installId);
   const { install } = limits(env);
   const taken = await counter(env, { op: "take", day, keys });
   if (!taken.ok) return json({ error: "quota", remaining: taken.remaining, limit: install }, 429, cors);
@@ -166,7 +187,25 @@ export class QuotaCounter {
     this.sql.exec(
       "CREATE TABLE IF NOT EXISTS usage (day TEXT NOT NULL, key TEXT NOT NULL, count INTEGER NOT NULL, PRIMARY KEY (day, key))"
     );
+    this.sql.exec("CREATE TABLE IF NOT EXISTS salts (day TEXT PRIMARY KEY, salt TEXT NOT NULL)");
     this.cleanedDay = "";
+  }
+
+  // 每天一個隨機鹽值；換日時跟前一天的次數一起刪掉，之後就無法從雜湊找回 IP
+  saltFor(day) {
+    const row = this.sql.exec("SELECT salt FROM salts WHERE day = ?", day).toArray()[0];
+    if (row) return row.salt;
+    const salt = [...crypto.getRandomValues(new Uint8Array(32))].map((b) => b.toString(16).padStart(2, "0")).join("");
+    this.sql.exec("INSERT INTO salts (day, salt) VALUES (?, ?)", day, salt);
+    return salt;
+  }
+
+  // { ip } 換成 { key: "ip:<雜湊>" }；原始 IP 不寫進儲存空間
+  async resolveKeys(day, keys) {
+    const salt = this.saltFor(day);
+    return Promise.all(keys.map(async (k) => (k.ip === undefined
+      ? k
+      : { key: `ip:${(await sha256(`${salt}|${k.ip}`)).slice(0, 32)}`, limit: k.limit })));
   }
 
   count(day, key) {
@@ -175,15 +214,18 @@ export class QuotaCounter {
   }
 
   async fetch(request) {
-    const { op, day, keys } = await request.json();
+    let { op, day, keys } = await request.json();
     if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || !Array.isArray(keys) || !keys.length) {
       return json({ error: "bad_request" }, 400);
     }
-    // 換日之後第一個請求，順手刪掉前一天的紀錄
+    // 換日之後第一個請求，順手刪掉前一天的紀錄和鹽值
     if (this.cleanedDay !== day) {
       this.sql.exec("DELETE FROM usage WHERE day <> ?", day);
+      this.sql.exec("DELETE FROM salts WHERE day <> ?", day);
       this.cleanedDay = day;
     }
+    // 雜湊先算好；之後的檢查和寫入都是同步的，中間不會插進別的請求
+    keys = await this.resolveKeys(day, keys);
     const first = keys[0];
     if (op === "peek") {
       return json({ remaining: Math.max(0, first.limit - this.count(day, first.key)) });
