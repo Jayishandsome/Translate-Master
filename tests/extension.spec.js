@@ -71,7 +71,7 @@ test("安裝後打開說明頁，介面跟著 Chrome 的語言", async () => {
   const { context, sw } = await launch({ lang: "en-US" });
   await expect.poll(() => context.pages().some((p) => p.url().endsWith("/welcome.html"))).toBe(true);
   const welcome = context.pages().find((p) => p.url().endsWith("/welcome.html"));
-  await expect(welcome.locator("h1")).toHaveText("Context Translator");
+  await expect(welcome.locator("h1")).toHaveText("Select text, translate it in place");
   expect(await sw.evaluate(() => chrome.i18n.getMessage("menuTranslatePage"))).toBe("Translate full page");
   await context.close();
 });
