@@ -447,6 +447,50 @@
   "engineAIDesc": {
     "message": "會參考上下文，譯得更準・需 API 金鑰"
   },
+  "engineFree": {
+    "message": "免費 AI"
+  },
+  "engineFreeDesc": {
+    "message": "每天 $P1$ 次・免金鑰・文字會送到雲端翻譯",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "freeInfo": {
+    "message": "今天還剩 $P1$ 次，$P2$ 重置。用完後改用本機翻譯；全頁翻譯一律用本機翻譯。選取的文字會送到隨選翻譯的伺服器，由 Cloudflare Workers AI 翻譯，不會保存。",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "modeFreeLeft": {
+    "message": "免費 AI・今天還剩 $P1$ 次",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "freeFallbackQuota": {
+    "message": "今天的免費 AI 次數用完了，這次改用本機翻譯。"
+  },
+  "freeFallbackBusy": {
+    "message": "免費 AI 暫時不能用，這次改用本機翻譯。"
+  },
+  "freeFallbackLong": {
+    "message": "免費 AI 一次最多 $P1$ 字，這次改用本機翻譯。",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
   "builtinInfo": {
     "message": "首次使用某個語言時，Chrome 需要先下載語言套件。"
   },

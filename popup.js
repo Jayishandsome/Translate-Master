@@ -66,6 +66,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   const modelInput = document.getElementById("model-input");
   const languageSelect = document.getElementById("lang-select");
   const helpLink = document.getElementById("help-link");
+  const freeOption = document.getElementById("engine-free");
+  const freeDesc = document.getElementById("engine-free-desc");
+  const freeInfo = document.getElementById("free-info");
 
   let isEnabled = true;
   let currentProvider = "builtin";
@@ -74,6 +77,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   let savedKey = "";            // 目前服務商已儲存的金鑰
   let customModels = {};
   let defaultModels = {};
+  // 免費 AI：背景程式回報有沒有開放、每天幾次；剩下的次數記在 storage.local
+  let freeConfig = { enabled: false, dailyLimit: 10 };
   let savedLabelTimer = null;
 
   const keyArea = () => (keyStorage === "local" ? local : sync);
@@ -124,13 +129,29 @@ document.addEventListener("DOMContentLoaded", async () => {
     modelInput.placeholder = defaultModels[lastAiProvider] || "";
   };
 
+  // 次數跟 Workers AI 的免費額度一樣，每天 UTC 0 點重置；重置時間用這台電腦的時區顯示
+  const renderFreeInfo = async () => {
+    const now = new Date();
+    const day = now.toISOString().slice(0, 10);
+    const { freeAI } = await local.get("freeAI");
+    const left = freeAI?.day === day ? Math.max(0, Number(freeAI.remaining) || 0) : freeConfig.dailyLimit;
+    const reset = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1))
+      .toLocaleTimeString(t("htmlLang"), { hour: "2-digit", minute: "2-digit" });
+    freeInfo.textContent = t("freeInfo", [String(left), reset]);
+  };
+
+  const engineModeOf = (provider) => (provider === "builtin" || provider === "free" ? provider : "ai");
+
   const renderEngine = () => {
-    const usesBuiltin = currentProvider === "builtin";
-    const mode = usesBuiltin ? "builtin" : "ai";
+    const mode = engineModeOf(currentProvider);
     engineMode.dataset.value = mode;
     engineRadios.forEach((radio) => { radio.checked = radio.value === mode; });
-    builtinInfo.hidden = !usesBuiltin;
-    aiFields.hidden = usesBuiltin;
+    freeOption.hidden = !freeConfig.enabled;
+    freeDesc.textContent = t("engineFreeDesc", [String(freeConfig.dailyLimit)]);
+    builtinInfo.hidden = mode !== "builtin";
+    freeInfo.hidden = mode !== "free";
+    if (mode === "free") renderFreeInfo();
+    aiFields.hidden = mode !== "ai";
 
     const meta = AI_PROVIDERS[lastAiProvider];
     providerSelect.value = lastAiProvider;
@@ -206,10 +227,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   const apiKeys = await readKeys();
 
   // 選了 AI 但還沒有金鑰時，顯示成本機翻譯（翻譯時本來就會先用本機翻譯）
-  const storedProvider = result.apiProvider === "builtin" || AI_PROVIDERS[result.apiProvider]
+  const storedProvider = result.apiProvider === "builtin" || result.apiProvider === "free" || AI_PROVIDERS[result.apiProvider]
     ? result.apiProvider
     : "builtin";
-  currentProvider = storedProvider === "builtin" || apiKeys[storedProvider] ? storedProvider : "builtin";
+  currentProvider = storedProvider === "builtin" || storedProvider === "free" || apiKeys[storedProvider] ? storedProvider : "builtin";
   if (currentProvider !== result.apiProvider) await sync.set({ apiProvider: currentProvider });
 
   lastAiProvider = AI_PROVIDERS[currentProvider]
@@ -233,9 +254,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("quota-text").textContent = String(usage);
 
   // 預設模型名稱由背景程式提供，當作「自訂模型」的提示文字
-  chrome.runtime.sendMessage({ action: "getProviders" }).then((reply) => {
+  chrome.runtime.sendMessage({ action: "getProviders" }).then(async (reply) => {
     defaultModels = Object.fromEntries(Object.entries(reply?.providers || {}).map(([id, p]) => [id, p.model]));
-    renderModel();
+    if (reply?.free) freeConfig = { ...freeConfig, ...reply.free };
+    // 免費 AI 沒有開放（或已經停止）時，改回本機翻譯
+    if (currentProvider === "free" && !freeConfig.enabled) {
+      currentProvider = "builtin";
+      await sync.set({ apiProvider: currentProvider });
+    }
+    renderEngine();
   }, () => {});
 
   // ------------------------------------------------------------------
@@ -252,7 +279,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   engineRadios.forEach((radio) => {
     radio.addEventListener("change", async () => {
       if (!radio.checked) return;
-      currentProvider = radio.value === "builtin" ? "builtin" : lastAiProvider;
+      currentProvider = radio.value === "ai" ? lastAiProvider : radio.value;
       renderEngine();
       await saveProvider();
     });

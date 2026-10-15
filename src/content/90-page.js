@@ -714,8 +714,8 @@
     page.starting = true;
     try {
       await refreshState();
-      // 設定選了 AI 模型且已儲存金鑰，就用 AI；否則用 Chrome 內建翻譯
-      const engine = activeProvider;
+      // 設定選了 AI 模型且已儲存金鑰，就用 AI；否則用 Chrome 內建翻譯（免費 AI 只用在選字翻譯）
+      const engine = activeProvider === "free" ? "builtin" : activeProvider;
       if (engine === "builtin" && !("Translator" in globalThis)) {
         barMessage("error", t("pageNeedsBuiltin"), t("pageNeedsBuiltinSub"));
         return;

@@ -190,14 +190,15 @@
     return html;
   }
 
-  function showResult(text) {
+  // notice：例如「今天的免費 AI 用完了，改用本機翻譯」，放在譯文下面
+  function showResult(text, notice = "") {
     currentResult = text;
     copyText = text;
     revealPopover();
     const html = isWordLookup(currentSelection)
       ? formatWordResult(text)
       : `${sourceBlock()}<div class="ctx-label">${t("labelTranslation")}</div><div class="ctx-result">${escapeHtml(text)}</div>`;
-    setBody(html);
+    setBody(notice ? `${html}<p class="ctx-notice" role="note">${escapeHtml(notice)}</p>` : html);
     setCopyEnabled(Boolean(copyText));
   }
 

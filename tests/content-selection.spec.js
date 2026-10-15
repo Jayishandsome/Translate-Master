@@ -46,3 +46,23 @@ test("本機：查單字顯示一般譯文", async ({ context }) => {
   await expect(page.locator(".ctx-note")).toHaveCount(0);
   expect(errors).toEqual([]);
 });
+
+test("免費 AI：用 AI 翻譯，並顯示今天剩下的次數", async ({ context }) => {
+  const { page, errors } = await openFixture(context, null, "pages/article.html", { provider: "free" });
+  await selectText(page, "#sel-target", "someone else.");
+  await clickTranslate(page);
+  await expect(page.locator("#ctx-body .ctx-result")).toHaveText("免費譯:We rarely notice how much of the internet was written for someone else.");
+  await expect(page.locator("#ctx-mode-label")).toContainText("今天還剩 9 次");
+  const msg = await page.evaluate(() => window.__stub.sent.find((m) => m.action === "translate"));
+  expect(msg.context).toContain("CONTEXT-NEAR");
+  expect(errors).toEqual([]);
+});
+
+test("免費 AI 次數用完：改用本機翻譯，並說明原因", async ({ context }) => {
+  const { page } = await openFixture(context, null, "pages/article.html", { provider: "free", freemode: "quota" });
+  await selectText(page, "#sel-target", "someone else.");
+  await clickTranslate(page);
+  await expect(page.locator("#ctx-body .ctx-result")).toHaveText("WE RARELY NOTICE HOW MUCH OF THE INTERNET WAS WRITTEN FOR SOMEONE ELSE.");
+  await expect(page.locator("#ctx-body .ctx-notice")).toContainText("次數用完了");
+  await expect(page.locator("#ctx-mode-label")).toContainText("Chrome");
+});

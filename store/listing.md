@@ -15,6 +15,8 @@
 ## 二、商店資訊（Store listing）
 
 > 說明文字裡不要列出 AI 服務商的品牌名稱。第一次送審時因為列了六家服務商的名稱，被判定為「關鍵字垃圾內容」（Yellow Argon）而退件。
+>
+> 「免費 AI」要先部署 `worker/`（見 `worker/README.md`）並在 `background.js` 的 `FREE_AI.endpoint` 填上網址才會出現。還沒部署就送審的話，把下面說明裡【每天 10 次免費 AI】那一段刪掉，隱私段落改回「開發者沒有伺服器，不收集任何資料」，資料使用表也不用填免費 AI 的部分。
 
 | 欄位 | 內容 |
 |---|---|
@@ -46,6 +48,9 @@
 【預設在你的裝置上翻譯】
 預設使用 Chrome 內建翻譯（桌面版 Chrome 138 以上），不需要 API 金鑰，文字不會離開你的電腦。
 
+【每天 10 次免費 AI】
+沒有 API 金鑰也能在設定選「免費 AI」：選字翻譯每天可以用 AI 翻 10 次，查單字一樣有語境說明；用完後自動改用本機翻譯。
+
 【也能接上你的 AI 模型】
 需要更貼近語境的譯文時，可以改用你自己的 AI 服務商 API 金鑰（支援 6 家主流服務商，在設定裡選擇）。金鑰只存在你的瀏覽器，請求直接送到你選的服務商。
 
@@ -57,7 +62,7 @@
 ・免費、開放原始碼
 
 【隱私】
-開發者沒有伺服器，不收集任何資料。使用 AI 模型時，只有你按下翻譯的文字會送到你選的服務商。
+不收集任何資料。使用 AI 模型時，只有你按下翻譯的文字會送到你選的服務商。選用免費 AI 時，文字經過開發者的伺服器交給雲端模型翻譯，不會記錄或保存。
 隱私權政策：https://jayishandsome.github.io/Translate-Master/privacy.html
 原始碼：https://github.com/Jayishandsome/Translate-Master
 ```
@@ -79,6 +84,9 @@ With an AI model, looking up a word takes its sentence into account and adds a s
 ON-DEVICE BY DEFAULT
 Uses Chrome's built-in translation (desktop Chrome 138 or later). No API key needed, and your text never leaves your computer.
 
+10 FREE AI TRANSLATIONS A DAY
+No API key? Choose “Free AI” in the settings to get 10 AI translations of selected text every day, including word explanations in context. After that, on-device translation takes over.
+
 BRING YOUR OWN AI MODEL
 For more context-aware translations, optionally use your own API key from one of six major AI providers, chosen in the settings. The key stays in your browser and requests go straight to the provider you choose.
 
@@ -90,7 +98,7 @@ ALSO
 • Free and open source
 
 PRIVACY
-The developer runs no servers and collects no data. With an AI model, only the text you choose to translate is sent to the provider you picked.
+No data is collected. With an AI model, only the text you choose to translate is sent to the provider you picked. With Free AI, the text passes through the developer's server to a cloud model for translation and is never logged or stored.
 Privacy policy: https://jayishandsome.github.io/Translate-Master/privacy.html
 Source code: https://github.com/Jayishandsome/Translate-Master
 ```
@@ -115,7 +123,7 @@ Translates text the user selects on a web page, or the whole page when the user 
 
 | 權限 | 填寫內容 |
 |---|---|
-| `storage` | 保存使用者的設定（選字翻譯開關、翻譯引擎、譯文語言、每日翻譯次數）以及使用者自行輸入的 AI 服務商 API 金鑰。資料只存在 chrome.storage.sync，不會傳給開發者。 |
+| `storage` | 保存使用者的設定（選字翻譯開關、翻譯引擎、譯文語言、每日翻譯次數）以及使用者自行輸入的 AI 服務商 API 金鑰。資料存在 chrome.storage，不會傳給開發者。使用免費 AI 時，另外在本機保存一組隨機的安裝 ID 和今天剩下的次數。 |
 | `contextMenus` | 在網頁的右鍵選單加入「全頁翻譯」，讓使用者翻譯目前的頁面。 |
 | `activeTab` | 使用者點選右鍵選單的「全頁翻譯」時，如果該分頁是在安裝或更新擴充功能前就開著、還沒有內容腳本，需要暫時取得這個分頁的存取權，才能開始翻譯。只在使用者操作的那一個分頁有效。 |
 | `scripting` | 與 activeTab 搭配，用 chrome.scripting.executeScript 把擴充功能套件內附的 content.js 注入上述分頁。不會注入或執行任何遠端程式碼。 |
@@ -130,11 +138,11 @@ Translates text the user selects on a web page, or the whole page when the user 
 
 | 類別 | 勾選 | 說明 |
 |---|---|---|
-| 網站內容（Website content） | ✅ | 使用者選用 AI 模型並觸發翻譯時，選取的文字或頁面段落會送到使用者自己選的 AI 服務商以取得譯文。本機翻譯模式不會送出。 |
+| 網站內容（Website content） | ✅ | 使用者選用 AI 模型並觸發翻譯時，選取的文字或頁面段落會送到使用者自己選的 AI 服務商以取得譯文。使用者選用免費 AI 時，選取的文字和前後文會送到開發者在 Cloudflare 上的伺服器，交給 Cloudflare Workers AI 翻譯，不記錄、不保存。本機翻譯模式不會送出。 |
 | 驗證資訊（Authentication information） | ✅ | 使用者自行輸入的 API 金鑰存在瀏覽器中，呼叫對應服務商時放在請求標頭送出。開發者收不到。 |
 | 個人識別資訊、健康資訊、財務和付款資訊、個人通訊、位置、網路記錄、使用者活動 | ☐ | 不收集。 |
 
-> 這兩項資料都不會傳給開發者，只會應使用者要求送到使用者選的 AI 服務商。勾選是為了如實揭露「資料會離開裝置」這件事；寧可多揭露，也不要少揭露，審核比較不會被退回。
+> API 金鑰不會傳給開發者，只會送到使用者選的 AI 服務商。網站內容只有在使用者選用免費 AI 時經過開發者的伺服器轉交翻譯，不記錄、不保存。勾選是為了如實揭露「資料會離開裝置」這件事；寧可多揭露，也不要少揭露，審核比較不會被退回。
 
 接著勾選三項聲明：
 
@@ -167,4 +175,5 @@ No account or sign-in is needed.
 2. Select a sentence and click the “文 翻譯” (Translate) button that appears next to it. The translation appears in a small card. The first time, Chrome may download a language pack.
 3. Right-click an empty area of the page and choose “全頁翻譯” (Translate full page). Paragraphs are translated in place; use the bar at the bottom right to switch to side-by-side view (對照) or restore the page (還原).
 4. Optional AI mode: open the toolbar popup, choose “AI 模型”, pick a provider and paste your own API key, then click 儲存 (Save). AI mode is optional; the default on-device mode needs no key.
+5. Optional Free AI: in the popup choose “免費 AI” (Free AI). Selection translations then use a cloud model, 10 per day with no key; the popup shows how many are left. After that, translations fall back to on-device.
 ```

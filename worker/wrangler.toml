@@ -1,0 +1,29 @@
+# 隨選翻譯 — 免費 AI 翻譯（Cloudflare Workers 免費方案就夠用）
+name = "translate-master-free"
+main = "src/index.js"
+compatibility_date = "2026-06-01"
+workers_dev = true
+
+# Workers AI：免費方案每天 10,000 Neurons，所有使用者共用
+[ai]
+binding = "AI"
+
+# 每天的使用次數（SQLite Durable Object，免費方案可用）
+[[durable_objects.bindings]]
+name = "QUOTA"
+class_name = "QuotaCounter"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["QuotaCounter"]
+
+[vars]
+# 主要模型與備用模型（Workers AI 的模型 ID）
+MODEL = "@cf/qwen/qwen3-30b-a3b-fp8"
+FALLBACK_MODEL = "@cf/google/gemma-4-26b-a4b-it"
+# 每個安裝每天幾次
+DAILY_LIMIT = "10"
+# 同一個 IP 每天最多幾次（擋重複安裝；公司、學校共用網路時會多人共用這個上限）
+IP_DAILY_LIMIT = "50"
+# 上架後填 Chrome 線上應用程式商店的擴充功能 ID（逗號分隔），就只接受這些擴充功能；留空表示任何擴充功能都可以
+EXTENSION_IDS = ""

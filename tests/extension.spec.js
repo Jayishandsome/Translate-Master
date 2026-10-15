@@ -177,3 +177,42 @@ test("真正的內容腳本：AI 全頁翻譯，連結保留、網站框架不�
   expect(errors).toEqual([]);
   await context.close();
 });
+
+test("免費 AI：送出文字、譯文語言和安裝 ID，記下剩下的次數；次數用完時回報原因", async () => {
+  const { context, sw } = await launch();
+  const calls = [];
+  let status = 200;
+  await context.route("https://free.test/**", async (route) => {
+    const req = route.request();
+    const cors = { "Access-Control-Allow-Origin": req.headers().origin || "*", "Access-Control-Allow-Headers": "Content-Type", "Access-Control-Allow-Methods": "POST, OPTIONS" };
+    if (req.method() === "OPTIONS") return route.fulfill({ status: 204, headers: cors });
+    calls.push({ url: req.url(), body: JSON.parse(req.postData() || "{}") });
+    const body = status === 200 ? { translation: "河岸", remaining: 7, limit: 10 } : { error: "quota", remaining: 0, limit: 10 };
+    await route.fulfill({ status, headers: cors, contentType: "application/json", body: JSON.stringify(body) });
+  });
+  await sw.evaluate(async () => {
+    FREE_AI.endpoint = "https://free.test/";
+    await chrome.storage.sync.set({ apiProvider: "free", targetLang: "ja" });
+  });
+  const ok = await sw.evaluate(() => handleFreeTranslation("bank", "She waited on the bank."));
+  expect(ok).toEqual({ text: "河岸", remaining: 7 });
+  expect(calls[0].url).toBe("https://free.test/translate");
+  expect(calls[0].body).toMatchObject({ text: "bank", context: "She waited on the bank.", target: "ja" });
+  expect(calls[0].body.installId).toMatch(/^[0-9a-f-]{36}$/);
+  const stored = await sw.evaluate(() => chrome.storage.local.get(["installId", "freeAI"]));
+  expect(stored.installId).toBe(calls[0].body.installId);
+  expect(stored.freeAI.remaining).toBe(7);
+
+  status = 429;
+  const quota = await sw.evaluate(() => handleFreeTranslation("bank", "x").then(() => null, (e) => ({ reason: e.reason, message: e.message })));
+  expect(quota.reason).toBe("quota");
+  expect(quota.message).toContain("free AI");
+  expect(calls[1].body.installId).toBe(calls[0].body.installId);
+  expect((await sw.evaluate(() => chrome.storage.local.get("freeAI"))).freeAI.remaining).toBe(0);
+
+  // 太長的選取不送出
+  const long = await sw.evaluate(() => handleFreeTranslation("a".repeat(2001), "").then(() => null, (e) => e.reason));
+  expect(long).toBe("too_long");
+  expect(calls).toHaveLength(2);
+  await context.close();
+});

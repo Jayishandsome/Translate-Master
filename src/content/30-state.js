@@ -25,6 +25,7 @@
 
   const PROVIDER_NAMES = {
     builtin: t("engineBuiltinName"),
+    free: t("engineFree"),
     gemini: "Gemini",
     minimax: "MiniMax",
     kimi: "Kimi",

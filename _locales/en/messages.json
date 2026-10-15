@@ -447,6 +447,50 @@
   "engineAIDesc": {
     "message": "Reads the context for better results · needs an API key"
   },
+  "engineFree": {
+    "message": "Free AI"
+  },
+  "engineFreeDesc": {
+    "message": "$P1$ a day · no key · text is sent to the cloud",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "freeInfo": {
+    "message": "$P1$ left today; resets at $P2$. After that, on-device translation takes over, and full-page translation always uses it. Selected text goes to Context Translator's server and is translated by Cloudflare Workers AI; nothing is stored.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "modeFreeLeft": {
+    "message": "Free AI · $P1$ left today",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "freeFallbackQuota": {
+    "message": "You've used today's free AI translations, so this one is on-device."
+  },
+  "freeFallbackBusy": {
+    "message": "Free AI isn't available right now, so this one is on-device."
+  },
+  "freeFallbackLong": {
+    "message": "Free AI takes up to $P1$ characters at a time, so this one is on-device.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
   "builtinInfo": {
     "message": "The first time you use a language, Chrome downloads a language pack."
   },

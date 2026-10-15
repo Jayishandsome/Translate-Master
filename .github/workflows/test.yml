@@ -17,6 +17,8 @@ jobs:
       - run: npm ci
       - name: Generated files are up to date (run npm run build if this fails)
         run: npm run check
+      - name: Free AI worker
+        run: npm run test:worker
       - run: npx playwright install --with-deps chromium
       - run: npm test
         env:

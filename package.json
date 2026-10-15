@@ -6,7 +6,8 @@
     "build": "node scripts/build.mjs",
     "check": "node scripts/build.mjs && git diff --exit-code -- content.js _locales",
     "test": "playwright test",
-    "package": "node scripts/build.mjs && bash scripts/package.sh"
+    "package": "node scripts/build.mjs && bash scripts/package.sh",
+    "test:worker": "node --test worker/test/*.test.mjs"
   },
   "devDependencies": {
     "@playwright/test": "1.56.0"

@@ -167,25 +167,30 @@
       fn();
     };
 
-    const timeoutId = setTimeout(() => {
-      finish(() => showError(t("errTimeout")));
-    }, provider === "builtin" ? 300000 : 18000);
+    // 內建翻譯第一次可能要下載語言套件，給比較長的時間
+    const startTimer = (ms) => setTimeout(() => finish(() => showError(t("errTimeout"))), ms);
+    let timeoutId = startTimer(provider === "builtin" ? 300000 : 18000);
+
+    // Chrome 內建翻譯；notice 是改用內建翻譯的原因（例如免費 AI 次數用完）
+    const translateHere = async (notice = "") => {
+      const text = await translateWithBuiltin(
+        currentSelection,
+        currentContext,
+        activeTargetLanguage
+      );
+      clearTimeout(timeoutId);
+
+      if (!text) {
+        finish(() => showError(t("errEmptyBuiltin")));
+      } else {
+        incrementBuiltinUsage().catch(() => {});
+        finish(() => showResult(text, notice));
+      }
+    };
 
     try {
       if (provider === "builtin") {
-        const text = await translateWithBuiltin(
-          currentSelection,
-          currentContext,
-          activeTargetLanguage
-        );
-        clearTimeout(timeoutId);
-
-        if (!text) {
-          finish(() => showError(t("errEmptyBuiltin")));
-        } else {
-          incrementBuiltinUsage().catch(() => {});
-          finish(() => showResult(text));
-        }
+        await translateHere();
         return;
       }
 
@@ -202,11 +207,22 @@
         return;
       }
 
+      // 免費 AI 不能用時（次數用完、太長、暫時故障），改用 Chrome 內建翻譯，並說明原因
+      if (!response.success && response.fallback) {
+        clearTimeout(timeoutId);
+        timeoutId = startTimer(300000);
+        setHeader("builtin");
+        showLoading(t("loadingBuiltin"));
+        await translateHere(response.error || t("freeFallbackBusy"));
+        return;
+      }
+
       if (response.success) {
         const text = String(response.data ?? "").trim();
         if (!text) {
           finish(() => showError(t("errEmptyAI")));
         } else {
+          if (response.free) modeLabel.textContent = t("modeFreeLeft", [String(response.free.remaining ?? "")]);
           finish(() => showResult(text));
         }
       } else {

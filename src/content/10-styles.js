@@ -333,6 +333,15 @@
     ${P} .ctx-skeleton i:nth-child(1)::before { --w: 92%; }
     ${P} .ctx-skeleton i:nth-child(2)::before { --w: 100%; animation-delay: 160ms; }
     ${P} .ctx-skeleton i:nth-child(3)::before { --w: 56%; animation-delay: 320ms; }
+    ${P} .ctx-notice {
+      margin: 14px 0 0;
+      padding-top: 10px;
+      border-top: 1px dotted var(--ctx-dots);
+      color: var(--ctx-ink-2);
+      font-family: var(--ctx-sans);
+      font-size: 11.5px;
+      line-height: 1.6;
+    }
     ${P} .ctx-loading-text {
       display: block;
       margin-top: 14px;

@@ -153,3 +153,12 @@ test("本機：中文頁面的外文段落第一次要下載語言套件，按�
   await expect(page.locator("#ctx-page-bar")).toContainText("外文段落");
   await expect(page.locator("main ctx-tr")).toHaveCount(1);
 });
+
+test("免費 AI：全頁翻譯一律用本機翻譯，不消耗次數", async ({ context }) => {
+  const { page } = await openFixture(context, null, "pages/article.html", { provider: "free" });
+  await translatePage(page);
+  await expect(tr(page, "#title")).toHaveText("A BEGINNER'S GUIDE TO COFFEE");
+  const actions = await page.evaluate(() => window.__stub.sent.map((m) => m.action));
+  expect(actions).not.toContain("translateBatch");
+  expect(actions).not.toContain("translate");
+});

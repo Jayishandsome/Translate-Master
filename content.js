@@ -343,6 +343,15 @@
     ${P} .ctx-skeleton i:nth-child(1)::before { --w: 92%; }
     ${P} .ctx-skeleton i:nth-child(2)::before { --w: 100%; animation-delay: 160ms; }
     ${P} .ctx-skeleton i:nth-child(3)::before { --w: 56%; animation-delay: 320ms; }
+    ${P} .ctx-notice {
+      margin: 14px 0 0;
+      padding-top: 10px;
+      border-top: 1px dotted var(--ctx-dots);
+      color: var(--ctx-ink-2);
+      font-family: var(--ctx-sans);
+      font-size: 11.5px;
+      line-height: 1.6;
+    }
     ${P} .ctx-loading-text {
       display: block;
       margin-top: 14px;
@@ -505,6 +514,7 @@
 
   const PROVIDER_NAMES = {
     builtin: t("engineBuiltinName"),
+    free: t("engineFree"),
     gemini: "Gemini",
     minimax: "MiniMax",
     kimi: "Kimi",
@@ -736,7 +746,9 @@
   }
 
   function resolveProvider() {
-    activeProvider = storedProvider === "builtin" || providersWithKey.has(storedProvider) ? storedProvider : "builtin";
+    activeProvider = storedProvider === "builtin" || storedProvider === "free" || providersWithKey.has(storedProvider)
+      ? storedProvider
+      : "builtin";
   }
 
   // API 金鑰可能跟著 Chrome 同步（sync），也可能只存在這台電腦（local）
@@ -1032,14 +1044,15 @@
     return html;
   }
 
-  function showResult(text) {
+  // notice：例如「今天的免費 AI 用完了，改用本機翻譯」，放在譯文下面
+  function showResult(text, notice = "") {
     currentResult = text;
     copyText = text;
     revealPopover();
     const html = isWordLookup(currentSelection)
       ? formatWordResult(text)
       : `${sourceBlock()}<div class="ctx-label">${t("labelTranslation")}</div><div class="ctx-result">${escapeHtml(text)}</div>`;
-    setBody(html);
+    setBody(notice ? `${html}<p class="ctx-notice" role="note">${escapeHtml(notice)}</p>` : html);
     setCopyEnabled(Boolean(copyText));
   }
 
@@ -1225,25 +1238,30 @@
       fn();
     };
 
-    const timeoutId = setTimeout(() => {
-      finish(() => showError(t("errTimeout")));
-    }, provider === "builtin" ? 300000 : 18000);
+    // 內建翻譯第一次可能要下載語言套件，給比較長的時間
+    const startTimer = (ms) => setTimeout(() => finish(() => showError(t("errTimeout"))), ms);
+    let timeoutId = startTimer(provider === "builtin" ? 300000 : 18000);
+
+    // Chrome 內建翻譯；notice 是改用內建翻譯的原因（例如免費 AI 次數用完）
+    const translateHere = async (notice = "") => {
+      const text = await translateWithBuiltin(
+        currentSelection,
+        currentContext,
+        activeTargetLanguage
+      );
+      clearTimeout(timeoutId);
+
+      if (!text) {
+        finish(() => showError(t("errEmptyBuiltin")));
+      } else {
+        incrementBuiltinUsage().catch(() => {});
+        finish(() => showResult(text, notice));
+      }
+    };
 
     try {
       if (provider === "builtin") {
-        const text = await translateWithBuiltin(
-          currentSelection,
-          currentContext,
-          activeTargetLanguage
-        );
-        clearTimeout(timeoutId);
-
-        if (!text) {
-          finish(() => showError(t("errEmptyBuiltin")));
-        } else {
-          incrementBuiltinUsage().catch(() => {});
-          finish(() => showResult(text));
-        }
+        await translateHere();
         return;
       }
 
@@ -1260,11 +1278,22 @@
         return;
       }
 
+      // 免費 AI 不能用時（次數用完、太長、暫時故障），改用 Chrome 內建翻譯，並說明原因
+      if (!response.success && response.fallback) {
+        clearTimeout(timeoutId);
+        timeoutId = startTimer(300000);
+        setHeader("builtin");
+        showLoading(t("loadingBuiltin"));
+        await translateHere(response.error || t("freeFallbackBusy"));
+        return;
+      }
+
       if (response.success) {
         const text = String(response.data ?? "").trim();
         if (!text) {
           finish(() => showError(t("errEmptyAI")));
         } else {
+          if (response.free) modeLabel.textContent = t("modeFreeLeft", [String(response.free.remaining ?? "")]);
           finish(() => showResult(text));
         }
       } else {
@@ -2025,8 +2054,8 @@
     page.starting = true;
     try {
       await refreshState();
-      // 設定選了 AI 模型且已儲存金鑰，就用 AI；否則用 Chrome 內建翻譯
-      const engine = activeProvider;
+      // 設定選了 AI 模型且已儲存金鑰，就用 AI；否則用 Chrome 內建翻譯（免費 AI 只用在選字翻譯）
+      const engine = activeProvider === "free" ? "builtin" : activeProvider;
       if (engine === "builtin" && !("Translator" in globalThis)) {
         barMessage("error", t("pageNeedsBuiltin"), t("pageNeedsBuiltinSub"));
         return;

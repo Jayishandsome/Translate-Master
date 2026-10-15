@@ -6,7 +6,7 @@ const stub = (page, fn) => page.evaluate(fn);
 
 test("金鑰按儲存才寫入；換服務商時捨棄沒存的輸入", async ({ context }) => {
   const { page, errors } = await openFixture(context, null, "ext/popup.html", { keys: "none" });
-  await page.locator(".sense").nth(1).click();
+  await page.locator(".sense:has(input[value=ai])").click();
   await page.fill("#api-key", "AIza-new-key");
   await expect(page.locator("#key-save")).toBeEnabled();
   await expect(page.locator("#api-key-help")).toContainText("還沒儲存");
@@ -62,4 +62,32 @@ test("英文介面", async ({ context }) => {
   await expect(page.locator("#api-key")).toHaveAttribute("placeholder", "Paste your Google API key");
   await expect(page.locator("#key-save")).toHaveText("Save");
   expect(await page.evaluate(() => document.documentElement.lang)).toBe("en");
+});
+
+test("免費 AI：開放時才出現；選了之後顯示今天剩下的次數", async ({ context }) => {
+  const { page: closed } = await openFixture(context, null, "ext/popup.html");
+  await expect(closed.locator("#engine-free")).toBeHidden();
+  await closed.close();
+
+  const { page, errors } = await openFixture(context, null, "ext/popup.html", { free: "on" });
+  await expect(page.locator("#engine-free")).toBeVisible();
+  await expect(page.locator("#engine-free-desc")).toContainText("每天 10 次");
+  await page.locator("#engine-free").click();
+  await expect.poll(() => stub(page, () => window.__stub.sync.apiProvider)).toBe("free");
+  await expect(page.locator("#free-info")).toContainText("今天還剩 10 次");
+  await expect(page.locator("#free-info")).toContainText("Cloudflare Workers AI");
+  await expect(page.locator("#ai-fields")).toBeHidden();
+  await expect(page.locator("#builtin-info")).toBeHidden();
+  // 背景程式記下的剩餘次數（今天的才算）
+  await stub(page, () => { window.__stub.local.freeAI = { day: new Date().toISOString().slice(0, 10), remaining: 3 }; });
+  await page.locator(".sense:has(input[value=builtin])").click();
+  await page.locator("#engine-free").click();
+  await expect(page.locator("#free-info")).toContainText("今天還剩 3 次");
+  expect(errors).toEqual([]);
+});
+
+test("免費 AI 停止開放時，設定改回本機翻譯", async ({ context }) => {
+  const { page } = await openFixture(context, null, "ext/popup.html", { provider: "free" });
+  await expect.poll(() => stub(page, () => window.__stub.sync.apiProvider)).toBe("builtin");
+  await expect(page.locator(".sense:has(input[value=builtin]) input")).toBeChecked();
 });

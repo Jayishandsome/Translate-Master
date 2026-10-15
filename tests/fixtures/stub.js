@@ -86,7 +86,17 @@
       if (S.batchFail > 0) { S.batchFail--; return { success: false, error: S.batchError }; }
       return { success: true, data: msg.texts.map((t) => `AI譯:${t}`) };
     }
-    if (msg?.action === "getProviders") return { providers: { gemini: { model: "gemini-test-lite" }, openai: { model: "gpt-test" } } };
+    if (msg?.action === "getProviders") {
+      return {
+        providers: { gemini: { model: "gemini-test-lite" }, openai: { model: "gpt-test" } },
+        free: { enabled: q.get("free") === "on", dailyLimit: 10, maxChars: 2000 },
+      };
+    }
+    // 免費 AI：?freemode=quota 模擬今天的次數用完
+    if (msg?.action === "translate" && S.sync.apiProvider === "free") {
+      if (q.get("freemode") === "quota") return { success: false, fallback: "quota", error: "今天的免費 AI 次數用完了，這次改用本機翻譯。" };
+      return { success: true, data: `免費譯:${msg.text}`, free: { remaining: 9, limit: 10 } };
+    }
     if (msg?.action === "translate") {
       return { success: true, data: q.get("wordreply") ? "【翻譯】河岸；岸邊\n【上下文】這裡指河邊。" : `AI譯:${msg.text}` };
     }

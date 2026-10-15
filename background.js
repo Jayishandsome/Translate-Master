@@ -66,6 +66,15 @@ const PROVIDERS = {
   },
 };
 
+// 免費 AI：沒有金鑰的使用者，選字翻譯每天可以用 AI 翻 dailyLimit 次。
+// 請求送到我們自己的 Cloudflare Worker（原始碼在 worker/），由 Workers AI 翻譯；次數由 Worker 計算。
+// endpoint 留空就不提供這個選項（部署 Worker 之後填上它的網址）。
+const FREE_AI = {
+  endpoint: "",
+  dailyLimit: 10,
+  maxChars: 2000,
+};
+
 // 選字翻譯的輸出上限；全頁翻譯一批的上限見 BATCH_OPTIONS
 const SINGLE_MAX_TOKENS = 2048;
 
@@ -128,6 +137,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "translate") {
     (async () => {
       try {
+        const { apiProvider } = await chrome.storage.sync.get("apiProvider");
+        if (apiProvider === "free") {
+          try {
+            const free = await handleFreeTranslation(request.text, request.context);
+            sendResponse({ success: true, data: free.text, free: { remaining: free.remaining, limit: FREE_AI.dailyLimit } });
+            incrementUsageCount().catch(() => {});
+          } catch (error) {
+            // 次數用完、太長、暫時不能用：讓內容腳本改用 Chrome 內建翻譯
+            sendResponse({ success: false, fallback: error?.reason || "error", error: error?.message || String(error) });
+          }
+          return;
+        }
         const result = await handleTranslation(request.text, request.context);
         sendResponse({ success: true, data: result });
         incrementUsageCount().catch(() => {});
@@ -162,6 +183,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         Object.entries(PROVIDERS).map(([k, v]) => [k, { name: v.name, model: v.model }])
       ),
       languages: LANGUAGES,
+      free: { enabled: Boolean(FREE_AI.endpoint), dailyLimit: FREE_AI.dailyLimit, maxChars: FREE_AI.maxChars },
     });
     return false;
   }
@@ -181,6 +203,64 @@ async function incrementUsageCount() {
     await chrome.storage.sync.set({ usageDate: today, usageCount: next });
   } catch (_) {}
 }
+
+// ---------------------------------------------------------------------------
+// 免費 AI
+
+class FreeAIError extends Error {
+  constructor(reason, message) {
+    super(message);
+    this.reason = reason;
+  }
+}
+
+// 隨機的安裝 ID，只用來讓 Worker 計算每天的次數；只存在這台電腦，不跟著 Chrome 同步
+async function freeInstallId() {
+  const { installId } = await chrome.storage.local.get("installId");
+  if (installId) return installId;
+  const id = crypto.randomUUID();
+  await chrome.storage.local.set({ installId: id });
+  return id;
+}
+
+// 次數跟 Workers AI 的免費額度一樣，每天 UTC 0 點重置
+const utcDay = () => new Date().toISOString().slice(0, 10);
+
+async function handleFreeTranslation(selectedText, context) {
+  const text = String(selectedText || "").trim();
+  if (!text) throw new Error(t("errNoText"));
+  if (!FREE_AI.endpoint) throw new FreeAIError("unavailable", t("freeFallbackBusy"));
+  if (text.length > FREE_AI.maxChars) throw new FreeAIError("too_long", t("freeFallbackLong", [String(FREE_AI.maxChars)]));
+
+  const { targetLang } = await chrome.storage.sync.get("targetLang");
+  let res;
+  try {
+    res = await fetchWithTimeout(`${FREE_AI.endpoint.replace(/\/+$/, "")}/translate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text,
+        context: String(context || "").slice(0, 1200),
+        target: LANGUAGES[targetLang] ? targetLang : "zh-TW",
+        installId: await freeInstallId(),
+      }),
+    }, 15000);
+  } catch (_) {
+    throw new FreeAIError("error", t("freeFallbackBusy"));
+  }
+  const json = await res.json().catch(() => ({}));
+  if (typeof json.remaining === "number") {
+    await chrome.storage.local.set({ freeAI: { day: utcDay(), remaining: json.remaining } });
+  }
+  if (res.ok && String(json.translation || "").trim()) {
+    return { text: String(json.translation).trim(), remaining: json.remaining };
+  }
+  if (res.status === 429) throw new FreeAIError("quota", t("freeFallbackQuota"));
+  if (json.error === "too_long") throw new FreeAIError("too_long", t("freeFallbackLong", [String(FREE_AI.maxChars)]));
+  throw new FreeAIError("error", t("freeFallbackBusy"));
+}
+
+// ---------------------------------------------------------------------------
 
 // API 金鑰預設跟著 Chrome 同步（storage.sync）；使用者可以選擇只存在這台電腦（storage.local）
 async function readApiKeys() {

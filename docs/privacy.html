@@ -73,7 +73,7 @@
   <!-- ================================================================ 中文 -->
   <section class="policy" id="zh" lang="zh-Hant">
     <h1>隱私權政策</h1>
-    <p class="meta">生效日期：2026 年 10 月 4 日　・　適用版本：3.0.0 起</p>
+    <p class="meta">生效日期：2026 年 10 月 15 日　・　適用版本：3.0.0 起</p>
 
     <div class="summary">
       <p>重點摘要</p>
@@ -88,10 +88,10 @@
     <p>本政策說明 Chrome 擴充功能「隨選翻譯 — Context Translator」（以下稱「本擴充功能」）如何處理資料。本擴充功能由 JAYlly CAT 以開放原始碼方式提供，原始碼公開在 <a href="https://github.com/Jayishandsome/Translate-Master">GitHub</a>，任何人都可以檢查以下說明是否屬實。</p>
 
     <h2><span class="no">貳</span>開發者不收集的資料</h2>
-    <p>本擴充功能沒有帳號系統，也沒有任何屬於開發者的伺服器。開發者<strong>收不到</strong>：</p>
+    <p>本擴充功能沒有帳號系統。除了你選用的「免費 AI」（見第肆節），開發者沒有接收資料的伺服器。開發者<strong>收不到、也不保存</strong>：</p>
     <ul>
       <li>你瀏覽的網址、瀏覽紀錄或網頁內容；</li>
-      <li>你選取或翻譯的文字、翻譯結果；</li>
+      <li>你選取或翻譯的文字、翻譯結果（使用免費 AI 時，文字只經過伺服器轉交翻譯，不會記錄或保存）；</li>
       <li>你的 API 金鑰；</li>
       <li>使用統計、當機報告、裝置資訊或任何識別資料。</li>
     </ul>
@@ -109,6 +109,8 @@
         <tr><td>金鑰儲存位置</td><td>金鑰跟著 Chrome 同步，或只存在這台電腦</td></tr>
         <tr><td>自訂模型名稱</td><td>你在「進階」填的模型名稱（選填）</td></tr>
         <tr><td>今日翻譯次數</td><td>日期與次數，只用來在設定視窗顯示，不會送出</td></tr>
+        <tr><td>安裝 ID（只存這台電腦）</td><td>第一次使用免費 AI 時隨機產生的編號，只在使用免費 AI 時送出，用來計算每天的次數</td></tr>
+        <tr><td>免費 AI 剩餘次數（只存這台電腦）</td><td>今天還剩幾次，只用來在設定視窗顯示</td></tr>
       </tbody>
     </table></div>
     <p>使用全頁翻譯時，翻過的段落會暫存在該分頁的記憶體裡，讓你按「還原」後再翻不必重新送出；重新整理或關閉分頁就會清除，不會寫入硬碟。</p>
@@ -117,6 +119,15 @@
     <h2><span class="no">肆</span>什麼時候會送出資料</h2>
     <h3>本機翻譯（預設）</h3>
     <p>使用 Chrome 內建的翻譯與語言偵測功能，在你的裝置上完成。第一次翻譯某個語言時，Chrome 可能會從 Google 下載語言套件；這個下載由 Chrome 處理，不包含你要翻譯的文字。本擴充功能在這個模式下不會送出任何網頁內容。</p>
+
+    <h3>免費 AI（選用，每天 10 次，不需要金鑰）</h3>
+    <ul>
+      <li><strong>只用在選字翻譯：</strong>你在設定選了「免費 AI」並按下「翻譯」時，選取的文字、它前後各約 200 字、譯文語言和安裝 ID，會送到開發者在 Cloudflare 上執行的伺服器（Cloudflare Workers），再交給 Cloudflare Workers AI 的模型翻譯。全頁翻譯不使用免費 AI，一律在裝置上翻譯。</li>
+      <li><strong>不保存文字：</strong>伺服器不記錄、不保存你要翻譯的文字與譯文。</li>
+      <li><strong>計算次數：</strong>伺服器只記下當天的使用次數，對應安裝 ID 與你的 IP 位址的雜湊值（加上當天日期一起計算，無法還原成 IP，也無法跨日比對）；換日後就刪除。</li>
+      <li>次數用完或服務暫時不能用時，這次的翻譯改在裝置上完成，不會送出。</li>
+      <li>Cloudflare 處理這些資料的方式，依 <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare 隱私權政策</a>。</li>
+    </ul>
 
     <h3>AI 模型（選用，需你自己的 API 金鑰）</h3>
     <ul>
@@ -142,12 +153,12 @@
       <li><code>storage</code>：保存上述設定與 API 金鑰。</li>
       <li><code>contextMenus</code>：在右鍵選單加入「全頁翻譯」。</li>
       <li><code>activeTab</code>、<code>scripting</code>：在你點選「全頁翻譯」的那一刻，若該分頁還沒載入本擴充功能（例如安裝前就開著的分頁），暫時把翻譯程式加到這一頁。只對你操作的分頁有效。</li>
-      <li>網站存取（所有網站的內容腳本）：在你選取文字時顯示翻譯按鈕，並在你要求時翻譯網頁。網頁內容只在你的瀏覽器裡讀取，除非你選用 AI 模型並觸發翻譯，否則不會送出。</li>
-      <li>本擴充功能只會連線到上列 AI 服務商的 API 網域。</li>
+      <li>網站存取（所有網站的內容腳本）：在你選取文字時顯示翻譯按鈕，並在你要求時翻譯網頁。網頁內容只在你的瀏覽器裡讀取，除非你選用免費 AI 或 AI 模型並觸發翻譯，否則不會送出。</li>
+      <li>本擴充功能只會連線到上列 AI 服務商的 API 網域，以及你選用免費 AI 時的開發者伺服器。</li>
     </ul>
 
     <h2><span class="no">陸</span>Chrome 線上應用程式商店使用者資料政策</h2>
-    <p>本擴充功能對使用者資料的使用，遵守 <a href="https://developer.chrome.com/docs/webstore/program-policies/user-data-faq">Chrome 線上應用程式商店使用者資料政策</a>，包括「有限使用」（Limited Use）規定：資料只用來提供你所要求的翻譯功能；不出售；不轉移給第三方，除非是應你的要求送到你選的 AI 服務商；不用於廣告、信用評估或其他無關用途；開發者不會讀取這些資料。</p>
+    <p>本擴充功能對使用者資料的使用，遵守 <a href="https://developer.chrome.com/docs/webstore/program-policies/user-data-faq">Chrome 線上應用程式商店使用者資料政策</a>，包括「有限使用」（Limited Use）規定：資料只用來提供你所要求的翻譯功能；不出售；不轉移給第三方，除非是應你的要求送到你選的 AI 服務商，或在你選用免費 AI 時交給 Cloudflare Workers AI 翻譯；不用於廣告、信用評估或其他無關用途；開發者不會讀取或保存這些資料。</p>
 
     <h2><span class="no">柒</span>兒童隱私</h2>
     <p>本擴充功能不是為 13 歲以下兒童設計，也不會在知情的情況下收集兒童的個人資料。</p>
@@ -162,7 +173,7 @@
   <!-- ================================================================ English -->
   <section class="policy" id="en" lang="en">
     <h1>Privacy Policy</h1>
-    <p class="meta">Effective date: October 4, 2026 · Applies to version 3.0.0 and later</p>
+    <p class="meta">Effective date: October 15, 2026 · Applies to version 3.0.0 and later</p>
 
     <div class="summary">
       <p>Summary</p>
@@ -177,10 +188,10 @@
     <p>This policy explains how the Chrome extension “隨選翻譯 — Context Translator” (the “extension”) handles data. The extension is open source and published by JAYlly CAT; the code is on <a href="https://github.com/Jayishandsome/Translate-Master">GitHub</a>, so anyone can verify what is described here.</p>
 
     <h2><span class="no">2</span>What the developer does not collect</h2>
-    <p>The extension has no accounts and no developer-operated servers. The developer <strong>never receives</strong>:</p>
+    <p>The extension has no accounts. Apart from the optional Free AI described in section 4, there are no developer-operated servers that receive data. The developer <strong>never receives or stores</strong>:</p>
     <ul>
       <li>the pages you visit, your browsing history or page content;</li>
-      <li>the text you select or translate, or the translations;</li>
+      <li>the text you select or translate, or the translations (with Free AI, text only passes through the server to be translated and is never logged or stored);</li>
       <li>your API keys;</li>
       <li>usage statistics, crash reports, device information or any identifiers.</li>
     </ul>
@@ -198,6 +209,8 @@
         <tr><td>Key storage</td><td>Whether API keys sync with Chrome or stay on this computer</td></tr>
         <tr><td>Custom model name</td><td>A model name you entered under Advanced (optional)</td></tr>
         <tr><td>Translations today</td><td>A date and a count, shown in the settings window only; never sent anywhere</td></tr>
+        <tr><td>Install ID (this computer only)</td><td>A random ID created the first time you use Free AI; sent only with Free AI requests, to count daily use</td></tr>
+        <tr><td>Free AI remaining (this computer only)</td><td>How many free translations are left today, shown in the settings window</td></tr>
       </tbody>
     </table></div>
     <p>During full-page translation, translated paragraphs are kept in that tab's memory so that restoring and translating again does not resend them. This is cleared when you reload or close the tab and is never written to disk.</p>
@@ -206,6 +219,15 @@
     <h2><span class="no">4</span>When data is sent</h2>
     <h3>On-device translation (default)</h3>
     <p>Uses Chrome's built-in translation and language detection on your device. The first time you translate a language, Chrome may download a language pack from Google; Chrome handles that download and it does not contain the text you translate. In this mode the extension sends no page content anywhere.</p>
+
+    <h3>Free AI (optional, 10 a day, no key needed)</h3>
+    <ul>
+      <li><strong>Selection translation only:</strong> when you choose Free AI in the settings and click Translate, the selected text, about 200 characters on each side of it, the target language and the install ID are sent to a server the developer runs on Cloudflare (Cloudflare Workers), which passes them to a Cloudflare Workers AI model for translation. Full-page translation never uses Free AI; it always runs on your device.</li>
+      <li><strong>No text is kept:</strong> the server does not log or store the text you translate or the translation.</li>
+      <li><strong>Counting use:</strong> the server keeps only today's count, keyed by the install ID and a hash of your IP address (computed together with the date, so it cannot be turned back into an IP or linked across days). Counts are deleted when the day changes.</li>
+      <li>When the free translations are used up or the service is unavailable, that translation is done on your device instead and nothing is sent.</li>
+      <li>Cloudflare handles this data under the <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare Privacy Policy</a>.</li>
+    </ul>
 
     <h3>AI models (optional, your own API key)</h3>
     <ul>
@@ -231,12 +253,12 @@
       <li><code>storage</code>: saves the settings and API keys described above.</li>
       <li><code>contextMenus</code>: adds “全頁翻譯” (Translate full page) to the right-click menu.</li>
       <li><code>activeTab</code>, <code>scripting</code>: when you choose full-page translation on a tab where the extension is not loaded yet (for example, a tab opened before installation), the translation code is added to that one page. This applies only to the tab you act on.</li>
-      <li>Site access (content script on all sites): shows the Translate button when you select text and translates the page when you ask. Page content is read only inside your browser and is sent nowhere unless you use an AI model and trigger a translation.</li>
-      <li>The extension connects only to the API domains of the AI providers listed above.</li>
+      <li>Site access (content script on all sites): shows the Translate button when you select text and translates the page when you ask. Page content is read only inside your browser and is sent nowhere unless you use Free AI or an AI model and trigger a translation.</li>
+      <li>The extension connects only to the API domains of the AI providers listed above, and to the developer's server when you use Free AI.</li>
     </ul>
 
     <h2><span class="no">6</span>Chrome Web Store User Data Policy</h2>
-    <p>The use of user data by this extension complies with the <a href="https://developer.chrome.com/docs/webstore/program-policies/user-data-faq">Chrome Web Store User Data Policy</a>, including the Limited Use requirements: data is used only to provide the translation you request; it is not sold; it is not transferred to third parties except to the AI provider you chose, at your request; it is not used for advertising, creditworthiness or any unrelated purpose; and the developer does not read it.</p>
+    <p>The use of user data by this extension complies with the <a href="https://developer.chrome.com/docs/webstore/program-policies/user-data-faq">Chrome Web Store User Data Policy</a>, including the Limited Use requirements: data is used only to provide the translation you request; it is not sold; it is not transferred to third parties except to the AI provider you chose, at your request, or to Cloudflare Workers AI for translation when you use Free AI; it is not used for advertising, creditworthiness or any unrelated purpose; and the developer does not read or store it.</p>
 
     <h2><span class="no">7</span>Children's privacy</h2>
     <p>The extension is not directed to children under 13 and does not knowingly collect personal information from children.</p>

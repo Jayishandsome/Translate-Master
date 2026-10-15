@@ -210,6 +210,7 @@
   }
 
   .sense + .sense { border-top: 1px dotted var(--dots); }
+  .sense[hidden] { display: none; }
 
   .sense input {
     position: absolute;
@@ -693,6 +694,14 @@
             <span class="sense-desc" data-i18n="engineBuiltinDesc">Chrome 內建・免金鑰・文字不離開裝置</span>
           </span>
         </label>
+        <label class="sense" id="engine-free" hidden>
+          <input type="radio" name="engine" value="free">
+          <span class="sense-mark" aria-hidden="true"></span>
+          <span class="sense-body">
+            <span class="sense-title" data-i18n="engineFree">免費 AI</span>
+            <span class="sense-desc" id="engine-free-desc">每天 10 次・免金鑰・文字會送到雲端翻譯</span>
+          </span>
+        </label>
         <label class="sense">
           <input type="radio" name="engine" value="ai">
           <span class="sense-mark" aria-hidden="true"></span>
@@ -704,6 +713,7 @@
       </fieldset>
 
       <p class="footnote" id="builtin-info" data-i18n="builtinInfo">首次使用某個語言時，Chrome 需要先下載語言套件。</p>
+      <p class="footnote" id="free-info" hidden></p>
 
       <div class="ai-fields" id="ai-fields" hidden>
         <div>

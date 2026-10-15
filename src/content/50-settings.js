@@ -3,7 +3,9 @@
   }
 
   function resolveProvider() {
-    activeProvider = storedProvider === "builtin" || providersWithKey.has(storedProvider) ? storedProvider : "builtin";
+    activeProvider = storedProvider === "builtin" || storedProvider === "free" || providersWithKey.has(storedProvider)
+      ? storedProvider
+      : "builtin";
   }
 
   // API 金鑰可能跟著 Chrome 同步（sync），也可能只存在這台電腦（local）

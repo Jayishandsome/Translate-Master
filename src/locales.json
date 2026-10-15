@@ -521,6 +521,41 @@
   "zh_CN": "会参考上下文，译得更准・需 API 密钥",
   "en": "Reads the context for better results · needs an API key"
  },
+ "engineFree": {
+  "zh_TW": "免費 AI",
+  "zh_CN": "免费 AI",
+  "en": "Free AI"
+ },
+ "engineFreeDesc": {
+  "zh_TW": "每天 $1 次・免金鑰・文字會送到雲端翻譯",
+  "zh_CN": "每天 $1 次・无需密钥・文字会发送到云端翻译",
+  "en": "$1 a day · no key · text is sent to the cloud"
+ },
+ "freeInfo": {
+  "zh_TW": "今天還剩 $1 次，$2 重置。用完後改用本機翻譯；全頁翻譯一律用本機翻譯。選取的文字會送到隨選翻譯的伺服器，由 Cloudflare Workers AI 翻譯，不會保存。",
+  "zh_CN": "今天还剩 $1 次，$2 重置。用完后改用本机翻译；全页翻译一律使用本机翻译。选中的文字会发送到随选翻译的服务器，由 Cloudflare Workers AI 翻译，不会保存。",
+  "en": "$1 left today; resets at $2. After that, on-device translation takes over, and full-page translation always uses it. Selected text goes to Context Translator's server and is translated by Cloudflare Workers AI; nothing is stored."
+ },
+ "modeFreeLeft": {
+  "zh_TW": "免費 AI・今天還剩 $1 次",
+  "zh_CN": "免费 AI・今天还剩 $1 次",
+  "en": "Free AI · $1 left today"
+ },
+ "freeFallbackQuota": {
+  "zh_TW": "今天的免費 AI 次數用完了，這次改用本機翻譯。",
+  "zh_CN": "今天的免费 AI 次数用完了，这次改用本机翻译。",
+  "en": "You've used today's free AI translations, so this one is on-device."
+ },
+ "freeFallbackBusy": {
+  "zh_TW": "免費 AI 暫時不能用，這次改用本機翻譯。",
+  "zh_CN": "免费 AI 暂时不能用，这次改用本机翻译。",
+  "en": "Free AI isn't available right now, so this one is on-device."
+ },
+ "freeFallbackLong": {
+  "zh_TW": "免費 AI 一次最多 $1 字，這次改用本機翻譯。",
+  "zh_CN": "免费 AI 一次最多 $1 字，这次改用本机翻译。",
+  "en": "Free AI takes up to $1 characters at a time, so this one is on-device."
+ },
  "builtinInfo": {
   "zh_TW": "首次使用某個語言時，Chrome 需要先下載語言套件。",
   "zh_CN": "首次使用某个语言时，Chrome 需要先下载语言包。",
