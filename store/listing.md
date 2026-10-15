@@ -6,7 +6,7 @@
 
 ## 一、套件
 
-上傳 `translate-master-3.1.1.zip`（用 `npm run package` 產生在 `dist/`，只包含擴充功能本身的檔案：`manifest.json`、`background.js`、`content.js`、`popup.html`、`popup.js`、`welcome.html`、`welcome.js`、`icons/`、`_locales/`、`LICENSE`）。
+上傳 `translate-master-3.1.2.zip`（用 `npm run package` 產生在 `dist/`，只包含擴充功能本身的檔案：`manifest.json`、`background.js`、`content.js`、`popup.html`、`popup.js`、`welcome.html`、`welcome.js`、`icons/`、`_locales/`、`LICENSE`）。
 
 > 3.0.0 起名稱和摘要改由 `_locales/` 依語言提供：繁中、簡中、英文各一份，商店會自動帶入。
 

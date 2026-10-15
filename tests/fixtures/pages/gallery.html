@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Gallery fixture</title>
+<style>
+  body { font: 16px/1.5 sans-serif; margin: 40px; }
+  .slide { display: flex; gap: 16px; align-items: center; }
+  #photo { width: 240px; height: 160px; display: block; }
+  .nav { margin-top: 16px; }
+  .nav a { display: inline-block; padding: 6px 12px; border: 1px solid #333; margin-right: 8px; text-decoration: none; color: #111; }
+  .nav button { padding: 6px 12px; margin-right: 8px; }
+  .arrow { display: inline-block; padding: 6px 12px; border: 1px solid #333; cursor: pointer; }
+</style></head>
+<body>
+<div class="slide">
+  <img id="photo" draggable="false" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='160'%3E%3Crect width='240' height='160' fill='%23789'/%3E%3C/svg%3E">
+  <p id="caption">A quiet harbour at dawn, before the fishing boats leave.</p>
+</div>
+<div class="nav">
+  <a href="#prev" id="prev">‹ Prev</a><a href="#next" id="next">Next ›</a>
+  <button type="button" id="next-btn">Next photo</button>
+  <div class="arrow" role="button" id="next-div">Next ›</div>
+  <span id="count">3 / 10</span>
+</div>
+<p id="text">Plain paragraph for a normal double-click on the word harbour.</p>
+<script src="/ext/content.js"></script>
+</body></html>

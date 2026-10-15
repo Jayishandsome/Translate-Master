@@ -175,6 +175,32 @@
   window.addEventListener("scroll", followSelection, { capture: true, passive: true });
   window.addEventListener("resize", followSelection, { passive: true });
 
+  // 記下按下滑鼠前的選取：放開時選取沒變，代表這一下不是在選字（例如點圖片、點「下一頁」），
+  // Chrome 點圖片或按鈕時不會取消原本的選取，不檢查的話每點一下翻頁，按鈕就又跳出來一次。
+  let pressed = null;
+  document.addEventListener("mousedown", (e) => {
+    if (!e.isTrusted) return;
+    const sel = window.getSelection();
+    pressed = {
+      target: elementOfTarget(e.target),
+      detail: e.detail,
+      text: sel?.toString() || "",
+      anchorNode: sel?.anchorNode, anchorOffset: sel?.anchorOffset,
+      focusNode: sel?.focusNode, focusOffset: sel?.focusOffset,
+    };
+  }, true);
+
+  const sameSelectionAsPressed = (sel) => Boolean(pressed) && sel.toString() === pressed.text &&
+    sel.anchorNode === pressed.anchorNode && sel.anchorOffset === pressed.anchorOffset &&
+    sel.focusNode === pressed.focusNode && sel.focusOffset === pressed.focusOffset;
+
+  // 在按鈕、連結、分頁標籤這類控制項上連點（例如快速點「下一張 ›」），Chrome 會順便選到上面的字，那不是要翻譯的文字
+  const CONTROL = "button, a[href], input, select, label, summary, [role='button'], [role='link'], [role='tab'], [role='menuitem'], [role='option'], [role='slider'], [role='switch'], [role='checkbox'], [role='radio']";
+  const multiClickOnControl = (e, target) => e.detail >= 2 && Boolean((pressed?.target || target)?.closest?.(CONTROL));
+
+  // 只有數字、符號（頁碼「3 / 10」、時間、箭頭）不用翻譯
+  const hasWords = (text) => /\p{L}/u.test(text);
+
   document.addEventListener("mouseup", async (e) => {
     if (!e.isTrusted) return;
     const target = elementOfTarget(e.target);
@@ -190,6 +216,11 @@
     }
 
     const sel = window.getSelection();
+    // 這一下沒有選出新的文字、是在控制項上連點、或選到的只有數字符號：不出現翻譯按鈕
+    if (sameSelectionAsPressed(sel) || multiClickOnControl(e, target) || !hasWords(sel.toString())) {
+      hideButton();
+      return;
+    }
     const { text, context } = captureSelection(sel);
 
     if (!text) {
