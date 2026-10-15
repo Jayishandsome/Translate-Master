@@ -79,15 +79,14 @@
   }
 
   const BUTTON_MIN_VISIBLE_MS = 350;
-  const BUTTON_MAX = { w: 220, h: 64 };
 
+  // 按鈕在封閉的 Shadow DOM 裡，網頁改不到它本身；只要外層容器沒被動過、按鈕出現夠久，就是使用者看得到的那顆按鈕。
+  // 不比對座標：有些網站在 <html> 上設了 zoom 或 transform，座標會不一樣，比對反而會讓按鈕在那些網站失靈。
   function buttonLooksRight() {
     if (!buttonSpot || performance.now() - buttonShownAt < BUTTON_MIN_VISIBLE_MS) return false;
-    const style = getComputedStyle(btn);
-    if (style.display === "none" || style.visibility !== "visible" || Number(style.opacity) < 1) return false;
+    if (!hostLooksRight()) return false;
     const r = btn.getBoundingClientRect();
-    if (r.width > BUTTON_MAX.w || r.height > BUTTON_MAX.h || r.width < 8 || r.height < 8) return false;
-    return Math.abs(r.left - buttonSpot.x) <= 2 && Math.abs(r.top - buttonSpot.y) <= 2;
+    return r.width >= 8 && r.height >= 8;
   }
 
   // 捲動（包括網頁裡可以捲動的區塊）或改變視窗大小時，按鈕跟著選取的文字移動
@@ -106,8 +105,8 @@
     if (!e.isTrusted) return;
     const target = elementOfTarget(e.target);
     if (!target) return;
-    // 點到自己的浮窗就跳過
-    if (target.closest(`#${IDS.btn}`) || target.closest(`#${IDS.pop}`) || target.closest(`#${IDS.bar}`)) return;
+    // 點到自己的按鈕、浮窗、狀態列就跳過（Shadow DOM 裡的事件，在外面看到的目標是容器本身）
+    if (target === host) return;
 
     await refreshState();
     if (!isFeatureEnabled) {
@@ -138,9 +137,7 @@
     if (isTranslating) return;
     const t = elementOfTarget(e.target);
     if (!t) return;
-    if (!t.closest(`#${IDS.pop}`) && !t.closest(`#${IDS.btn}`)) {
-      hidePopover();
-    }
+    if (t !== host) hidePopover();
   });
 
   // ----------------------------------------------------------------------

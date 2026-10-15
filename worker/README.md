@@ -7,10 +7,10 @@
 - 接收擴充功能送來的：選取的文字、前後各約 200 字、譯文語言、一組隨機的安裝 ID。
 - 防濫用的上限：
   - 每個安裝每天 10 次；
-  - 同一個 IP 每天最多 50 次（擋「移除再安裝」換新 ID）；IPv6 以同一段 /56 網路算同一個來源，換位址也躲不掉；
+  - 同一個 IP 每天最多 50 次（擋「移除再安裝」換新 ID）；IPv6 以同一段 /56 網路算同一個來源，換位址也躲不掉；每段 IPv6 /48 每天最多 150 次（免費的 IPv6 通道一個帳號就有一整段 /48）；
   - 整個服務每天最多 1,500 次，保護 Workers AI 的免費額度（改付費方案時也是費用上限）；
   - 每個 IP 每分鐘最多 20 個請求（Cloudflare Rate Limiting），擋短時間大量請求。
-- 次數記在 SQLite Durable Object，只有當天的次數，換日就刪掉。不存原始 IP，只存雜湊；雜湊用的隨機鹽值只放在記憶體，不寫進儲存空間或備份，所以存下來的雜湊無法還原成 IP。
+- 次數記在 SQLite Durable Object，只有當天的次數，換日就刪掉。不存原始 IP，只存雜湊；雜湊用的密鑰 `IP_SALT` 存在 Cloudflare 的加密設定（Secret）裡，寫入後讀不回來，也不在儲存空間或備份裡，所以存下來的雜湊無法還原成 IP。（沒設定 `IP_SALT` 時改用只放在記憶體的隨機鹽值，一樣無法還原，但伺服器閒置重開後 IP 的計數會重來。）
 - 交給 Workers AI 翻譯：預設 Qwen3 30B（中文很好、很便宜），故障時換 Gemma 4 26B。模型故障會退還使用者的次數；模型回空白（可能是被提示詞操縱）不退，避免有人免費消耗額度。
 - 不記錄、不保存任何要翻譯的文字和譯文。
 - 只接受 Chrome 擴充功能送來的請求；上架後可以限定只接受你的擴充功能（見下方）。
@@ -30,6 +30,7 @@
 cd worker
 npx wrangler login      # 打開瀏覽器登入 Cloudflare 並按「允許」
 npx wrangler deploy
+openssl rand -hex 32 | npx wrangler secret put IP_SALT   # IP 雜湊用的密鑰：隨機產生、直接存進 Cloudflare，不會顯示出來
 ```
 
 第一次用 workers.dev 時，Cloudflare 會請你取一個子網域。部署完會印出網址，例如：
@@ -55,6 +56,7 @@ https://translate-master-free.你的子網域.workers.dev
 | `DAILY_LIMIT` | `10` | 每個安裝每天幾次（擴充功能 `background.js` 的 `FREE_AI.dailyLimit` 只是顯示用，請一起改） |
 | `IP_DAILY_LIMIT` | `50` | 同一個 IP 每天最多幾次；公司、學校共用網路時是大家一起算 |
 | `GLOBAL_DAILY_LIMIT` | `1500` | 整個服務每天最多幾次；到了就當天暫停，使用者改用本機翻譯 |
+| `NET_DAILY_LIMIT` | `150` | 每段 IPv6 /48 每天最多幾次 |
 | `MODEL` | `@cf/qwen/qwen3-30b-a3b-fp8` | 主要模型 |
 | `FALLBACK_MODEL` | `@cf/google/gemma-4-26b-a4b-it` | 主要模型失敗時用的備用模型 |
 | `EXTENSION_IDS` | 空白 | 只接受這些擴充功能 ID（逗號分隔）；空白表示任何擴充功能都可以 |

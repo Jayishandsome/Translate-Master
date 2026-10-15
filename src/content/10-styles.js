@@ -1,4 +1,5 @@
   const IDS = {
+    host: "ctx-translator-root",
     style: "ctx-trans-style",
     btn: "ctx-trans-floating-btn",
     pop: "ctx-trans-popover",
@@ -10,9 +11,48 @@
 
   // 清掉舊版殘留節點 (避免擴充更新後重複)
   Object.values(IDS).forEach((id) => document.getElementById(id)?.remove());
+  document.querySelectorAll(IDS.host).forEach((el) => el.remove());
 
-  // 紙本字典風：米白紙、墨黑字、朱紅印。所有選擇器都限定在擴充功能自己的節點內，
-  // 並重設常見屬性，避免網頁本身的 CSS 滲入。
+  // 翻譯按鈕、浮窗、全頁翻譯的狀態列都放在「封閉」的 Shadow DOM 裡：
+  // 網頁的程式碼讀不到譯文、改不了按鈕的樣式、也塞不進假按鈕。網頁只碰得到外層的容器，
+  // 容器的樣式被改掉時會馬上改回來，點擊時也會再檢查一次（見 hostLooksRight）。
+  // 自動測試用的替身環境改用 open，讓 Playwright 找得到裡面的元素；替身的 runtime.id 固定是 test-extension，
+  // 網頁沒辦法偽造內容腳本裡的 chrome.runtime.id。
+  const HOST_STYLE = [
+    "all: initial", "position: fixed", "top: 0", "left: 0", "width: 0", "height: 0", "margin: 0", "padding: 0",
+    "border: 0", "display: block", "visibility: visible", "opacity: 1", "z-index: 2147483647", "overflow: visible",
+    "transform: none", "translate: none", "scale: none", "rotate: none", "filter: none", "backdrop-filter: none",
+    "clip-path: none", "mask: none", "mix-blend-mode: normal", "isolation: auto", "contain: none",
+    "content-visibility: visible", "will-change: auto", "perspective: none", "zoom: 1", "pointer-events: auto",
+  ].map((rule) => `${rule} !important`).join("; ");
+  const host = document.createElement(IDS.host);
+  host.setAttribute("translate", "no");
+  host.style.cssText = HOST_STYLE;
+  // 瀏覽器會把樣式整理成自己的寫法，比對時要用整理後的字串，否則會一直改來改去
+  const HOST_CSS = host.style.cssText;
+  const ui = host.attachShadow({ mode: globalThis.chrome?.runtime?.id === "test-extension" ? "open" : "closed" });
+  document.documentElement.appendChild(host);
+
+  // 網頁改了容器的屬性或樣式，就改回來；被移出文件時重新放回去
+  new MutationObserver(() => {
+    if (host.style.cssText !== HOST_CSS) host.style.cssText = HOST_STYLE;
+    for (const attr of [...host.attributes]) {
+      if (attr.name !== "style" && attr.name !== "translate") host.removeAttribute(attr.name);
+    }
+  }).observe(host, { attributes: true });
+
+  function hostLooksRight() {
+    if (!host.isConnected) return false;
+    const s = getComputedStyle(host);
+    return s.display === "block" && s.visibility === "visible" && s.opacity === "1" && s.position === "fixed" &&
+      s.transform === "none" && s.translate === "none" && s.scale === "none" && s.rotate === "none" &&
+      s.filter === "none" && s.backdropFilter === "none" && s.clipPath === "none" &&
+      (s.maskImage || s.webkitMaskImage || "none") === "none" && s.mixBlendMode === "normal" &&
+      s.contain === "none" && (s.contentVisibility || "visible") === "visible" && s.willChange === "auto" &&
+      s.perspective === "none" && (s.zoom || "1") === "1";
+  }
+
+  // 紙本字典風：米白紙、墨黑字、朱紅印。樣式放在 Shadow DOM 裡，網頁本身的 CSS 進不來。
   const style = document.createElement("style");
   style.id = IDS.style;
   style.textContent = `
@@ -431,4 +471,4 @@
       ${P} .ctx-skeleton i::before { animation: none; width: var(--w, 100%); }
     }
   `;
-  (document.head || document.documentElement).appendChild(style);
+  ui.appendChild(style);

@@ -4,6 +4,14 @@ const { openFixture, translatePage } = require("./helpers");
 
 const tr = (page, sel) => page.locator(`${sel} ctx-tr`).first();
 
+// 狀態列剛出現或換內容時，短時間內的點擊不算（防點擊劫持），所以先等一下再點
+async function clickBar(page, act) {
+  const button = page.locator(`#ctx-page-bar [data-act=${act}]`);
+  await button.waitFor();
+  await page.waitForTimeout(400);
+  await button.click();
+}
+
 test("本機：譯文模式、連結可點、混合語言逐段偵測、還原後完全一樣", async ({ context }) => {
   const { page, errors } = await openFixture(context, null, "pages/article.html");
   const before = await page.locator("article").innerHTML();
@@ -24,9 +32,9 @@ test("本機：譯文模式、連結可點、混合語言逐段偵測、還原�
   await link.click();
   await expect.poll(() => page.evaluate(() => location.hash)).toBe("#grinders");
   // 對照模式顯示原文
-  await page.click("#ctx-page-bar [data-act=bilingual]");
+  await clickBar(page, "bilingual");
   await expect(page.locator("#grinder")).toHaveText("burr grinder");
-  await page.click("#ctx-page-bar [data-act=restore]");
+  await clickBar(page, "restore");
   await expect(page.locator("ctx-tr")).toHaveCount(0);
   expect(await page.locator("article").innerHTML()).toBe(before);
   expect(errors).toEqual([]);
@@ -50,9 +58,8 @@ test("本機：第一次翻譯某語言要按一下才下載語言套件", async
   });
   const { page } = await openFixture(context, null, "pages/article.html", { avail: "downloadable" });
   await translatePage(page);
-  const btn = page.locator("#ctx-page-bar [data-act=download]");
-  await expect(btn).toBeVisible();
-  await btn.click();
+  await expect(page.locator("#ctx-page-bar [data-act=download]")).toBeVisible();
+  await clickBar(page, "download");
   await expect(tr(page, "#title")).toHaveText("A BEGINNER'S GUIDE TO COFFEE");
 });
 
@@ -69,7 +76,7 @@ test("AI：不送網站框架、連結標記保留、還原後再翻不重送", 
   await expect(link).toHaveText("burr grinder");
   await expect(tr(page, "#p-link")).not.toContainText("⟦");
   const batches = await page.evaluate(() => window.__stub.sent.filter((m) => m.action === "translateBatch").length);
-  await page.click("#ctx-page-bar [data-act=restore]");
+  await clickBar(page, "restore");
   await translatePage(page);
   await expect(tr(page, "#title")).toBeVisible();
   await page.waitForTimeout(300);
@@ -82,7 +89,7 @@ test("AI：金鑰錯誤時顯示原因，修好後按重試", async ({ context }
   await translatePage(page);
   await expect(page.locator("#ctx-page-bar")).toContainText("API key not valid");
   await page.evaluate(() => { window.__stub.batchFail = 0; });
-  await page.click("#ctx-page-bar [data-act=retryFailed]");
+  await clickBar(page, "retryFailed");
   await expect(tr(page, "#title")).toHaveText("AI譯:A beginner's guide to coffee");
 });
 
@@ -108,7 +115,7 @@ test("本機：中文頁面只翻夾在裡面的外文段落", async ({ context 
   await expect(page.locator("#ctx-page-bar")).toContainText("1");
   // 中文段落（包括夾著幾個英文單字的）和很短的英文都不動
   await expect(page.locator("main ctx-tr")).toHaveCount(1);
-  await page.click("#ctx-page-bar [data-act=restore]");
+  await clickBar(page, "restore");
   await expect(page.locator("ctx-tr")).toHaveCount(0);
   await expect(page.locator("#en")).toHaveText("We rarely notice how much of the internet was written for someone else.");
   expect(errors).toEqual([]);
@@ -146,9 +153,8 @@ test("本機：中文頁面的外文段落第一次要下載語言套件，按�
   });
   const { page } = await openFixture(context, null, "pages/mixed-zh.html", { avail: "downloadable" });
   await translatePage(page);
-  const btn = page.locator("#ctx-page-bar [data-act=download]");
-  await expect(btn).toBeVisible();
-  await btn.click();
+  await expect(page.locator("#ctx-page-bar [data-act=download]")).toBeVisible();
+  await clickBar(page, "download");
   await expect(tr(page, "#en")).toHaveText("WE RARELY NOTICE HOW MUCH OF THE INTERNET WAS WRITTEN FOR SOMEONE ELSE.");
   await expect(page.locator("#ctx-page-bar")).toContainText("外文段落");
   await expect(page.locator("main ctx-tr")).toHaveCount(1);
@@ -187,7 +193,7 @@ test("AI：網頁一直塞內容時，每頁翻到約 4 萬字就先暫停，按
   expect(first).toBeLessThanOrEqual(40000 + 2400);
   await page.waitForTimeout(300);
   expect(await sentChars()).toBe(first);
-  await page.click("#ctx-page-bar [data-act=continueAI]");
+  await clickBar(page, "continueAI");
   await expect.poll(sentChars).toBeGreaterThan(first + 10000);
   await expect(page.locator("#flood p ctx-tr")).toHaveCount(60);
 });

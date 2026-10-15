@@ -230,3 +230,28 @@ test("每分鐘的上限：Rate Limiting 拒絕時不扣次數、不呼叫模型
   assert.equal(calls.length, 0);
   assert.equal(quota.sql.exec("SELECT count(*) AS n FROM usage").toArray()[0].n, 0);
 });
+
+test("IPv6 每段 /48 也有上限：同一個通道帳號換 /56 也躲不掉", async () => {
+  const { env } = makeEnv({ NET_DAILY_LIMIT: "3" });
+  for (let i = 0; i < 3; i++) {
+    assert.equal((await post(env, ask("bank", { installId: `dddddddd-000${i}` }), { ip: `2001:db8:abcd:${i}00::1` })).status, 200);
+  }
+  assert.equal((await post(env, ask("bank", { installId: "dddddddd-0009" }), { ip: "2001:db8:abcd:f00::1" })).status, 429);
+  assert.equal((await post(env, ask("bank", { installId: "dddddddd-0009" }), { ip: "2001:db8:abce:100::1" })).status, 200);
+  // IPv4 沒有 /48 這一層
+  assert.equal((await post(env, ask("bank", { installId: "dddddddd-0010" }), { ip: "198.51.100.200" })).status, 200);
+});
+
+test("設定 IP_SALT 時：IP 雜湊用密鑰算，伺服器重新啟動後 IP 上限照樣有效", async () => {
+  const { env, quota } = makeEnv({ IP_SALT: "test-secret", IP_DAILY_LIMIT: "2" });
+  assert.equal((await post(env, ask("bank", { installId: "eeeeeeee-0001" }), { ip: "203.0.113.50" })).status, 200);
+  quota.salt = ""; // 模擬 Durable Object 被關掉重開：記憶體裡的鹽值不見了
+  assert.equal((await post(env, ask("bank", { installId: "eeeeeeee-0002" }), { ip: "203.0.113.50" })).status, 200);
+  assert.equal((await post(env, ask("bank", { installId: "eeeeeeee-0003" }), { ip: "203.0.113.50" })).status, 429);
+  const day = new Date().toISOString().slice(0, 10);
+  const { createHash } = await import("node:crypto");
+  const expected = `ip:${createHash("sha256").update(`test-secret|${day}|203.0.113.50`).digest("hex").slice(0, 32)}`;
+  const keys = quota.sql.exec("SELECT key FROM usage").toArray().map((r) => r.key);
+  assert.ok(keys.includes(expected));
+  assert.ok(!JSON.stringify(keys).includes("203.0.113"));
+});

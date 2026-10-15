@@ -16,7 +16,15 @@
       display: block; margin: .35em 0 0; padding: 0 0 0 .65em;
       border-left: 2px solid rgba(200, 55, 45, .55); opacity: .92;
     }
+    @media (prefers-color-scheme: dark) {
+      html.ctx-page-bi ctx-tr { border-left-color: rgba(238, 122, 102, .6); }
+    }
+  `;
+  (document.head || document.documentElement).appendChild(pageStyle);
 
+  // 狀態列的樣式放在 Shadow DOM 裡
+  const barStyle = document.createElement("style");
+  barStyle.textContent = `
     ${PB} {
       --pb-paper: #fbf8f1; --pb-paper-2: #efe9dc; --pb-ink: #1b1a17; --pb-ink-2: #5c574d;
       --pb-vermilion: #c8372d; --pb-seal-text: #fbf7ef; --pb-focus: rgba(200, 55, 45, .38);
@@ -52,16 +60,16 @@
       ${PB} { --pb-paper: #211f1b; --pb-paper-2: #2e2b26; --pb-ink: #ede6d8; --pb-ink-2: #b4ac9c;
         --pb-vermilion: #e0604c; --pb-seal-text: #1a1815; --pb-focus: rgba(238, 122, 102, .45);
         box-shadow: 0 16px 34px -14px rgba(0, 0, 0, .75); }
-      html.ctx-page-bi ctx-tr { border-left-color: rgba(238, 122, 102, .6); }
     }
   `;
-  (document.head || document.documentElement).appendChild(pageStyle);
+  ui.appendChild(barStyle);
+
 
   const PAGE_SKIP = [
     "script", "style", "noscript", "template", "textarea", "input", "select", "option", "button",
     "code", "pre", "kbd", "samp", "svg", "math", "iframe", "canvas", "video", "audio", "ctx-tr",
     "[contenteditable='']", "[contenteditable='true']", "[translate='no']", ".notranslate",
-    `#${IDS.btn}`, `#${IDS.pop}`, `#${IDS.bar}`,
+    IDS.host,
   ].join(",");
 
   // AI 模式下不翻網站本身的框架：選單、導覽、頁首頁尾、側欄。這些每頁都一樣，翻了只是花錢。
@@ -626,7 +634,7 @@
     bar.setAttribute("aria-live", "polite");
     bar.addEventListener("mousedown", (e) => e.stopPropagation());
     bar.addEventListener("click", onBarClick);
-    document.documentElement.appendChild(bar);
+    ui.appendChild(bar);
     return bar;
   }
 
@@ -688,6 +696,9 @@
       <span class="ctx-pb-text"><span class="ctx-pb-title">${escapeHtml(s.title)}</span>${s.sub ? `<span class="ctx-pb-sub" title="${escapeHtml(s.sub)}">${escapeHtml(s.sub)}</span>` : ""}</span>
       ${actions}
       <button type="button" class="ctx-pb-x" data-act="close" title="${t("close")}" aria-label="${t("close")}">${ICONS.close}</button>`;
+    // 狀態列剛出現或換了內容（例如「繼續翻譯」）時，短時間內的點擊不算：
+    // 網頁可以控制什麼時候塞進新內容，可能趁你正要點別的東西時讓按鈕出現在滑鼠底下
+    if (b.style.display !== "flex" || b.dataset.kind !== s.kind) barShownAt = performance.now();
     b.dataset.kind = s.kind;
     b.style.display = "flex";
     if (s.kind === "info") barTimer = setTimeout(hideBar, 3200);
@@ -698,9 +709,13 @@
     if (page.active && sub) sub.textContent = progressText();
   }
 
+  let barShownAt = 0;
+  const BAR_MIN_VISIBLE_MS = 350;
+
   function onBarClick(e) {
-    // 只接受使用者真正的點擊，網頁上的程式不能代按（例如「重試」會送出請求）
-    if (!e.isTrusted) return;
+    // 只接受使用者真正的點擊，網頁上的程式不能代按（例如「重試」會送出請求）；
+    // 外層容器被動過、或狀態列剛出現就被點，都不算
+    if (!e.isTrusted || !hostLooksRight() || performance.now() - barShownAt < BAR_MIN_VISIBLE_MS) return;
     const act = e.target.closest("[data-act]")?.dataset.act;
     if (!act) return;
     e.stopPropagation();
@@ -907,7 +922,7 @@
     page.mo = new MutationObserver((mutations) => {
       for (const m of mutations) {
         for (const n of m.addedNodes) {
-          if (n.nodeType === 1 && n.localName !== "ctx-tr" && !n.closest?.(`#${IDS.bar}, #${IDS.pop}, #${IDS.btn}`)) added.push(n);
+          if (n.nodeType === 1 && n.localName !== "ctx-tr" && n !== host) added.push(n);
         }
       }
       if (!added.length) return;

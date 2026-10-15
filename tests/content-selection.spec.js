@@ -4,6 +4,7 @@ const { openFixture, selectText } = require("./helpers");
 
 // 按鈕出現後要停留一下才接受點擊（防點擊劫持），所以先等一下
 async function clickTranslate(page) {
+  await expect(page.locator("#ctx-trans-floating-btn")).toBeVisible();
   await page.waitForTimeout(400);
   const b = await page.locator("#ctx-trans-floating-btn").boundingBox();
   await page.mouse.click(b.x + b.width / 2, b.y + b.height / 2);
@@ -80,52 +81,53 @@ test("內容腳本不讀 API 金鑰，只讀哪些服務商有金鑰", async ({ 
   expect(asked).not.toContain("*");
 });
 
-test("防點擊劫持：按鈕被拉大、變透明、移位或剛出現就被點，都不翻譯", async ({ context }) => {
+test("防點擊劫持：網頁動外層容器會被改回來；容器樣式不對、或按鈕剛出現就被點，都不翻譯", async ({ context }) => {
   const { page } = await openFixture(context, null, "pages/article.html", { provider: "gemini" });
   const sent = () => page.evaluate(() => window.__stub.sent.filter((m) => m.action === "translate").length);
   const btn = page.locator("#ctx-trans-floating-btn");
-
-  // 剛出現就點（例如雙擊的第二下）
-  await selectText(page, "#sel-target", "someone else.");
-  const b0 = await btn.boundingBox();
-  await page.evaluate(() => {
-    const b = document.getElementById("ctx-trans-floating-btn");
-    b.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
-  });
-  await page.mouse.click(b0.x + b0.width / 2, b0.y + b0.height / 2);
-  expect(await sent()).toBe(0);
-
-  // 網頁把按鈕拉滿整個畫面（先取消原本的選取，否則拖曳會變成拖放文字）
   const reselect = async () => {
     await page.evaluate(() => getSelection().removeAllRanges());
     await selectText(page, "#sel-target", "someone else.");
     await expect(btn).toBeVisible();
   };
+  const clickButton = async () => {
+    const b = await btn.boundingBox();
+    await page.mouse.click(b.x + b.width / 2, b.y + b.height / 2);
+  };
+
+  // 剛出現就點（例如雙擊的第二下）
+  await reselect();
+  await clickButton();
+  expect(await sent()).toBe(0);
+
+  // 網頁改外層容器的 style：馬上被改回來
+  await reselect();
+  await page.waitForTimeout(400);
+  const restored = await page.evaluate(async () => {
+    const host = document.querySelector("ctx-translator-root");
+    host.style.setProperty("opacity", "0", "important");
+    host.setAttribute("class", "evil");
+    await new Promise((r) => setTimeout(r, 0));
+    return { opacity: getComputedStyle(host).opacity, cls: host.getAttribute("class") };
+  });
+  expect(restored).toEqual({ opacity: "1", cls: null });
+
+  // 網頁用自己的 CSS 想把容器變透明、放大：容器的 inline !important 樣式優先，點擊照常有效
+  await page.addStyleTag({ content: "ctx-translator-root { opacity: 0 !important; transform: scale(40) !important; }" });
+  await clickButton();
+  await expect(page.locator("#ctx-body")).toContainText("AI譯:");
+  expect(await sent()).toBe(1);
+
+  // 若外層容器的樣式真的被改掉（例如瀏覽器擋不住的情況），點擊不算數
+  await page.evaluate(() => document.querySelector("#ctx-close-btn")?.click());
   await reselect();
   await page.waitForTimeout(400);
   await page.evaluate(() => {
-    const b = document.getElementById("ctx-trans-floating-btn");
-    b.style.setProperty("left", "0px", "important");
-    b.style.setProperty("top", "0px", "important");
-    b.style.setProperty("width", "100vw", "important");
-    b.style.setProperty("height", "100vh", "important");
+    const host = document.querySelector("ctx-translator-root");
+    // 暫停改回來的機制，模擬容器被改掉
+    Object.defineProperty(host.style, "cssText", { get: () => "", set: () => {}, configurable: true });
+    host.style.setProperty("filter", "opacity(0)", "important");
   });
-  await page.mouse.click(300, 300);
-  expect(await sent()).toBe(0);
-
-  // 網頁把按鈕變透明
-  await page.evaluate(() => document.getElementById("ctx-trans-floating-btn").removeAttribute("style"));
-  await reselect();
-  await page.waitForTimeout(400);
-  await page.evaluate(() => document.getElementById("ctx-trans-floating-btn").style.setProperty("opacity", "0", "important"));
-  const b1 = await btn.boundingBox();
-  await page.mouse.click(b1.x + b1.width / 2, b1.y + b1.height / 2);
-  expect(await sent()).toBe(0);
-
-  // 正常的情況：一樣可以翻譯
-  await page.evaluate(() => document.getElementById("ctx-trans-floating-btn").style.removeProperty("opacity"));
-  await reselect();
-  await clickTranslate(page);
-  await expect(page.locator("#ctx-body")).toContainText("AI譯:");
+  await clickButton();
   expect(await sent()).toBe(1);
 });

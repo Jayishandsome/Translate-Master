@@ -12,7 +12,7 @@
   btn.type = "button";
   btn.setAttribute("aria-label", t("btnTranslateLabel"));
   btn.innerHTML = `<span class="ctx-seal" aria-hidden="true">文</span><span>${t("btnTranslate")}</span>`;
-  document.documentElement.appendChild(btn);
+  ui.appendChild(btn);
 
   const pop = document.createElement("div");
   pop.id = IDS.pop;
@@ -33,7 +33,7 @@
     </div>
     <div class="ctx-body" id="ctx-body" aria-live="polite"></div>
   `;
-  document.documentElement.appendChild(pop);
+  ui.appendChild(pop);
 
   const body = pop.querySelector("#ctx-body");
   const closeBtn = pop.querySelector("#ctx-close-btn");

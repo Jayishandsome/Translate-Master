@@ -171,7 +171,15 @@ test("真正的內容腳本：AI 全頁翻譯，連結保留、網站框架不�
   await sw.evaluate(() => chrome.tabs.query({ active: true, lastFocusedWindow: true }).then((t) => requestPageTranslation(t[0].id)));
   await expect(page.locator("#title ctx-tr")).toHaveText("譯:A beginner's guide to coffee");
   await expect(page.locator("#p-link ctx-tr a")).toHaveAttribute("href", "#grinders");
-  await expect(page.locator("#ctx-page-bar")).toContainText("Gemini");
+  // 按鈕、浮窗、狀態列放在封閉的 Shadow DOM 裡：網頁的程式碼找不到、也打不開
+  expect(await page.evaluate(() => {
+    const host = document.querySelector("ctx-translator-root");
+    return {
+      host: Boolean(host),
+      shadow: host?.shadowRoot ?? null,
+      ids: ["ctx-page-bar", "ctx-trans-floating-btn", "ctx-trans-popover"].map((id) => document.getElementById(id)),
+    };
+  })).toEqual({ host: true, shadow: null, ids: [null, null, null] });
   const sent = calls.flatMap((c) => JSON.parse(promptOf(c.body).split("INPUT:\n").pop())).join("\n");
   expect(sent).not.toMatch(/Home page|Copyright/);
   expect(errors).toEqual([]);

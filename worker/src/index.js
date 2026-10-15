@@ -4,11 +4,13 @@
 // 擴充功能把選取的文字、前後文、譯文語言和一組隨機的安裝 ID 送到這裡；
 // 這裡先扣次數，再交給 Cloudflare Workers AI 翻譯，失敗就把次數還回去。
 //
-// - 只記每天的次數：安裝 ID、IP 的雜湊、全部加起來的總數。IP 雜湊用的隨機鹽值只放在記憶體，
-//   不寫進任何儲存空間（包括 Durable Object 的備份），所以存下來的雜湊無法還原成 IP。
+// - 只記每天的次數：安裝 ID、IP 的雜湊、全部加起來的總數。IP 雜湊用的密鑰放在 Cloudflare 的加密設定
+//   （Secret：IP_SALT，寫入後讀不回來）；沒設定時改用只放在記憶體的隨機鹽值。兩種都不在儲存空間或備份裡，
+//   所以存下來的雜湊無法還原成 IP；雜湊也加上日期，隔天就對不起來。
 // - 不記錄、不保存任何要翻譯的文字。
 // - 只接受 Chrome 擴充功能送來的請求（EXTENSION_IDS 有填就只接受那些擴充功能）。
-// - 防濫用：每個安裝、每個 IP（IPv6 以 /56 計）、整個服務每天都有上限，另外每個 IP 每分鐘也有上限。
+// - 防濫用：每個安裝、每個 IP（IPv6 以 /56 計，另外每段 /48 也有上限）、整個服務每天都有上限，
+//   另外每個 IP 每分鐘也有上限。
 //
 // 部署方式見 worker/README.md。
 
@@ -26,12 +28,12 @@ export default {
     if (url.pathname !== "/translate" || request.method !== "POST") return json({ error: "not_found" }, 404, cors);
 
     // 每個 IP 每分鐘的上限（Cloudflare 的 Rate Limiting），擋短時間大量請求；放在扣次數之前
-    const group = ipGroup(request.headers.get("CF-Connecting-IP"));
+    const ip = request.headers.get("CF-Connecting-IP") || "";
     if (env.RATE_LIMITER) {
-      const { success } = await env.RATE_LIMITER.limit({ key: group }).catch(() => ({ success: true }));
+      const { success } = await env.RATE_LIMITER.limit({ key: ipGroup(ip) }).catch(() => ({ success: true }));
       if (!success) return json({ error: "rate_limited" }, 429, cors);
     }
-    return translate(request, env, cors, group);
+    return translate(request, env, cors, ip);
   },
 };
 
@@ -64,11 +66,32 @@ const limits = (env) => ({
   ip: Math.max(1, Number(env.IP_DAILY_LIMIT) || 50),
   // 整個服務每天最多幾次：Workers AI 免費額度約可翻 1,200～2,000 次，留一點餘裕；付費方案時也是費用上限
   global: Math.max(1, Number(env.GLOBAL_DAILY_LIMIT) || 1500),
+  // IPv6 每段 /48 每天最多幾次：免費的 IPv6 通道（例如 Hurricane Electric）一個帳號就給一整段 /48（256 段 /56）
+  net: Math.max(1, Number(env.NET_DAILY_LIMIT) || 150),
 });
 
 async function sha256(text) {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+function ipv6Hex(value) {
+  const compressed = value.includes("::");
+  const [head, tail = ""] = value.split("::");
+  const left = head ? head.split(":") : [];
+  const right = compressed && tail ? tail.split(":") : [];
+  const groups = compressed
+    ? [...left, ...Array(Math.max(0, 8 - left.length - right.length)).fill("0"), ...right]
+    : left;
+  return groups.slice(0, 4).map((g) => (parseInt(g, 16) || 0).toString(16).padStart(4, "0"));
+}
+
+// IPv6 /48；IPv4 沒有這一層，回傳空字串
+export function netGroup(ip) {
+  const value = String(ip || "").trim().toLowerCase();
+  if (!value.includes(":") || /^::ffff:\d+\.\d+\.\d+\.\d+$/.test(value)) return "";
+  const hex = ipv6Hex(value);
+  return `${hex[0]}:${hex[1]}:${hex[2]}::/48`;
 }
 
 // IPv6 一個家庭通常分到一整段 /56（256 個 /64），可以一直換位址；所以 IPv6 用前 56 位元當作同一個來源
@@ -77,14 +100,7 @@ export function ipGroup(ip) {
   if (!value.includes(":")) return value || "unknown";
   const mapped = value.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
   if (mapped) return mapped[1];
-  const compressed = value.includes("::");
-  const [head, tail = ""] = value.split("::");
-  const left = head ? head.split(":") : [];
-  const right = compressed && tail ? tail.split(":") : [];
-  const groups = compressed
-    ? [...left, ...Array(Math.max(0, 8 - left.length - right.length)).fill("0"), ...right]
-    : left;
-  const hex = groups.slice(0, 4).map((g) => (parseInt(g, 16) || 0).toString(16).padStart(4, "0"));
+  const hex = ipv6Hex(value);
   return `${hex[0]}:${hex[1]}:${hex[2]}:${hex[3].slice(0, 2)}00::/56`;
 }
 
@@ -95,20 +111,28 @@ async function counter(env, body) {
   return res.json();
 }
 
-// 第一個一定是這個安裝的次數（回傳的剩餘次數以它為準）。
-// IP 不直接存：交給 Durable Object 用記憶體裡的鹽值算雜湊，只存雜湊。
-function quotaKeys(env, installId, group) {
-  const { install, ip, global } = limits(env);
+// 第一個一定是這個安裝的次數（回傳的剩餘次數以它為準）。IP 不直接存，只存雜湊：
+// 有設定 IP_SALT（Cloudflare 的加密設定）就在這裡用它算；沒有的話交給 Durable Object 用記憶體裡的鹽值算。
+async function quotaKeys(env, installId, ip, day) {
+  const { install, ip: ipLimit, net: netLimit, global } = limits(env);
+  const sources = [{ ip: ipGroup(ip), limit: ipLimit, kind: "ip" }];
+  const net = netGroup(ip);
+  if (net) sources.push({ ip: `net:${net}`, limit: netLimit, kind: "net" });
+  const hashed = env.IP_SALT
+    ? await Promise.all(sources.map(async (k) => ({
+      key: `ip:${(await sha256(`${env.IP_SALT}|${day}|${k.ip}`)).slice(0, 32)}`, limit: k.limit, kind: k.kind,
+    })))
+    : sources;
   return [
     { key: `i:${installId}`, limit: install, kind: "install" },
-    { ip: group, limit: ip, kind: "ip" },
+    ...hashed,
     { key: "global", limit: global, kind: "global" },
   ];
 }
 
 const validInstallId = (id) => /^[A-Za-z0-9-]{8,64}$/.test(String(id || ""));
 
-async function translate(request, env, cors, group = ipGroup(request.headers.get("CF-Connecting-IP"))) {
+async function translate(request, env, cors, ip = request.headers.get("CF-Connecting-IP") || "") {
   if (Number(request.headers.get("Content-Length") || 0) > MAX_BODY) return json({ error: "too_long" }, 413, cors);
   const raw = await request.text().catch(() => "");
   if (raw.length > MAX_BODY) return json({ error: "too_long" }, 413, cors);
@@ -121,7 +145,7 @@ async function translate(request, env, cors, group = ipGroup(request.headers.get
   if (text.length > MAX_TEXT) return json({ error: "too_long", max: MAX_TEXT }, 413, cors);
 
   const day = today();
-  const keys = quotaKeys(env, body.installId, group);
+  const keys = await quotaKeys(env, body.installId, ip, day);
   const { install } = limits(env);
   const taken = await counter(env, { op: "take", day, keys });
   if (!taken.ok) {

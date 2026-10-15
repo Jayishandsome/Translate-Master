@@ -9,6 +9,7 @@
   const uiLanguage = globalThis.chrome?.i18n?.getUILanguage?.() || "zh-TW";
 
   const IDS = {
+    host: "ctx-translator-root",
     style: "ctx-trans-style",
     btn: "ctx-trans-floating-btn",
     pop: "ctx-trans-popover",
@@ -20,9 +21,48 @@
 
   // 清掉舊版殘留節點 (避免擴充更新後重複)
   Object.values(IDS).forEach((id) => document.getElementById(id)?.remove());
+  document.querySelectorAll(IDS.host).forEach((el) => el.remove());
 
-  // 紙本字典風：米白紙、墨黑字、朱紅印。所有選擇器都限定在擴充功能自己的節點內，
-  // 並重設常見屬性，避免網頁本身的 CSS 滲入。
+  // 翻譯按鈕、浮窗、全頁翻譯的狀態列都放在「封閉」的 Shadow DOM 裡：
+  // 網頁的程式碼讀不到譯文、改不了按鈕的樣式、也塞不進假按鈕。網頁只碰得到外層的容器，
+  // 容器的樣式被改掉時會馬上改回來，點擊時也會再檢查一次（見 hostLooksRight）。
+  // 自動測試用的替身環境改用 open，讓 Playwright 找得到裡面的元素；替身的 runtime.id 固定是 test-extension，
+  // 網頁沒辦法偽造內容腳本裡的 chrome.runtime.id。
+  const HOST_STYLE = [
+    "all: initial", "position: fixed", "top: 0", "left: 0", "width: 0", "height: 0", "margin: 0", "padding: 0",
+    "border: 0", "display: block", "visibility: visible", "opacity: 1", "z-index: 2147483647", "overflow: visible",
+    "transform: none", "translate: none", "scale: none", "rotate: none", "filter: none", "backdrop-filter: none",
+    "clip-path: none", "mask: none", "mix-blend-mode: normal", "isolation: auto", "contain: none",
+    "content-visibility: visible", "will-change: auto", "perspective: none", "zoom: 1", "pointer-events: auto",
+  ].map((rule) => `${rule} !important`).join("; ");
+  const host = document.createElement(IDS.host);
+  host.setAttribute("translate", "no");
+  host.style.cssText = HOST_STYLE;
+  // 瀏覽器會把樣式整理成自己的寫法，比對時要用整理後的字串，否則會一直改來改去
+  const HOST_CSS = host.style.cssText;
+  const ui = host.attachShadow({ mode: globalThis.chrome?.runtime?.id === "test-extension" ? "open" : "closed" });
+  document.documentElement.appendChild(host);
+
+  // 網頁改了容器的屬性或樣式，就改回來；被移出文件時重新放回去
+  new MutationObserver(() => {
+    if (host.style.cssText !== HOST_CSS) host.style.cssText = HOST_STYLE;
+    for (const attr of [...host.attributes]) {
+      if (attr.name !== "style" && attr.name !== "translate") host.removeAttribute(attr.name);
+    }
+  }).observe(host, { attributes: true });
+
+  function hostLooksRight() {
+    if (!host.isConnected) return false;
+    const s = getComputedStyle(host);
+    return s.display === "block" && s.visibility === "visible" && s.opacity === "1" && s.position === "fixed" &&
+      s.transform === "none" && s.translate === "none" && s.scale === "none" && s.rotate === "none" &&
+      s.filter === "none" && s.backdropFilter === "none" && s.clipPath === "none" &&
+      (s.maskImage || s.webkitMaskImage || "none") === "none" && s.mixBlendMode === "normal" &&
+      s.contain === "none" && (s.contentVisibility || "visible") === "visible" && s.willChange === "auto" &&
+      s.perspective === "none" && (s.zoom || "1") === "1";
+  }
+
+  // 紙本字典風：米白紙、墨黑字、朱紅印。樣式放在 Shadow DOM 裡，網頁本身的 CSS 進不來。
   const style = document.createElement("style");
   style.id = IDS.style;
   style.textContent = `
@@ -441,7 +481,7 @@
       ${P} .ctx-skeleton i::before { animation: none; width: var(--w, 100%); }
     }
   `;
-  (document.head || document.documentElement).appendChild(style);
+  ui.appendChild(style);
 
   // ----------------------------------------------------------------------
   // DOM: 浮動按鈕 + 翻譯氣泡
@@ -457,7 +497,7 @@
   btn.type = "button";
   btn.setAttribute("aria-label", t("btnTranslateLabel"));
   btn.innerHTML = `<span class="ctx-seal" aria-hidden="true">文</span><span>${t("btnTranslate")}</span>`;
-  document.documentElement.appendChild(btn);
+  ui.appendChild(btn);
 
   const pop = document.createElement("div");
   pop.id = IDS.pop;
@@ -478,7 +518,7 @@
     </div>
     <div class="ctx-body" id="ctx-body" aria-live="polite"></div>
   `;
-  document.documentElement.appendChild(pop);
+  ui.appendChild(pop);
 
   const body = pop.querySelector("#ctx-body");
   const closeBtn = pop.querySelector("#ctx-close-btn");
@@ -1124,15 +1164,14 @@
   }
 
   const BUTTON_MIN_VISIBLE_MS = 350;
-  const BUTTON_MAX = { w: 220, h: 64 };
 
+  // 按鈕在封閉的 Shadow DOM 裡，網頁改不到它本身；只要外層容器沒被動過、按鈕出現夠久，就是使用者看得到的那顆按鈕。
+  // 不比對座標：有些網站在 <html> 上設了 zoom 或 transform，座標會不一樣，比對反而會讓按鈕在那些網站失靈。
   function buttonLooksRight() {
     if (!buttonSpot || performance.now() - buttonShownAt < BUTTON_MIN_VISIBLE_MS) return false;
-    const style = getComputedStyle(btn);
-    if (style.display === "none" || style.visibility !== "visible" || Number(style.opacity) < 1) return false;
+    if (!hostLooksRight()) return false;
     const r = btn.getBoundingClientRect();
-    if (r.width > BUTTON_MAX.w || r.height > BUTTON_MAX.h || r.width < 8 || r.height < 8) return false;
-    return Math.abs(r.left - buttonSpot.x) <= 2 && Math.abs(r.top - buttonSpot.y) <= 2;
+    return r.width >= 8 && r.height >= 8;
   }
 
   // 捲動（包括網頁裡可以捲動的區塊）或改變視窗大小時，按鈕跟著選取的文字移動
@@ -1151,8 +1190,8 @@
     if (!e.isTrusted) return;
     const target = elementOfTarget(e.target);
     if (!target) return;
-    // 點到自己的浮窗就跳過
-    if (target.closest(`#${IDS.btn}`) || target.closest(`#${IDS.pop}`) || target.closest(`#${IDS.bar}`)) return;
+    // 點到自己的按鈕、浮窗、狀態列就跳過（Shadow DOM 裡的事件，在外面看到的目標是容器本身）
+    if (target === host) return;
 
     await refreshState();
     if (!isFeatureEnabled) {
@@ -1183,9 +1222,7 @@
     if (isTranslating) return;
     const t = elementOfTarget(e.target);
     if (!t) return;
-    if (!t.closest(`#${IDS.pop}`) && !t.closest(`#${IDS.btn}`)) {
-      hidePopover();
-    }
+    if (t !== host) hidePopover();
   });
 
   // ----------------------------------------------------------------------
@@ -1350,7 +1387,15 @@
       display: block; margin: .35em 0 0; padding: 0 0 0 .65em;
       border-left: 2px solid rgba(200, 55, 45, .55); opacity: .92;
     }
+    @media (prefers-color-scheme: dark) {
+      html.ctx-page-bi ctx-tr { border-left-color: rgba(238, 122, 102, .6); }
+    }
+  `;
+  (document.head || document.documentElement).appendChild(pageStyle);
 
+  // 狀態列的樣式放在 Shadow DOM 裡
+  const barStyle = document.createElement("style");
+  barStyle.textContent = `
     ${PB} {
       --pb-paper: #fbf8f1; --pb-paper-2: #efe9dc; --pb-ink: #1b1a17; --pb-ink-2: #5c574d;
       --pb-vermilion: #c8372d; --pb-seal-text: #fbf7ef; --pb-focus: rgba(200, 55, 45, .38);
@@ -1386,16 +1431,16 @@
       ${PB} { --pb-paper: #211f1b; --pb-paper-2: #2e2b26; --pb-ink: #ede6d8; --pb-ink-2: #b4ac9c;
         --pb-vermilion: #e0604c; --pb-seal-text: #1a1815; --pb-focus: rgba(238, 122, 102, .45);
         box-shadow: 0 16px 34px -14px rgba(0, 0, 0, .75); }
-      html.ctx-page-bi ctx-tr { border-left-color: rgba(238, 122, 102, .6); }
     }
   `;
-  (document.head || document.documentElement).appendChild(pageStyle);
+  ui.appendChild(barStyle);
+
 
   const PAGE_SKIP = [
     "script", "style", "noscript", "template", "textarea", "input", "select", "option", "button",
     "code", "pre", "kbd", "samp", "svg", "math", "iframe", "canvas", "video", "audio", "ctx-tr",
     "[contenteditable='']", "[contenteditable='true']", "[translate='no']", ".notranslate",
-    `#${IDS.btn}`, `#${IDS.pop}`, `#${IDS.bar}`,
+    IDS.host,
   ].join(",");
 
   // AI 模式下不翻網站本身的框架：選單、導覽、頁首頁尾、側欄。這些每頁都一樣，翻了只是花錢。
@@ -1960,7 +2005,7 @@
     bar.setAttribute("aria-live", "polite");
     bar.addEventListener("mousedown", (e) => e.stopPropagation());
     bar.addEventListener("click", onBarClick);
-    document.documentElement.appendChild(bar);
+    ui.appendChild(bar);
     return bar;
   }
 
@@ -2022,6 +2067,9 @@
       <span class="ctx-pb-text"><span class="ctx-pb-title">${escapeHtml(s.title)}</span>${s.sub ? `<span class="ctx-pb-sub" title="${escapeHtml(s.sub)}">${escapeHtml(s.sub)}</span>` : ""}</span>
       ${actions}
       <button type="button" class="ctx-pb-x" data-act="close" title="${t("close")}" aria-label="${t("close")}">${ICONS.close}</button>`;
+    // 狀態列剛出現或換了內容（例如「繼續翻譯」）時，短時間內的點擊不算：
+    // 網頁可以控制什麼時候塞進新內容，可能趁你正要點別的東西時讓按鈕出現在滑鼠底下
+    if (b.style.display !== "flex" || b.dataset.kind !== s.kind) barShownAt = performance.now();
     b.dataset.kind = s.kind;
     b.style.display = "flex";
     if (s.kind === "info") barTimer = setTimeout(hideBar, 3200);
@@ -2032,9 +2080,13 @@
     if (page.active && sub) sub.textContent = progressText();
   }
 
+  let barShownAt = 0;
+  const BAR_MIN_VISIBLE_MS = 350;
+
   function onBarClick(e) {
-    // 只接受使用者真正的點擊，網頁上的程式不能代按（例如「重試」會送出請求）
-    if (!e.isTrusted) return;
+    // 只接受使用者真正的點擊，網頁上的程式不能代按（例如「重試」會送出請求）；
+    // 外層容器被動過、或狀態列剛出現就被點，都不算
+    if (!e.isTrusted || !hostLooksRight() || performance.now() - barShownAt < BAR_MIN_VISIBLE_MS) return;
     const act = e.target.closest("[data-act]")?.dataset.act;
     if (!act) return;
     e.stopPropagation();
@@ -2241,7 +2293,7 @@
     page.mo = new MutationObserver((mutations) => {
       for (const m of mutations) {
         for (const n of m.addedNodes) {
-          if (n.nodeType === 1 && n.localName !== "ctx-tr" && !n.closest?.(`#${IDS.bar}, #${IDS.pop}, #${IDS.btn}`)) added.push(n);
+          if (n.nodeType === 1 && n.localName !== "ctx-tr" && n !== host) added.push(n);
         }
       }
       if (!added.length) return;
