@@ -1,4 +1,5 @@
-// 隨選翻譯 — 安裝後的說明頁：教三個用法，並檢查這台電腦的 Chrome 能不能用本機翻譯。
+// 隨選翻譯 — 安裝後的說明頁：先讓使用者試一次，再用三張示意圖教三個用法，最後列出可以選的翻譯方式。
+// 也會檢查這台電腦的 Chrome 能不能用本機翻譯。
 // 頁面最後也載入 content.js，讓使用者直接在「試試看」區塊選字翻譯。
 
 const t = (key, subs) => globalThis.chrome?.i18n?.getMessage(key, subs) || key;
@@ -38,5 +39,20 @@ async function checkTranslator() {
   else setCheck("check-translator", "ok", availability === "available" ? "translatorReady" : "translatorFirstUse", [version]);
 }
 
+// 「免費 AI」開放時才列出來（背景程式知道伺服器有沒有設定好）
+async function showEngines() {
+  const reply = await chrome.runtime.sendMessage({ action: "getProviders" }).catch(() => null);
+  const free = reply?.free;
+  const card = document.getElementById("engine-free");
+  if (free?.enabled) {
+    card.hidden = false;
+    document.getElementById("engine-free-desc").textContent = t("engineFreeCardDesc", [String(free.dailyLimit || 10)]);
+  } else {
+    card.hidden = true;
+    document.getElementById("engines").classList.add("two");
+  }
+}
+
 applyI18n();
 checkTranslator().catch(() => setCheck("check-translator", "warn", "translatorPairMissing"));
+showEngines().catch(() => {});

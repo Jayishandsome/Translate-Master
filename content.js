@@ -1097,9 +1097,11 @@
     return null;
   }
 
-  // 翻譯按鈕固定放在選取範圍「最後一個字」的右下方。
+  // 翻譯按鈕放在滑鼠放開的那一端：
+  // - 從前往後選：放在「最後一個字」的右下方；
+  // - 從後往前選：放在「第一個字」的左上方。
   // 不直接用 range.getClientRects() 的最後一塊：三連擊整段、拖過行尾時，最後一塊常常是下一行的開頭或整個元素的框，
-  // 按鈕就會跳到別的地方。這裡從選取的結尾往回找最後一個看得到的字，量它的位置。
+  // 按鈕就會跳到別的地方。這裡從選取的兩端往內找第一個看得到的字，量它的位置。
   function lastCharRect(range) {
     const root = range.commonAncestorContainer;
     const walker = document.createTreeWalker(root.nodeType === Node.TEXT_NODE ? root.parentNode : root, NodeFilter.SHOW_TEXT);
@@ -1131,6 +1133,68 @@
     return null;
   }
 
+  function firstCharRect(range) {
+    const root = range.commonAncestorContainer;
+    const walker = document.createTreeWalker(root.nodeType === Node.TEXT_NODE ? root.parentNode : root, NodeFilter.SHOW_TEXT);
+    let node = range.startContainer;
+    if (node.nodeType !== Node.TEXT_NODE) {
+      node = node.childNodes[range.startOffset] || node;
+      while (node.firstChild) node = node.firstChild;
+    }
+    walker.currentNode = node;
+    if (node.nodeType !== Node.TEXT_NODE) node = walker.nextNode();
+    for (let steps = 0; node && steps < 500; steps++, node = walker.nextNode()) {
+      if (!range.intersectsNode(node)) {
+        if (range.comparePoint(node, 0) < 0) continue; // 還在選取範圍前面
+        break;
+      }
+      const start = node === range.startContainer ? range.startOffset : 0;
+      const end = node === range.endContainer ? range.endOffset : node.data.length;
+      for (let i = start; i < end; i++) {
+        if (!/\S/.test(node.data[i])) continue;
+        const code = node.data.charCodeAt(i);
+        const char = document.createRange();
+        char.setStart(node, i);
+        char.setEnd(node, code >= 0xd800 && code <= 0xdbff && i + 1 < end ? i + 2 : i + 1);
+        const rects = [...char.getClientRects()].filter((r) => r.width > 0 && r.height > 0);
+        if (rects.length) {
+          const rtl = node.parentElement && getComputedStyle(node.parentElement).direction === "rtl";
+          return { rect: rects[0], rtl };
+        }
+        break; // 這個文字節點沒有顯示出來，換下一個
+      }
+    }
+    return null;
+  }
+
+  // 使用者是不是從後往前拖（焦點在錨點前面）
+  function isBackward(sel) {
+    if (!sel?.rangeCount || sel.isCollapsed || !sel.anchorNode || !sel.focusNode) return false;
+    if (sel.direction === "backward") return true;
+    if (sel.direction === "forward") return false;
+    try {
+      const probe = document.createRange();
+      probe.setStart(sel.anchorNode, sel.anchorOffset);
+      probe.setEnd(sel.focusNode, sel.focusOffset);
+      return probe.collapsed;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  const pointerRect = (pointer) => ({ left: pointer.x, right: pointer.x, top: pointer.y, bottom: pointer.y, width: 0, height: 0 });
+
+  function selectionStart(range, pointer) {
+    if (range) {
+      const found = firstCharRect(range);
+      if (found) return found;
+      const rects = [...range.getClientRects()].filter((r) => r.width > 0 && r.height > 0);
+      if (rects.length) return { rect: rects[0], rtl: false };
+    }
+    if (!pointer) return null;
+    return { rect: pointerRect(pointer), rtl: false, pointer: true };
+  }
+
   // 找不到字的位置時（例如選取在輸入框裡），退回整個選取範圍最後一塊有大小的框，再不行就用滑鼠位置
   function selectionEnd(range, pointer) {
     if (range) {
@@ -1140,24 +1204,34 @@
       if (rects.length) return { rect: rects[rects.length - 1], rtl: false };
     }
     if (!pointer) return null;
-    return { rect: { left: pointer.x, right: pointer.x, top: pointer.y, bottom: pointer.y, width: 0, height: 0 }, rtl: false, pointer: true };
+    return { rect: pointerRect(pointer), rtl: false, pointer: true };
   }
 
   const BUTTON_GAP_X = 4;
   const BUTTON_GAP_Y = 6;
   let buttonPointer = null;
+  let buttonBackward = false; // 這次是從後往前選的
   let buttonSpot = null; // 按鈕應該在的位置（左上角）
 
   function placeButton() {
-    const end = selectionEnd(savedRange, buttonPointer);
+    const end = buttonBackward ? selectionStart(savedRange, buttonPointer) : selectionEnd(savedRange, buttonPointer);
     if (!end) return;
     const { rect } = end;
     const w = btn.offsetWidth;
     const h = btn.offsetHeight;
-    let x = end.rtl ? rect.left - w - BUTTON_GAP_X : rect.right + BUTTON_GAP_X;
-    let y = rect.bottom + BUTTON_GAP_Y;
-    // 下面放不下（選到畫面最底下一行）就放在那一行上面
-    if (y + h > window.innerHeight - 8 && rect.top - h - BUTTON_GAP_Y >= 8) y = rect.top - h - BUTTON_GAP_Y;
+    let x;
+    let y;
+    if (buttonBackward) {
+      // 從後往前選：放在第一個字的左上方；上面放不下（畫面最上面一行）就放在那一行下面
+      x = end.rtl ? rect.right + BUTTON_GAP_X : rect.left - w - BUTTON_GAP_X;
+      y = rect.top - h - BUTTON_GAP_Y;
+      if (y < 8 && rect.bottom + BUTTON_GAP_Y + h <= window.innerHeight - 8) y = rect.bottom + BUTTON_GAP_Y;
+    } else {
+      // 從前往後選：放在最後一個字的右下方；下面放不下（選到畫面最底下一行）就放在那一行上面
+      x = end.rtl ? rect.left - w - BUTTON_GAP_X : rect.right + BUTTON_GAP_X;
+      y = rect.bottom + BUTTON_GAP_Y;
+      if (y + h > window.innerHeight - 8 && rect.top - h - BUTTON_GAP_Y >= 8) y = rect.top - h - BUTTON_GAP_Y;
+    }
     x = Math.max(8, Math.min(x, window.innerWidth - w - 8));
     y = Math.max(8, Math.min(y, window.innerHeight - h - 8));
     btn.style.left = `${x}px`;
@@ -1218,10 +1292,21 @@
     currentContext = context;
 
     buttonPointer = { x: e.clientX, y: e.clientY };
+    buttonBackward = isBackward(sel);
     showButton();
     placeButton();
     hidePopover();
   });
+
+  // 選取被取消（點空白處、點選取的文字、點別的地方）或換成別的文字時，翻譯按鈕跟著消失
+  document.addEventListener("selectionchange", () => {
+    if (btn.style.display !== "inline-flex") return;
+    const text = window.getSelection()?.toString().trim() || "";
+    if (!text || text !== currentSelection) hideButton();
+  });
+
+  // 按下翻譯按鈕時不要讓網頁的選取被取消（否則按鈕會在點下去的瞬間消失）
+  btn.addEventListener("mousedown", (e) => e.preventDefault());
 
   document.addEventListener("mousedown", (e) => {
     if (isTranslating) return;

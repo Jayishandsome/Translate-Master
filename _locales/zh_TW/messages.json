@@ -608,10 +608,7 @@
     "message": "停"
   },
   "welcomeLead": {
-    "message": "謝謝你安裝隨選翻譯。三個用法，一分鐘就會。"
-  },
-  "welcomeCheckTitle": {
-    "message": "你的 Chrome 準備好了嗎"
+    "message": "讀外文網頁時，不用切換分頁，也不用複製貼上。"
   },
   "checking": {
     "message": "檢查中…"
@@ -646,29 +643,8 @@
   "translatorPairMissing": {
     "message": "這台電腦的 Chrome 暫時不支援目前的譯文語言，可以在設定換一個語言，或改用 AI 模型。"
   },
-  "welcomeHowTitle": {
-    "message": "怎麼用"
-  },
-  "stepSelectTitle": {
-    "message": "選取文字，按旁邊的「文 翻譯」"
-  },
-  "stepSelectDesc": {
-    "message": "譯文會出現在旁邊的浮窗。用 AI 模型時，只選一個單字會依照句子說明它在這裡的意思。"
-  },
-  "stepPageTitle": {
-    "message": "在網頁上按右鍵，選「全頁翻譯」"
-  },
-  "stepPageDesc": {
-    "message": "只翻你看得到的段落，捲到哪裡翻到哪裡。右下角可以切換「對照」或「還原」。"
-  },
-  "stepSettingsTitle": {
-    "message": "點工具列的「文」圖示調整設定"
-  },
-  "stepSettingsDesc": {
-    "message": "可以換譯文語言，或接上你自己的 AI 模型。建議先在拼圖圖示裡把它釘選到工具列。"
-  },
   "tryHint": {
-    "message": "在這裡試試看：選取下面的句子、雙擊 bank 這個字，或按右鍵選「全頁翻譯」"
+    "message": "用滑鼠選取下面這句話，再按旁邊出現的「文 翻譯」。"
   },
   "privacyPolicy": {
     "message": "隱私權政策"
@@ -704,5 +680,67 @@
   },
   "pageBudgetContinue": {
     "message": "繼續翻譯"
+  },
+  "welcomeTitle": {
+    "message": "選取文字，就地翻譯"
+  },
+  "tryTitle": {
+    "message": "先試一次"
+  },
+  "tryWordHint": {
+    "message": "也可以雙擊 bank 這個字，看它在這句話裡的意思。"
+  },
+  "howTitle": {
+    "message": "三個用法"
+  },
+  "howSelectTitle": {
+    "message": "選字翻譯"
+  },
+  "howSelectDesc": {
+    "message": "選取文字，按「文 翻譯」。譯文出現在旁邊的小卡片，可以拖曳、複製。"
+  },
+  "howPageTitle": {
+    "message": "整頁翻譯"
+  },
+  "howPageDesc": {
+    "message": "在網頁空白處按右鍵，選「全頁翻譯」。右下角可以切換「對照」或「還原」。"
+  },
+  "howSettingsTitle": {
+    "message": "調整設定"
+  },
+  "howSettingsDesc": {
+    "message": "點工具列的「文」圖示，可以換譯文語言或翻譯方式。先在拼圖圖示裡把它釘選，比較好找。"
+  },
+  "mockBack": {
+    "message": "上一頁"
+  },
+  "mockReload": {
+    "message": "重新載入"
+  },
+  "engineTitle": {
+    "message": "選一種翻譯方式"
+  },
+  "engineDefaultTag": {
+    "message": "預設"
+  },
+  "engineBuiltinCardDesc": {
+    "message": "免費、不用設定，文字只在這台電腦上處理。"
+  },
+  "engineFreeCardDesc": {
+    "message": "沒有金鑰也能用 AI：每天 $P1$ 次，查單字會說明它在句子裡的意思。文字會送到雲端翻譯。",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "engineKeyCardTitle": {
+    "message": "自己的 AI 金鑰"
+  },
+  "engineKeyCardDesc": {
+    "message": "沒有次數限制，整頁也能用 AI 翻。在設定裡選服務商、貼上金鑰。"
+  },
+  "engineNote": {
+    "message": "隨時可以在設定裡換。"
   }
 }

@@ -608,10 +608,7 @@
     "message": "Off"
   },
   "welcomeLead": {
-    "message": "Thanks for installing Context Translator. Three things to know, one minute to learn."
-  },
-  "welcomeCheckTitle": {
-    "message": "Is your Chrome ready?"
+    "message": "Read foreign-language pages without switching tabs or copying and pasting."
   },
   "checking": {
     "message": "Checking…"
@@ -646,29 +643,8 @@
   "translatorPairMissing": {
     "message": "Chrome on this computer doesn't support your target language yet. Pick another one, or use an AI model."
   },
-  "welcomeHowTitle": {
-    "message": "How to use it"
-  },
-  "stepSelectTitle": {
-    "message": "Select text and click “文 Translate”"
-  },
-  "stepSelectDesc": {
-    "message": "The translation appears in a small card. With an AI model, select a single word to see what it means in that sentence."
-  },
-  "stepPageTitle": {
-    "message": "Right-click a page and choose “Translate full page”"
-  },
-  "stepPageDesc": {
-    "message": "Only the paragraphs you can see are translated, more as you scroll. Use the bar at the bottom right to switch to side by side or restore the page."
-  },
-  "stepSettingsTitle": {
-    "message": "Click the “文” toolbar icon for settings"
-  },
-  "stepSettingsDesc": {
-    "message": "Change the target language or connect your own AI model. Tip: pin it to the toolbar from the puzzle-piece menu."
-  },
   "tryHint": {
-    "message": "Try it here: select a sentence below, double-click the word “bank”, or right-click and choose “Translate full page”"
+    "message": "Select the sentence below, then click the “文 Translate” button that appears next to it."
   },
   "privacyPolicy": {
     "message": "Privacy policy"
@@ -704,5 +680,67 @@
   },
   "pageBudgetContinue": {
     "message": "Continue"
+  },
+  "welcomeTitle": {
+    "message": "Select text, translate it in place"
+  },
+  "tryTitle": {
+    "message": "Try it now"
+  },
+  "tryWordHint": {
+    "message": "Or double-click “bank” to see what it means in this sentence."
+  },
+  "howTitle": {
+    "message": "Three ways to use it"
+  },
+  "howSelectTitle": {
+    "message": "Translate a selection"
+  },
+  "howSelectDesc": {
+    "message": "Select text and click “文 Translate”. The translation appears in a small card you can drag or copy."
+  },
+  "howPageTitle": {
+    "message": "Translate the whole page"
+  },
+  "howPageDesc": {
+    "message": "Right-click an empty part of the page and choose “Translate full page”. The bar at the bottom right switches to side by side or restores the page."
+  },
+  "howSettingsTitle": {
+    "message": "Change settings"
+  },
+  "howSettingsDesc": {
+    "message": "Click the 文 icon in the toolbar to change the language or the translation method. Pin it from the puzzle-piece menu so it's easy to find."
+  },
+  "mockBack": {
+    "message": "Back"
+  },
+  "mockReload": {
+    "message": "Reload"
+  },
+  "engineTitle": {
+    "message": "Pick a translation method"
+  },
+  "engineDefaultTag": {
+    "message": "Default"
+  },
+  "engineBuiltinCardDesc": {
+    "message": "Free, no setup, and the text stays on this computer."
+  },
+  "engineFreeCardDesc": {
+    "message": "AI without a key: $P1$ a day, and looking up a word explains what it means in the sentence. Text is sent to the cloud for translation.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "engineKeyCardTitle": {
+    "message": "Your own AI key"
+  },
+  "engineKeyCardDesc": {
+    "message": "No daily limit, and whole pages can use AI too. Pick a provider and paste your key in the settings."
+  },
+  "engineNote": {
+    "message": "You can switch any time in the settings."
   }
 }

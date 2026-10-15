@@ -8,86 +8,174 @@
 <style>
   :root {
     color-scheme: light dark;
-    --paper: #f7f3ea; --paper-2: #efe8d9; --sheet: #fbf8f1; --ink: #1b1a17; --ink-2: #4f4a41; --ink-3: #857e70;
+    --paper: #f7f3ea; --sheet: #fbf8f1; --ink: #1b1a17; --ink-2: #4f4a41; --ink-3: #857e70;
     --rule: rgba(27, 26, 23, .16); --vermilion: #c8372d; --vermilion-text: #a92c23; --seal-text: #fbf7ef;
-    --ok: #3d6b4a; --focus: rgba(200, 55, 45, .38);
+    --marker: #f3dca8; --ok: #3d6b4a; --focus: rgba(200, 55, 45, .38);
     --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Songti TC", "Noto Serif TC", "Source Han Serif TC", "PMingLiU", Georgia, serif;
     --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
   }
   @media (prefers-color-scheme: dark) {
-    :root { --paper: #1a1815; --paper-2: #24211c; --sheet: #211f1b; --ink: #ede6d8; --ink-2: #c4bba9; --ink-3: #8f8778;
-      --rule: rgba(237, 230, 216, .16); --vermilion: #e0604c; --vermilion-text: #ee8574; --seal-text: #1a1815; --ok: #8fc29c; }
+    :root { --paper: #1a1815; --sheet: #211f1b; --ink: #ede6d8; --ink-2: #c4bba9; --ink-3: #8f8778;
+      --rule: rgba(237, 230, 216, .16); --vermilion: #e0604c; --vermilion-text: #ee8574; --seal-text: #1a1815;
+      --marker: #5b4a23; --ok: #8fc29c; }
   }
   * { box-sizing: border-box; }
   html { background: var(--paper); }
-  body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.75 var(--sans); -webkit-font-smoothing: antialiased; }
-  .page { max-width: 760px; margin: 0 auto; padding: 48px 20px 72px; }
-  header { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; padding-bottom: 14px; border-bottom: 2px solid var(--ink); }
-  .kicker { display: block; font: 600 11px/1 var(--sans); letter-spacing: .22em; color: var(--ink-3); text-transform: uppercase; }
-  h1 { margin: 8px 0 0; font: 700 34px/1.2 var(--serif); letter-spacing: .04em; }
-  .seal { flex: none; width: 52px; height: 52px; display: grid; place-items: center; border-radius: 7px; transform: rotate(-4deg);
-    background: var(--vermilion); color: var(--seal-text); font: 900 31px/1 var(--serif); box-shadow: inset 0 0 0 2px var(--paper), inset 0 0 0 3.5px var(--seal-text); }
-  .lead { margin: 22px 0 0; font: 400 19px/1.7 var(--serif); color: var(--ink-2); }
-
-  h2 { margin: 44px 0 12px; font: 700 21px/1.4 var(--serif); display: flex; align-items: baseline; gap: 10px; }
-  h2 .no { color: var(--vermilion-text); font-size: 17px; }
-
-  .checks { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--rule); }
-  .check { display: grid; grid-template-columns: 22px 1fr; gap: 4px 12px; align-items: start; padding: 14px 2px; border-bottom: 1px solid var(--rule); }
-  .check .mark { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font: 700 13px/1 var(--sans);
-    border: 1.5px solid var(--ink-3); color: var(--ink-3); margin-top: 2px; }
-  .check[data-state="ok"] .mark { border-color: var(--ok); color: var(--ok); }
-  .check[data-state="warn"] .mark, .check[data-state="off"] .mark { border-color: var(--vermilion); color: var(--vermilion-text); }
-  .check b { display: block; font-weight: 700; }
-  .check .desc { display: block; color: var(--ink-2); font-size: 14.5px; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.7 var(--sans); -webkit-font-smoothing: antialiased; }
+  .page { max-width: 720px; margin: 0 auto; padding: 32px 20px 64px; }
+  a { color: inherit; }
   a:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 
-  .steps { margin: 0; padding: 0; list-style: none; counter-reset: step; }
-  .steps li { position: relative; padding: 0 0 18px 44px; }
-  .steps li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 2px; width: 28px; height: 28px;
-    border-radius: 50%; border: 1.5px solid var(--ink); display: grid; place-items: center; font: 700 14px/1 var(--serif); }
-  .steps b { display: block; font: 700 17px/1.5 var(--serif); }
-  .steps span { color: var(--ink-2); }
-  kbd { font: 600 13px/1 var(--sans); padding: 2px 6px; border: 1px solid var(--rule); border-bottom-width: 2px; border-radius: 3px; background: var(--sheet); }
+  /* 名稱：朱紅印章 + 擴充功能名稱 */
+  .brand { display: flex; align-items: center; gap: 10px; padding-bottom: 12px; border-bottom: 2px solid var(--ink);
+    font: 700 15px/1 var(--serif); letter-spacing: .06em; }
+  .seal { flex: none; display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 4px; transform: rotate(-4deg);
+    background: var(--vermilion); color: var(--seal-text); font: 900 18px/1 var(--serif);
+    box-shadow: inset 0 0 0 1.5px var(--paper), inset 0 0 0 2.5px var(--seal-text); }
 
-  .try { margin-top: 8px; padding: 22px 24px; background: var(--sheet); border: 1px solid var(--rule); border-left: 3px solid var(--vermilion); border-radius: 0 4px 4px 0; }
-  .try p { margin: 0; font: 400 19px/1.7 Georgia, "Iowan Old Style", serif; }
-  .try p + p { margin-top: 14px; }
-  .try .hint { display: block; margin-bottom: 10px; font: 600 12px/1 var(--sans); letter-spacing: .14em; color: var(--ink-3); }
+  h1 { margin: 36px 0 0; font: 700 clamp(28px, 5vw, 40px)/1.2 var(--serif); letter-spacing: .02em; }
+  .lead { margin: 10px 0 0; max-width: 34em; color: var(--ink-2); font: 400 18px/1.7 var(--serif); }
 
-  footer { margin-top: 56px; padding-top: 16px; border-top: 2px solid var(--ink); color: var(--ink-3); font-size: 13.5px; display: flex; flex-wrap: wrap; gap: 6px 18px; }
+  /* 這台電腦能不能用本機翻譯：一行狀態 */
+  .status { display: flex; align-items: baseline; gap: 8px; margin: 18px 0 0; color: var(--ink-2); font-size: 14px; }
+  .status .mark { flex: none; display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%;
+    border: 1.5px solid var(--ink-3); color: var(--ink-3); font: 700 11px/1 var(--sans); transform: translateY(3px); }
+  .status[data-state="ok"] .mark { border-color: var(--ok); color: var(--ok); }
+  .status[data-state="warn"] .mark, .status[data-state="off"] .mark { border-color: var(--vermilion); color: var(--vermilion-text); }
+  .status b { color: var(--ink); font-weight: 600; }
+
+  h2 { margin: 48px 0 14px; font: 700 21px/1.4 var(--serif); }
+
+  /* 試用區：整頁最重要的地方 */
+  .try { padding: 22px 24px 24px; background: var(--sheet); border: 1px solid var(--ink); border-radius: 3px;
+    box-shadow: 4px 4px 0 var(--rule); }
+  .try .hint { color: var(--ink-2); font-size: 14px; }
+  .try p { margin: 8px 0 0; font: 400 clamp(19px, 2.6vw, 22px)/1.65 Georgia, "Iowan Old Style", serif; }
+  .try .hint + p { margin-top: 8px; }
+  .try p + .hint { margin-top: 18px; padding-top: 14px; border-top: 1px dotted var(--rule); }
+  .try .word { text-decoration: underline dotted var(--vermilion); text-underline-offset: 4px; }
+
+  /* 三個用法：左邊是示意圖，右邊一句說明 */
+  .uses { margin: 0; padding: 0; list-style: none; }
+  .use { display: grid; grid-template-columns: 200px 1fr; gap: 20px; align-items: center; padding: 16px 0; border-top: 1px solid var(--rule); }
+  .use:last-child { border-bottom: 1px solid var(--rule); }
+  .use h3 { margin: 0; font: 700 17px/1.4 var(--serif); }
+  .use p { margin: 4px 0 0; color: var(--ink-2); font-size: 15px; }
+
+  .fig { position: relative; height: 104px; padding: 12px 14px; background: var(--sheet); border: 1px solid var(--ink); border-radius: 3px;
+    color: var(--ink); font: 13px/1.5 Georgia, "Iowan Old Style", serif; overflow: hidden; }
+  .fig mark { background: var(--marker); color: inherit; padding: 0 1px; }
+  .chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px 3px 4px; border: 1px solid var(--ink); border-radius: 3px;
+    background: var(--sheet); font: 600 11px/1 var(--sans); box-shadow: 2px 2px 0 var(--rule); }
+  .chip .seal { width: 16px; height: 16px; font-size: 10px; border-radius: 2px; box-shadow: none; }
+  /* 按鈕掛在選取文字的結尾右下方，跟真的一樣 */
+  .fig-select .fig-text { display: block; max-width: 150px; font-size: 14px; }
+  .fig-select .anchor { position: relative; display: inline-block; width: 0; height: 1em; }
+  .fig-select .chip { position: absolute; left: 2px; top: 1.55em; white-space: nowrap; }
+  .fig-menu { padding: 8px; }
+  .menu { width: 150px; margin-left: auto; border: 1px solid var(--rule); border-radius: 4px; background: var(--paper); padding: 4px 0; font: 12px/1 var(--sans); }
+  .menu > span { display: flex; align-items: center; gap: 6px; padding: 5px 10px; color: var(--ink-2); }
+  .menu .on { color: var(--ink); background: var(--marker); font-weight: 600; }
+  .menu .seal { width: 16px; height: 16px; font-size: 10px; border-radius: 2px; box-shadow: none; }
+  .fig-bar { padding: 0; }
+  .toolbar { display: flex; align-items: center; gap: 10px; padding: 12px 12px 10px; border-bottom: 1px solid var(--rule); }
+  .toolbar .url { flex: 1; height: 18px; border-radius: 9px; background: var(--paper); border: 1px solid var(--rule); }
+  .toolbar svg { width: 16px; height: 16px; fill: none; stroke: var(--ink-3); stroke-width: 1.6; }
+  .toolbar .seal { width: 20px; height: 20px; font-size: 12px; border-radius: 3px; box-shadow: 0 0 0 3px var(--paper), 0 0 0 4.5px var(--vermilion); }
+  .fig-bar .lines { padding: 10px 14px; }
+  .fig-bar .lines i { display: block; height: 6px; margin-top: 8px; border-radius: 3px; background: var(--rule); }
+  .fig-bar .lines i:nth-child(2) { width: 80%; }
+  .fig-bar .lines i:nth-child(3) { width: 60%; }
+
+  /* 翻譯方式：像字典裡的對照表，用直線分欄 */
+  .engines { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 2px solid var(--ink); border-bottom: 1px solid var(--rule); }
+  .engines.two { grid-template-columns: repeat(2, 1fr); }
+  .engine { padding: 14px 16px 16px; }
+  .engine + .engine { border-left: 1px solid var(--rule); }
+  .engine[hidden] { display: none; }
+  .engine h3 { margin: 0; font: 700 17px/1.4 var(--serif); }
+  .engine .tag { margin-left: 6px; padding: 1px 6px; border: 1px solid var(--vermilion); border-radius: 3px; color: var(--vermilion-text);
+    font: 600 11px/1.4 var(--sans); vertical-align: 2px; }
+  .engine p { margin: 6px 0 0; color: var(--ink-2); font-size: 14.5px; line-height: 1.65; }
+  .engines-note { margin: 10px 0 0; color: var(--ink-3); font-size: 13.5px; }
+
+  footer { margin-top: 56px; padding-top: 14px; border-top: 2px solid var(--ink); color: var(--ink-3); font-size: 13.5px; display: flex; flex-wrap: wrap; gap: 6px 18px; }
   footer a { color: var(--ink-2); }
-  @media (max-width: 520px) { h1 { font-size: 28px; } }
+
+  @media (max-width: 600px) {
+    .use { grid-template-columns: 1fr; gap: 10px; }
+    .fig { max-width: 260px; }
+    .engines, .engines.two { grid-template-columns: 1fr; }
+    .engine + .engine { border-left: 0; border-top: 1px solid var(--rule); }
+  }
 </style>
 </head>
 <body>
 <div class="page">
-  <header>
-    <div translate="no"><span class="kicker" data-i18n="kicker">Context Translator</span><h1 data-i18n="appName">隨選翻譯</h1></div>
-    <div class="seal" aria-hidden="true">文</div>
-  </header>
-  <p class="lead" data-i18n="welcomeLead">謝謝你安裝隨選翻譯。三個用法，一分鐘就會。</p>
+  <div class="brand"><span class="seal" aria-hidden="true">文</span><span data-i18n="appName" translate="no">隨選翻譯</span></div>
 
-  <h2><span class="no" data-i18n="numeralOne">壹</span><span data-i18n="welcomeCheckTitle">你的 Chrome 準備好了嗎</span></h2>
-  <ul class="checks">
-    <li class="check" id="check-translator" data-state="wait">
-      <span class="mark" aria-hidden="true">…</span>
-      <span><b data-i18n="checkTranslatorTitle">本機翻譯</b><span class="desc" data-i18n="checking">檢查中…</span></span>
+  <h1 data-i18n="welcomeTitle">選取文字，就地翻譯</h1>
+  <p class="lead" data-i18n="welcomeLead">讀外文網頁時，不用切換分頁，也不用複製貼上。</p>
+  <p class="status" id="check-translator" data-state="wait">
+    <span class="mark" aria-hidden="true">…</span>
+    <span><b data-i18n="checkTranslatorTitle">本機翻譯</b>：<span class="desc" data-i18n="checking">檢查中…</span></span>
+  </p>
+
+  <h2 data-i18n="tryTitle">先試一次</h2>
+  <div class="try" id="try">
+    <div class="hint" data-i18n="tryHint">用滑鼠選取下面這句話，再按旁邊出現的「文 翻譯」。</div>
+    <p lang="en">We rarely notice how much of the internet was written for someone else — in a language we only half understand.</p>
+    <div class="hint" data-i18n="tryWordHint">也可以雙擊 bank 這個字，看它在這句話裡的意思。</div>
+    <p lang="en">She waited on the <span class="word">bank</span> until the river calmed.</p>
+  </div>
+
+  <h2 data-i18n="howTitle">三個用法</h2>
+  <ul class="uses">
+    <li class="use">
+      <div class="fig fig-select" aria-hidden="true" translate="no">
+        <span class="fig-text" lang="en">Meet me down by the river <mark>bank</mark><span class="anchor"><span class="chip"><span class="seal">文</span><span data-i18n="btnTranslate">翻譯</span></span></span> at noon.</span>
+      </div>
+      <div><h3 data-i18n="howSelectTitle">選字翻譯</h3><p data-i18n="howSelectDesc">選取文字，按「文 翻譯」。譯文出現在旁邊的小卡片，可以拖曳、複製。</p></div>
+    </li>
+    <li class="use">
+      <div class="fig fig-menu" aria-hidden="true" translate="no">
+        <div class="menu">
+          <span data-i18n="mockBack">上一頁</span>
+          <span data-i18n="mockReload">重新載入</span>
+          <span class="on"><span class="seal">文</span><span data-i18n="menuTranslatePage">全頁翻譯</span></span>
+        </div>
+      </div>
+      <div><h3 data-i18n="howPageTitle">整頁翻譯</h3><p data-i18n="howPageDesc">在網頁空白處按右鍵，選「全頁翻譯」。右下角可以切換「對照」或「還原」。</p></div>
+    </li>
+    <li class="use">
+      <div class="fig fig-bar" aria-hidden="true" translate="no">
+        <div class="toolbar">
+          <span class="url"></span>
+          <svg viewBox="0 0 16 16"><path d="M6 2.5h2.5a1 1 0 0 1 1 1V5h1.5a1.5 1.5 0 0 1 0 3H9.5v2.5h-2a1.5 1.5 0 0 0-3 0H3.5a1 1 0 0 1-1-1v-2a1.5 1.5 0 0 0 0-3v-1a1 1 0 0 1 1-1H5"/></svg>
+          <span class="seal">文</span>
+        </div>
+        <div class="lines"><i></i><i></i><i></i></div>
+      </div>
+      <div><h3 data-i18n="howSettingsTitle">調整設定</h3><p data-i18n="howSettingsDesc">點工具列的「文」圖示，可以換譯文語言或翻譯方式。先在拼圖圖示裡把它釘選，比較好找。</p></div>
     </li>
   </ul>
 
-  <h2><span class="no" data-i18n="numeralTwo">貳</span><span data-i18n="welcomeHowTitle">怎麼用</span></h2>
-  <ol class="steps">
-    <li><b data-i18n="stepSelectTitle">選取文字，按旁邊的「文 翻譯」</b><span data-i18n="stepSelectDesc">譯文會出現在旁邊的浮窗。用 AI 模型時，只選一個單字會依照句子說明它在這裡的意思。</span></li>
-    <li><b data-i18n="stepPageTitle">在網頁上按右鍵，選「全頁翻譯」</b><span data-i18n="stepPageDesc">只翻你看得到的段落，捲到哪裡翻到哪裡。右下角可以切換「對照」或「還原」。</span></li>
-    <li><b data-i18n="stepSettingsTitle">點工具列的「文」圖示調整設定</b><span data-i18n="stepSettingsDesc">可以換譯文語言，或接上你自己的 AI 模型。建議先在拼圖圖示裡把它釘選到工具列。</span></li>
-  </ol>
-
-  <div class="try" id="try">
-    <span class="hint" data-i18n="tryHint">在這裡試試看：選取下面的句子、雙擊 bank 這個字，或按右鍵選「全頁翻譯」</span>
-    <p lang="en">We rarely notice how much of the internet was written for someone else — in a language we only half understand.</p>
-    <p lang="en">She waited on the bank until the river calmed.</p>
+  <h2 data-i18n="engineTitle">選一種翻譯方式</h2>
+  <div class="engines" id="engines">
+    <div class="engine" id="engine-builtin">
+      <h3><span data-i18n="engineBuiltin">本機翻譯</span><span class="tag" data-i18n="engineDefaultTag">預設</span></h3>
+      <p data-i18n="engineBuiltinCardDesc">免費、不用設定，文字只在這台電腦上處理。</p>
+    </div>
+    <div class="engine" id="engine-free" hidden>
+      <h3 data-i18n="engineFree">免費 AI</h3>
+      <p id="engine-free-desc">沒有金鑰也能用 AI：每天 10 次，查單字會說明它在句子裡的意思。文字會送到雲端翻譯。</p>
+    </div>
+    <div class="engine" id="engine-key">
+      <h3 data-i18n="engineKeyCardTitle">自己的 AI 金鑰</h3>
+      <p data-i18n="engineKeyCardDesc">沒有次數限制，整頁也能用 AI 翻。在設定裡選服務商、貼上金鑰。</p>
+    </div>
   </div>
+  <p class="engines-note" data-i18n="engineNote">隨時可以在設定裡換。</p>
 
   <footer>
     <a href="https://jayishandsome.github.io/Translate-Master/privacy.html" target="_blank" rel="noopener" data-i18n="privacyPolicy">隱私權政策</a>

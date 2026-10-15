@@ -717,14 +717,9 @@
   "en": "Off"
  },
  "welcomeLead": {
-  "zh_TW": "謝謝你安裝隨選翻譯。三個用法，一分鐘就會。",
-  "zh_CN": "谢谢你安装随选翻译。三个用法，一分钟就会。",
-  "en": "Thanks for installing Context Translator. Three things to know, one minute to learn."
- },
- "welcomeCheckTitle": {
-  "zh_TW": "你的 Chrome 準備好了嗎",
-  "zh_CN": "你的 Chrome 准备好了吗",
-  "en": "Is your Chrome ready?"
+  "zh_TW": "讀外文網頁時，不用切換分頁，也不用複製貼上。",
+  "zh_CN": "读外文网页时，不用切换标签页，也不用复制粘贴。",
+  "en": "Read foreign-language pages without switching tabs or copying and pasting."
  },
  "checking": {
   "zh_TW": "檢查中…",
@@ -756,45 +751,10 @@
   "zh_CN": "这台电脑的 Chrome 暂时不支持当前的译文语言，可以在设置中换一个语言，或改用 AI 模型。",
   "en": "Chrome on this computer doesn't support your target language yet. Pick another one, or use an AI model."
  },
- "welcomeHowTitle": {
-  "zh_TW": "怎麼用",
-  "zh_CN": "怎么用",
-  "en": "How to use it"
- },
- "stepSelectTitle": {
-  "zh_TW": "選取文字，按旁邊的「文 翻譯」",
-  "zh_CN": "选中文字，点旁边的「文 翻译」",
-  "en": "Select text and click “文 Translate”"
- },
- "stepSelectDesc": {
-  "zh_TW": "譯文會出現在旁邊的浮窗。用 AI 模型時，只選一個單字會依照句子說明它在這裡的意思。",
-  "zh_CN": "译文会出现在旁边的浮窗。使用 AI 模型时，只选一个单词会根据句子说明它在这里的意思。",
-  "en": "The translation appears in a small card. With an AI model, select a single word to see what it means in that sentence."
- },
- "stepPageTitle": {
-  "zh_TW": "在網頁上按右鍵，選「全頁翻譯」",
-  "zh_CN": "在网页上点右键，选「全页翻译」",
-  "en": "Right-click a page and choose “Translate full page”"
- },
- "stepPageDesc": {
-  "zh_TW": "只翻你看得到的段落，捲到哪裡翻到哪裡。右下角可以切換「對照」或「還原」。",
-  "zh_CN": "只翻你看得到的段落，滚到哪里翻到哪里。右下角可以切换「对照」或「还原」。",
-  "en": "Only the paragraphs you can see are translated, more as you scroll. Use the bar at the bottom right to switch to side by side or restore the page."
- },
- "stepSettingsTitle": {
-  "zh_TW": "點工具列的「文」圖示調整設定",
-  "zh_CN": "点工具栏的「文」图标调整设置",
-  "en": "Click the “文” toolbar icon for settings"
- },
- "stepSettingsDesc": {
-  "zh_TW": "可以換譯文語言，或接上你自己的 AI 模型。建議先在拼圖圖示裡把它釘選到工具列。",
-  "zh_CN": "可以换译文语言，或接上你自己的 AI 模型。建议先在拼图图标里把它固定到工具栏。",
-  "en": "Change the target language or connect your own AI model. Tip: pin it to the toolbar from the puzzle-piece menu."
- },
  "tryHint": {
-  "zh_TW": "在這裡試試看：選取下面的句子、雙擊 bank 這個字，或按右鍵選「全頁翻譯」",
-  "zh_CN": "在这里试试看：选中下面的句子、双击 bank 这个词，或右键选「全页翻译」",
-  "en": "Try it here: select a sentence below, double-click the word “bank”, or right-click and choose “Translate full page”"
+  "zh_TW": "用滑鼠選取下面這句話，再按旁邊出現的「文 翻譯」。",
+  "zh_CN": "用鼠标选中下面这句话，再点旁边出现的「文 翻译」。",
+  "en": "Select the sentence below, then click the “文 Translate” button that appears next to it."
  },
  "privacyPolicy": {
   "zh_TW": "隱私權政策",
@@ -836,5 +796,100 @@
   "zh_TW": "繼續翻譯",
   "zh_CN": "继续翻译",
   "en": "Continue"
+ },
+ "welcomeTitle": {
+  "zh_TW": "選取文字，就地翻譯",
+  "zh_CN": "选中文字，就地翻译",
+  "en": "Select text, translate it in place"
+ },
+ "tryTitle": {
+  "zh_TW": "先試一次",
+  "zh_CN": "先试一次",
+  "en": "Try it now"
+ },
+ "tryWordHint": {
+  "zh_TW": "也可以雙擊 bank 這個字，看它在這句話裡的意思。",
+  "zh_CN": "也可以双击 bank 这个词，看它在这句话里的意思。",
+  "en": "Or double-click “bank” to see what it means in this sentence."
+ },
+ "howTitle": {
+  "zh_TW": "三個用法",
+  "zh_CN": "三个用法",
+  "en": "Three ways to use it"
+ },
+ "howSelectTitle": {
+  "zh_TW": "選字翻譯",
+  "zh_CN": "选词翻译",
+  "en": "Translate a selection"
+ },
+ "howSelectDesc": {
+  "zh_TW": "選取文字，按「文 翻譯」。譯文出現在旁邊的小卡片，可以拖曳、複製。",
+  "zh_CN": "选中文字，点「文 翻译」。译文出现在旁边的小卡片，可以拖动、复制。",
+  "en": "Select text and click “文 Translate”. The translation appears in a small card you can drag or copy."
+ },
+ "howPageTitle": {
+  "zh_TW": "整頁翻譯",
+  "zh_CN": "整页翻译",
+  "en": "Translate the whole page"
+ },
+ "howPageDesc": {
+  "zh_TW": "在網頁空白處按右鍵，選「全頁翻譯」。右下角可以切換「對照」或「還原」。",
+  "zh_CN": "在网页空白处点右键，选「全页翻译」。右下角可以切换「对照」或「还原」。",
+  "en": "Right-click an empty part of the page and choose “Translate full page”. The bar at the bottom right switches to side by side or restores the page."
+ },
+ "howSettingsTitle": {
+  "zh_TW": "調整設定",
+  "zh_CN": "调整设置",
+  "en": "Change settings"
+ },
+ "howSettingsDesc": {
+  "zh_TW": "點工具列的「文」圖示，可以換譯文語言或翻譯方式。先在拼圖圖示裡把它釘選，比較好找。",
+  "zh_CN": "点工具栏的「文」图标，可以换译文语言或翻译方式。先在拼图图标里把它固定，比较好找。",
+  "en": "Click the 文 icon in the toolbar to change the language or the translation method. Pin it from the puzzle-piece menu so it's easy to find."
+ },
+ "mockBack": {
+  "zh_TW": "上一頁",
+  "zh_CN": "返回",
+  "en": "Back"
+ },
+ "mockReload": {
+  "zh_TW": "重新載入",
+  "zh_CN": "重新加载",
+  "en": "Reload"
+ },
+ "engineTitle": {
+  "zh_TW": "選一種翻譯方式",
+  "zh_CN": "选一种翻译方式",
+  "en": "Pick a translation method"
+ },
+ "engineDefaultTag": {
+  "zh_TW": "預設",
+  "zh_CN": "默认",
+  "en": "Default"
+ },
+ "engineBuiltinCardDesc": {
+  "zh_TW": "免費、不用設定，文字只在這台電腦上處理。",
+  "zh_CN": "免费、无需设置，文字只在这台电脑上处理。",
+  "en": "Free, no setup, and the text stays on this computer."
+ },
+ "engineFreeCardDesc": {
+  "zh_TW": "沒有金鑰也能用 AI：每天 $1 次，查單字會說明它在句子裡的意思。文字會送到雲端翻譯。",
+  "zh_CN": "没有密钥也能用 AI：每天 $1 次，查单词会说明它在句子里的意思。文字会发送到云端翻译。",
+  "en": "AI without a key: $1 a day, and looking up a word explains what it means in the sentence. Text is sent to the cloud for translation."
+ },
+ "engineKeyCardTitle": {
+  "zh_TW": "自己的 AI 金鑰",
+  "zh_CN": "自己的 AI 密钥",
+  "en": "Your own AI key"
+ },
+ "engineKeyCardDesc": {
+  "zh_TW": "沒有次數限制，整頁也能用 AI 翻。在設定裡選服務商、貼上金鑰。",
+  "zh_CN": "没有次数限制，整页也能用 AI 翻。在设置中选服务商、粘贴密钥。",
+  "en": "No daily limit, and whole pages can use AI too. Pick a provider and paste your key in the settings."
+ },
+ "engineNote": {
+  "zh_TW": "隨時可以在設定裡換。",
+  "zh_CN": "随时可以在设置中更换。",
+  "en": "You can switch any time in the settings."
  }
 }
