@@ -12,6 +12,7 @@ test("檢查本機翻譯", async ({ context }) => {
 test("在說明頁直接試用選字翻譯", async ({ context }) => {
   const { page } = await openFixture(context, null, "ext/welcome.html");
   await selectText(page, "#try p:first-of-type", "someone else");
+  await page.waitForTimeout(400);
   const b = await page.locator("#ctx-trans-floating-btn").boundingBox();
   await page.mouse.click(b.x + b.width / 2, b.y + b.height / 2);
   await expect(page.locator("#ctx-body .ctx-result")).toContainText("SOMEONE ELSE");

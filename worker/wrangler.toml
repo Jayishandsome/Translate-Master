@@ -17,6 +17,15 @@ class_name = "QuotaCounter"
 tag = "v1"
 new_sqlite_classes = ["QuotaCounter"]
 
+# 每個 IP 每分鐘最多 20 次（Cloudflare Rate Limiting；period 只能是 10 或 60 秒）
+[[ratelimits]]
+name = "RATE_LIMITER"
+namespace_id = "1001"
+
+  [ratelimits.simple]
+  limit = 20
+  period = 60
+
 [vars]
 # 主要模型與備用模型（Workers AI 的模型 ID）
 MODEL = "@cf/qwen/qwen3-30b-a3b-fp8"
@@ -25,5 +34,7 @@ FALLBACK_MODEL = "@cf/google/gemma-4-26b-a4b-it"
 DAILY_LIMIT = "10"
 # 同一個 IP 每天最多幾次（擋重複安裝；公司、學校共用網路時會多人共用這個上限）
 IP_DAILY_LIMIT = "50"
+# 整個服務每天最多幾次（保護 Workers AI 免費額度；改成付費方案時也是每天的費用上限）
+GLOBAL_DAILY_LIMIT = "1500"
 # 上架後填 Chrome 線上應用程式商店的擴充功能 ID（逗號分隔），就只接受這些擴充功能；留空表示任何擴充功能都可以
 EXTENSION_IDS = ""

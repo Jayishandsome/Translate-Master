@@ -23,8 +23,15 @@
     batchFail: Number(q.get("batchfail") || 0),
     batchError: q.get("batcherr") || "API key not valid. Please pass a valid API key.",
     messages: null,
+    gets: [],               // storage.get 要過哪些鍵（確認內容腳本不讀金鑰）
   });
   window.__stub = S;
+  // 背景程式會把「哪些服務商有金鑰」算好放在 storage.local；替身環境在這裡模擬
+  const syncKeyed = () => {
+    const keys = (S.sync.keyStorage === "local" ? S.local.apiKeys : S.sync.apiKeys) || {};
+    S.local.keyedProviders = Object.keys(keys).filter((k) => String(keys[k] || "").trim());
+  };
+  if (!S.local.keyedProviders) syncKeyed();
 
   // ---- i18n：從 _locales 同步載入，跟 chrome.i18n.getMessage 一樣是同步 API
   const uiLang = q.get("ui") || "zh_TW";
@@ -57,6 +64,7 @@
     get(keys, cb) {
       const src = S[name];
       const list = Array.isArray(keys) ? keys : typeof keys === "string" ? [keys] : keys && typeof keys === "object" ? Object.keys(keys) : Object.keys(src);
+      S.gets.push(keys == null ? ["*"] : list);
       const out = {};
       list.forEach((k) => { if (k in src) out[k] = clone(src[k]); else if (keys && typeof keys === "object" && !Array.isArray(keys) && k in keys) out[k] = keys[k]; });
       if (cb) { cb(out); return; }
@@ -66,6 +74,7 @@
       const changes = {};
       Object.keys(data).forEach((k) => { changes[k] = { oldValue: clone(S[name][k]), newValue: clone(data[k]) }; });
       Object.assign(S[name], clone(data));
+      if ("apiKeys" in data || "keyStorage" in data) syncKeyed();
       S.listeners.forEach((fn) => { try { fn(changes, name); } catch (_) {} });
       if (cb) { cb(); return; }
       return Promise.resolve();
@@ -74,6 +83,7 @@
       const list = Array.isArray(keys) ? keys : [keys];
       const changes = {};
       list.forEach((k) => { if (k in S[name]) { changes[k] = { oldValue: clone(S[name][k]) }; delete S[name][k]; } });
+      if (list.includes("apiKeys")) syncKeyed();
       S.listeners.forEach((fn) => { try { fn(changes, name); } catch (_) {} });
       if (cb) { cb(); return; }
       return Promise.resolve();

@@ -4,9 +4,11 @@
 // 擴充功能把選取的文字、前後文、譯文語言和一組隨機的安裝 ID 送到這裡；
 // 這裡先扣次數，再交給 Cloudflare Workers AI 翻譯，失敗就把次數還回去。
 //
-// - 只記每天的次數：安裝 ID、以及 IP 的雜湊（加上每天隨機產生的鹽值；鹽值換日就跟次數一起刪掉，之後無法還原）。
+// - 只記每天的次數：安裝 ID、IP 的雜湊、全部加起來的總數。IP 雜湊用的隨機鹽值只放在記憶體，
+//   不寫進任何儲存空間（包括 Durable Object 的備份），所以存下來的雜湊無法還原成 IP。
 // - 不記錄、不保存任何要翻譯的文字。
 // - 只接受 Chrome 擴充功能送來的請求（EXTENSION_IDS 有填就只接受那些擴充功能）。
+// - 防濫用：每個安裝、每個 IP（IPv6 以 /56 計）、整個服務每天都有上限，另外每個 IP 每分鐘也有上限。
 //
 // 部署方式見 worker/README.md。
 
@@ -21,9 +23,15 @@ export default {
     if (request.method === "OPTIONS") return new Response(null, { status: cors ? 204 : 403, headers: cors || {} });
     if (!cors) return json({ error: "forbidden" }, 403);
 
-    if (url.pathname === "/translate" && request.method === "POST") return translate(request, env, cors);
-    if (url.pathname === "/quota" && request.method === "GET") return quota(url, env, cors);
-    return json({ error: "not_found" }, 404, cors);
+    if (url.pathname !== "/translate" || request.method !== "POST") return json({ error: "not_found" }, 404, cors);
+
+    // 每個 IP 每分鐘的上限（Cloudflare 的 Rate Limiting），擋短時間大量請求；放在扣次數之前
+    const group = ipGroup(request.headers.get("CF-Connecting-IP"));
+    if (env.RATE_LIMITER) {
+      const { success } = await env.RATE_LIMITER.limit({ key: group }).catch(() => ({ success: true }));
+      if (!success) return json({ error: "rate_limited" }, 429, cors);
+    }
+    return translate(request, env, cors, group);
   },
 };
 
@@ -36,7 +44,7 @@ function corsHeaders(origin, env) {
   if (allowed.length && !allowed.includes(m[1])) return null;
   return {
     "Access-Control-Allow-Origin": origin,
-    "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
     "Access-Control-Max-Age": "86400",
     Vary: "Origin",
@@ -54,6 +62,8 @@ const today = () => new Date().toISOString().slice(0, 10);
 const limits = (env) => ({
   install: Math.max(1, Number(env.DAILY_LIMIT) || 10),
   ip: Math.max(1, Number(env.IP_DAILY_LIMIT) || 50),
+  // 整個服務每天最多幾次：Workers AI 免費額度約可翻 1,200～2,000 次，留一點餘裕；付費方案時也是費用上限
+  global: Math.max(1, Number(env.GLOBAL_DAILY_LIMIT) || 1500),
 });
 
 async function sha256(text) {
@@ -61,7 +71,7 @@ async function sha256(text) {
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-// IPv6 一個家庭或一台主機通常就有一整段 /64 位址，可以一直換；所以 IPv6 用前 64 位元（前 4 組）當作同一個來源
+// IPv6 一個家庭通常分到一整段 /56（256 個 /64），可以一直換位址；所以 IPv6 用前 56 位元當作同一個來源
 export function ipGroup(ip) {
   const value = String(ip || "").trim().toLowerCase();
   if (!value.includes(":")) return value || "unknown";
@@ -74,7 +84,8 @@ export function ipGroup(ip) {
   const groups = compressed
     ? [...left, ...Array(Math.max(0, 8 - left.length - right.length)).fill("0"), ...right]
     : left;
-  return `${groups.slice(0, 4).map((g) => (parseInt(g, 16) || 0).toString(16)).join(":")}::/64`;
+  const hex = groups.slice(0, 4).map((g) => (parseInt(g, 16) || 0).toString(16).padStart(4, "0"));
+  return `${hex[0]}:${hex[1]}:${hex[2]}:${hex[3].slice(0, 2)}00::/56`;
 }
 
 // 次數記在同一個 Durable Object 裡（SQLite），一次只處理一個請求，不會算錯
@@ -84,26 +95,20 @@ async function counter(env, body) {
   return res.json();
 }
 
-// IP 不直接存：交給 Durable Object 用當天的隨機鹽值算雜湊，只存雜湊
-function quotaKeys(request, env, installId) {
-  const { install, ip: ipLimit } = limits(env);
+// 第一個一定是這個安裝的次數（回傳的剩餘次數以它為準）。
+// IP 不直接存：交給 Durable Object 用記憶體裡的鹽值算雜湊，只存雜湊。
+function quotaKeys(env, installId, group) {
+  const { install, ip, global } = limits(env);
   return [
-    { key: `i:${installId}`, limit: install },
-    { ip: ipGroup(request.headers.get("CF-Connecting-IP")), limit: ipLimit },
+    { key: `i:${installId}`, limit: install, kind: "install" },
+    { ip: group, limit: ip, kind: "ip" },
+    { key: "global", limit: global, kind: "global" },
   ];
 }
 
 const validInstallId = (id) => /^[A-Za-z0-9-]{8,64}$/.test(String(id || ""));
 
-async function quota(url, env, cors) {
-  const installId = url.searchParams.get("installId");
-  if (!validInstallId(installId)) return json({ error: "bad_request" }, 400, cors);
-  const { install } = limits(env);
-  const { remaining } = await counter(env, { op: "peek", day: today(), keys: [{ key: `i:${installId}`, limit: install }] });
-  return json({ remaining, limit: install }, 200, cors);
-}
-
-async function translate(request, env, cors) {
+async function translate(request, env, cors, group = ipGroup(request.headers.get("CF-Connecting-IP"))) {
   if (Number(request.headers.get("Content-Length") || 0) > MAX_BODY) return json({ error: "too_long" }, 413, cors);
   const raw = await request.text().catch(() => "");
   if (raw.length > MAX_BODY) return json({ error: "too_long" }, 413, cors);
@@ -116,24 +121,26 @@ async function translate(request, env, cors) {
   if (text.length > MAX_TEXT) return json({ error: "too_long", max: MAX_TEXT }, 413, cors);
 
   const day = today();
-  const keys = quotaKeys(request, env, body.installId);
+  const keys = quotaKeys(env, body.installId, group);
   const { install } = limits(env);
   const taken = await counter(env, { op: "take", day, keys });
-  if (!taken.ok) return json({ error: "quota", remaining: taken.remaining, limit: install }, 429, cors);
+  if (!taken.ok) {
+    // 整個服務今天的上限到了：不是使用者自己的次數用完
+    if (taken.reason === "global") return json({ error: "exhausted", limit: install }, 503, cors);
+    return json({ error: "quota", remaining: 0, limit: install }, 429, cors);
+  }
 
-  const refund = () => counter(env, { op: "refund", day, keys }).catch(() => {});
   let translation;
   try {
     translation = await runModel(env, buildPrompt(text, context, target));
   } catch (error) {
-    await refund();
+    // 模型回空白（例如提示詞故意讓它只「思考」）不退次數，避免免費消耗額度；
+    // 模型故障才退還使用者自己的次數（安裝、IP），整個服務的總數不退
+    if (error?.empty) return json({ error: "empty", remaining: taken.remaining, limit: install }, 502, cors);
+    await counter(env, { op: "refund", day, keys: keys.filter((k) => k.kind !== "global") }).catch(() => {});
     // Workers AI 免費額度（每天 10,000 Neurons）整個帳號用完時，會回這類錯誤
     const exhausted = /neuron|allocation|4006|daily free/i.test(String(error?.message || error));
     return json({ error: exhausted ? "exhausted" : "model", remaining: taken.remaining + 1, limit: install }, 503, cors);
-  }
-  if (!translation) {
-    await refund();
-    return json({ error: "empty", remaining: taken.remaining + 1, limit: install }, 502, cors);
   }
   return json({ translation, remaining: taken.remaining, limit: install }, 200, cors);
 }
@@ -157,8 +164,10 @@ export async function runModel(env, prompt) {
       });
       const text = cleanReply(out);
       if (text) return text;
-      lastError = new Error(`empty reply from ${model}`);
+      // 回空白多半是提示詞造成的，換模型也一樣，直接結束
+      throw Object.assign(new Error(`empty reply from ${model}`), { empty: true });
     } catch (error) {
+      if (error?.empty) throw error;
       lastError = error;
       if (/neuron|allocation|4006|daily free/i.test(String(error?.message || error))) break;
     }
@@ -187,17 +196,21 @@ export class QuotaCounter {
     this.sql.exec(
       "CREATE TABLE IF NOT EXISTS usage (day TEXT NOT NULL, key TEXT NOT NULL, count INTEGER NOT NULL, PRIMARY KEY (day, key))"
     );
-    this.sql.exec("CREATE TABLE IF NOT EXISTS salts (day TEXT PRIMARY KEY, salt TEXT NOT NULL)");
+    // 舊版把鹽值存在資料表裡（會進備份）；現在只放記憶體
+    this.sql.exec("DROP TABLE IF EXISTS salts");
     this.cleanedDay = "";
+    this.salt = "";
+    this.saltDay = "";
   }
 
-  // 每天一個隨機鹽值；換日時跟前一天的次數一起刪掉，之後就無法從雜湊找回 IP
+  // 每天一個隨機鹽值，只放在記憶體：不寫進儲存空間，所以存下來的 IP 雜湊無法還原。
+  // Durable Object 閒置被關掉時鹽值會換新，當天 IP 的計數等於重來；安裝和總數的上限不受影響。
   saltFor(day) {
-    const row = this.sql.exec("SELECT salt FROM salts WHERE day = ?", day).toArray()[0];
-    if (row) return row.salt;
-    const salt = [...crypto.getRandomValues(new Uint8Array(32))].map((b) => b.toString(16).padStart(2, "0")).join("");
-    this.sql.exec("INSERT INTO salts (day, salt) VALUES (?, ?)", day, salt);
-    return salt;
+    if (this.saltDay !== day || !this.salt) {
+      this.salt = [...crypto.getRandomValues(new Uint8Array(32))].map((b) => b.toString(16).padStart(2, "0")).join("");
+      this.saltDay = day;
+    }
+    return this.salt;
   }
 
   // { ip } 換成 { key: "ip:<雜湊>" }；原始 IP 不寫進儲存空間
@@ -205,7 +218,7 @@ export class QuotaCounter {
     const salt = this.saltFor(day);
     return Promise.all(keys.map(async (k) => (k.ip === undefined
       ? k
-      : { key: `ip:${(await sha256(`${salt}|${k.ip}`)).slice(0, 32)}`, limit: k.limit })));
+      : { key: `ip:${(await sha256(`${salt}|${k.ip}`)).slice(0, 32)}`, limit: k.limit, kind: k.kind })));
   }
 
   count(day, key) {
@@ -218,10 +231,9 @@ export class QuotaCounter {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || !Array.isArray(keys) || !keys.length) {
       return json({ error: "bad_request" }, 400);
     }
-    // 換日之後第一個請求，順手刪掉前一天的紀錄和鹽值
+    // 換日之後第一個請求，順手刪掉前一天的紀錄
     if (this.cleanedDay !== day) {
       this.sql.exec("DELETE FROM usage WHERE day <> ?", day);
-      this.sql.exec("DELETE FROM salts WHERE day <> ?", day);
       this.cleanedDay = day;
     }
     // 雜湊先算好；之後的檢查和寫入都是同步的，中間不會插進別的請求
@@ -232,7 +244,8 @@ export class QuotaCounter {
     }
     if (op === "take") {
       const counts = keys.map((k) => this.count(day, k.key));
-      if (keys.some((k, i) => counts[i] >= k.limit)) return json({ ok: false, remaining: 0 });
+      const blocked = keys.findIndex((k, i) => counts[i] >= k.limit);
+      if (blocked >= 0) return json({ ok: false, remaining: 0, reason: keys[blocked].kind || "quota" });
       const remaining = first.limit - counts[0];
       for (const k of keys) {
         this.sql.exec(

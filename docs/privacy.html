@@ -78,9 +78,10 @@
     <div class="summary">
       <p>重點摘要</p>
       <ul>
-        <li>開發者沒有自己的伺服器，<strong>不收集、不儲存、不出售</strong>你的任何資料，也沒有分析工具、廣告或追蹤程式。</li>
+        <li>開發者<strong>不收集、不儲存、不出售</strong>你的任何資料，也沒有分析工具、廣告或追蹤程式。開發者唯一的伺服器只在你選用「免費 AI」時轉交翻譯，不保存文字。</li>
         <li>預設的「本機翻譯」使用 Chrome 內建翻譯，<strong>文字只在你的裝置上處理</strong>。</li>
         <li>只有在你選用「AI 模型」並親手按下翻譯（或選擇全頁翻譯）時，相關文字才會<strong>從你的瀏覽器直接送到你自己選的 AI 服務商</strong>，使用你自己的 API 金鑰。</li>
+        <li>選用「免費 AI」時，只有選字翻譯會用到它：你按下翻譯的文字經過開發者在 Cloudflare 上的伺服器，交給 Cloudflare Workers AI 翻譯。</li>
       </ul>
     </div>
 
@@ -110,7 +111,9 @@
         <tr><td>自訂模型名稱</td><td>你在「進階」填的模型名稱（選填）</td></tr>
         <tr><td>今日翻譯次數</td><td>日期與次數，只用來在設定視窗顯示，不會送出</td></tr>
         <tr><td>安裝 ID（只存這台電腦）</td><td>第一次使用免費 AI 時隨機產生的編號，只在使用免費 AI 時送出，用來計算每天的次數</td></tr>
-        <tr><td>免費 AI 剩餘次數（只存這台電腦）</td><td>今天還剩幾次，只用來在設定視窗顯示</td></tr>
+        <tr><td>免費 AI 剩餘次數（只存這台電腦）</td><td>今天還剩幾次，在設定視窗顯示；用完時就不再送出</td></tr>
+        <tr><td>有金鑰的服務商（只存這台電腦）</td><td>只記服務商名稱、不含金鑰，讓網頁上的翻譯按鈕知道要用哪個引擎；網頁裡的程式碼讀不到金鑰</td></tr>
+        <tr><td>可用的站台（只存這台電腦）</td><td>Kimi、MiniMax 有中國站與國際站，記住你的金鑰能用的那一個，下次直接送到那裡</td></tr>
       </tbody>
     </table></div>
     <p>使用全頁翻譯時，翻過的段落會暫存在該分頁的記憶體裡，讓你按「還原」後再翻不必重新送出；重新整理或關閉分頁就會清除，不會寫入硬碟。</p>
@@ -124,7 +127,7 @@
     <ul>
       <li><strong>只用在選字翻譯：</strong>你在設定選了「免費 AI」並按下「翻譯」時，選取的文字、它前後各約 200 字、譯文語言和安裝 ID，會送到開發者在 Cloudflare 上執行的伺服器（Cloudflare Workers），再交給 Cloudflare Workers AI 的模型翻譯。全頁翻譯不使用免費 AI，一律在裝置上翻譯。</li>
       <li><strong>不保存文字：</strong>伺服器不記錄、不保存你要翻譯的文字與譯文。</li>
-      <li><strong>計算次數：</strong>伺服器只記下當天的使用次數，對應安裝 ID 與你的 IP 位址的雜湊值（IPv6 以同一段網路計算），不存原始 IP。雜湊加上每天隨機產生的鹽值，鹽值換日就和次數一起刪除，之後無法還原成 IP，也無法跨日比對。</li>
+      <li><strong>計算次數：</strong>伺服器只記下當天的使用次數，對應安裝 ID 與你的 IP 位址的雜湊值（IPv6 以同一段網路計算），不存原始 IP。雜湊用的隨機鹽值只放在伺服器的記憶體裡，不寫入任何儲存空間或備份，每天（或伺服器重新啟動時）更換，所以存下來的雜湊無法還原成 IP，也無法跨日比對。次數換日就刪除。</li>
       <li>次數用完或服務暫時不能用時，這次的翻譯改在裝置上完成，不會送出。</li>
       <li>Cloudflare 處理這些資料的方式，依 <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare 隱私權政策</a>。</li>
     </ul>
@@ -135,7 +138,8 @@
       <li><strong>全頁翻譯：</strong>你在右鍵選單選擇「全頁翻譯」後，畫面附近的段落會連同網頁標題分批送出；往下捲動時才會送出後面的段落。網站的選單、導覽列、頁首頁尾與側欄不會送出。</li>
       <li>不會送出網頁網址或 Cookie；全頁翻譯也不會送出輸入框裡的內容。</li>
       <li>資料從你的瀏覽器<strong>直接</strong>傳到服務商，不經過開發者；API 金鑰放在請求標頭中，只傳給對應的服務商。</li>
-      <li>只有你親手操作時才會送出，網頁上的程式無法代替你觸發翻譯。</li>
+      <li>只有你親手操作時才會開始送出：網頁上的程式無法代替你按下翻譯按鈕或選擇全頁翻譯；翻譯按鈕被網頁改得太大、變透明、移位，或剛出現就被點時，點了也不算。</li>
+      <li>全頁翻譯開始後，之後載入的段落會接著送出；每一頁用 AI 翻到約 4 萬字時會先暫停，問你要不要繼續。選字翻譯一次最多 5,000 字。</li>
     </ul>
     <p>送出後，資料如何保存與使用，依各服務商的政策而定：</p>
     <ul>
@@ -178,9 +182,10 @@
     <div class="summary">
       <p>Summary</p>
       <ul>
-        <li>The developer runs no servers and <strong>does not collect, store or sell</strong> any of your data. There are no analytics, ads or trackers.</li>
+        <li>The developer <strong>does not collect, store or sell</strong> any of your data. There are no analytics, ads or trackers. The developer's only server is used just to pass on translations when you choose Free AI, and it keeps no text.</li>
         <li>The default <strong>on-device mode</strong> uses Chrome's built-in translation, so text is processed only on your device.</li>
         <li>Only if you choose an <strong>AI model</strong> and then click Translate (or choose full-page translation) is the relevant text sent <strong>directly from your browser to the AI provider you picked</strong>, using your own API key.</li>
+        <li>With <strong>Free AI</strong>, only selection translation uses it: the text you choose to translate passes through the developer's server on Cloudflare to Cloudflare Workers AI.</li>
       </ul>
     </div>
 
@@ -210,7 +215,9 @@
         <tr><td>Custom model name</td><td>A model name you entered under Advanced (optional)</td></tr>
         <tr><td>Translations today</td><td>A date and a count, shown in the settings window only; never sent anywhere</td></tr>
         <tr><td>Install ID (this computer only)</td><td>A random ID created the first time you use Free AI; sent only with Free AI requests, to count daily use</td></tr>
-        <tr><td>Free AI remaining (this computer only)</td><td>How many free translations are left today, shown in the settings window</td></tr>
+        <tr><td>Free AI remaining (this computer only)</td><td>How many free translations are left today, shown in the settings window; when none are left, nothing is sent</td></tr>
+        <tr><td>Providers with a key (this computer only)</td><td>Provider names only, never the keys, so the Translate button on web pages knows which engine to use; code running in web pages never reads your keys</td></tr>
+        <tr><td>Working endpoint (this computer only)</td><td>Kimi and MiniMax have China and international sites; remembers the one your key works with, so requests go straight there</td></tr>
       </tbody>
     </table></div>
     <p>During full-page translation, translated paragraphs are kept in that tab's memory so that restoring and translating again does not resend them. This is cleared when you reload or close the tab and is never written to disk.</p>
@@ -224,7 +231,7 @@
     <ul>
       <li><strong>Selection translation only:</strong> when you choose Free AI in the settings and click Translate, the selected text, about 200 characters on each side of it, the target language and the install ID are sent to a server the developer runs on Cloudflare (Cloudflare Workers), which passes them to a Cloudflare Workers AI model for translation. Full-page translation never uses Free AI; it always runs on your device.</li>
       <li><strong>No text is kept:</strong> the server does not log or store the text you translate or the translation.</li>
-      <li><strong>Counting use:</strong> the server keeps only today's count, keyed by the install ID and a hash of your IP address (for IPv6, of your network block); the IP itself is never stored. The hash uses a random salt that changes every day and is deleted together with the counts, after which it cannot be turned back into an IP or linked across days.</li>
+      <li><strong>Counting use:</strong> the server keeps only today's count, keyed by the install ID and a hash of your IP address (for IPv6, of your network block); the IP itself is never stored. The random salt for the hash is kept only in the server's memory, never written to storage or backups, and changes every day (or whenever the server restarts), so the stored hashes cannot be turned back into an IP or linked across days. Counts are deleted when the day changes.</li>
       <li>When the free translations are used up or the service is unavailable, that translation is done on your device instead and nothing is sent.</li>
       <li>Cloudflare handles this data under the <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare Privacy Policy</a>.</li>
     </ul>
@@ -235,7 +242,8 @@
       <li><strong>Full-page translation:</strong> after you choose “全頁翻譯” (Translate full page) from the right-click menu, paragraphs near the visible area are sent in batches together with the page title; later paragraphs are sent only as you scroll to them. Site menus, navigation bars, site headers and footers, and sidebars are not sent.</li>
       <li>Page URLs and cookies are never sent, and full-page translation skips form fields.</li>
       <li>Requests go <strong>directly</strong> from your browser to the provider, never through the developer. Your API key is sent in a request header, only to the matching provider.</li>
-      <li>Nothing is sent unless you act; scripts on a web page cannot trigger a translation on your behalf.</li>
+      <li>Nothing is sent until you act: scripts on a web page cannot press the Translate button or start full-page translation for you, and a click does not count if the page has enlarged, hidden or moved the button, or if the button has only just appeared.</li>
+      <li>Once full-page translation has started, paragraphs that load later are sent too; after about 40,000 characters on one page, AI translation pauses and asks before continuing. Selection translation sends at most 5,000 characters at a time.</li>
     </ul>
     <p>Once sent, the data is governed by the provider's own policies:</p>
     <ul>

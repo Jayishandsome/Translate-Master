@@ -679,5 +679,30 @@
   "kicker": {
     "message": "隨選翻譯",
     "description": "Small line above the title; shows the other-language name"
+  },
+  "errSelectionTooLong": {
+    "message": "The selection is too long (AI takes up to $P1$ characters at a time). For long articles, right-click and choose “Translate full page”.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "errBatchFormat": {
+    "message": "The model's reply wasn't in the expected format, so some paragraphs weren't translated"
+  },
+  "pageBudgetTitle": {
+    "message": "About $P1$k characters of this page translated with AI",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "pageBudgetSub": {
+    "message": "There's more to translate. Each batch uses your API quota — continue?"
+  },
+  "pageBudgetContinue": {
+    "message": "Continue"
   }
 }

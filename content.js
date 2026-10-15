@@ -741,28 +741,23 @@
     }
   }
 
-  function keyedProviders(keys) {
-    return new Set(Object.keys(keys || {}).filter((k) => String(keys[k] || "").trim()));
-  }
-
   function resolveProvider() {
     activeProvider = storedProvider === "builtin" || storedProvider === "free" || providersWithKey.has(storedProvider)
       ? storedProvider
       : "builtin";
   }
 
-  // API 金鑰可能跟著 Chrome 同步（sync），也可能只存在這台電腦（local）
-  let keyArea = "sync";
-
+  // 內容腳本跑在每一個網頁裡，所以不讀、也不接收 API 金鑰本身：
+  // 只讀背景程式算好的「哪些服務商有金鑰」（storage.local 的 keyedProviders）。
+  // 也不註冊 storage.onChanged（那會把金鑰的變動送進每個網頁），改成每次要用時重新讀取。
   async function refreshState() {
     try {
       if (chrome?.storage?.sync) {
-        const s = await chrome.storage.sync.get(["isEnabled", "apiProvider", "apiKeys", "targetLang", "keyStorage"]);
+        const s = await chrome.storage.sync.get(["isEnabled", "apiProvider", "targetLang"]);
+        const { keyedProviders } = await chrome.storage.local.get("keyedProviders");
         isFeatureEnabled = s.isEnabled !== false;
         storedProvider = s.apiProvider || "builtin";
-        keyArea = s.keyStorage === "local" ? "local" : "sync";
-        const keys = keyArea === "local" ? (await chrome.storage.local.get("apiKeys")).apiKeys : s.apiKeys;
-        providersWithKey = keyedProviders(keys);
+        providersWithKey = new Set(Array.isArray(keyedProviders) ? keyedProviders : []);
         resolveProvider();
         activeTargetLanguage = BUILTIN_TARGETS[s.targetLang] ? s.targetLang : "zh-TW";
       }
@@ -771,31 +766,6 @@
     }
   }
   refreshState();
-
-  if (globalThis.chrome?.storage?.onChanged) {
-    chrome.storage.onChanged.addListener((changes, areaName) => {
-      if (changes.apiKeys && areaName === keyArea) {
-        providersWithKey = keyedProviders(changes.apiKeys.newValue);
-        resolveProvider();
-      }
-      if (areaName !== "sync") return;
-      if (changes.keyStorage) { refreshState(); return; }
-      if (changes.apiProvider) storedProvider = changes.apiProvider.newValue || "builtin";
-      if (changes.apiProvider) resolveProvider();
-      if (changes.targetLang) {
-        activeTargetLanguage = BUILTIN_TARGETS[changes.targetLang.newValue]
-          ? changes.targetLang.newValue
-          : "zh-TW";
-      }
-      if (changes.isEnabled) {
-        isFeatureEnabled = changes.isEnabled.newValue !== false;
-      }
-      if (changes.isEnabled && !isFeatureEnabled) {
-        hideButton();
-        hidePopover();
-      }
-    });
-  }
 
   // ----------------------------------------------------------------------
   // 拖拉 (位置一律使用 fixed 座標，避免 scroll 問題)
@@ -871,7 +841,11 @@
     btn.style.display = "none";
   }
 
+  // 按鈕出現的時間：太快的點擊不算（防止網頁在你點下去前一刻把按鈕移到滑鼠底下）
+  let buttonShownAt = 0;
+
   function showButton() {
+    buttonShownAt = performance.now();
     btn.style.display = "inline-flex";
     if (prefersReducedMotion() || !btn.animate) return;
     buttonAnimation?.cancel();
@@ -1127,6 +1101,7 @@
   const BUTTON_GAP_X = 4;
   const BUTTON_GAP_Y = 6;
   let buttonPointer = null;
+  let buttonSpot = null; // 按鈕應該在的位置（左上角）
 
   function placeButton() {
     const end = selectionEnd(savedRange, buttonPointer);
@@ -1142,9 +1117,22 @@
     y = Math.max(8, Math.min(y, window.innerHeight - h - 8));
     btn.style.left = `${x}px`;
     btn.style.top = `${y}px`;
+    buttonSpot = { x, y };
     // 選取處捲出畫面時先藏起來，捲回來再出現，不要黏在畫面邊緣
     const offscreen = !end.pointer && (rect.bottom < 0 || rect.top > window.innerHeight || rect.right < 0 || rect.left > window.innerWidth);
     btn.style.visibility = offscreen ? "hidden" : "";
+  }
+
+  const BUTTON_MIN_VISIBLE_MS = 350;
+  const BUTTON_MAX = { w: 220, h: 64 };
+
+  function buttonLooksRight() {
+    if (!buttonSpot || performance.now() - buttonShownAt < BUTTON_MIN_VISIBLE_MS) return false;
+    const style = getComputedStyle(btn);
+    if (style.display === "none" || style.visibility !== "visible" || Number(style.opacity) < 1) return false;
+    const r = btn.getBoundingClientRect();
+    if (r.width > BUTTON_MAX.w || r.height > BUTTON_MAX.h || r.width < 8 || r.height < 8) return false;
+    return Math.abs(r.left - buttonSpot.x) <= 2 && Math.abs(r.top - buttonSpot.y) <= 2;
   }
 
   // 捲動（包括網頁裡可以捲動的區塊）或改變視窗大小時，按鈕跟著選取的文字移動
@@ -1167,7 +1155,11 @@
     if (target.closest(`#${IDS.btn}`) || target.closest(`#${IDS.pop}`) || target.closest(`#${IDS.bar}`)) return;
 
     await refreshState();
-    if (!isFeatureEnabled) return;
+    if (!isFeatureEnabled) {
+      hideButton();
+      hidePopover();
+      return;
+    }
 
     const sel = window.getSelection();
     const { text, context } = captureSelection(sel);
@@ -1206,6 +1198,8 @@
     // 只回應使用者真的點擊或按鍵；網頁腳本呼叫 btn.click() 不會觸發翻譯，
     // 避免惡意網頁用你的 API 金鑰大量送出請求。
     if (!e.isTrusted) return;
+    // 防點擊劫持：按鈕在網頁裡，網頁可以改它的樣式。被拉大、變透明、移位，或剛出現就被點，都不算數
+    if (!buttonLooksRight()) return;
 
     const buttonRect = btn.getBoundingClientRect();
     const anchorX = buttonRect.left || e.clientX;
@@ -1426,6 +1420,7 @@
     engine: "builtin", source: "", knownSource: "", target: "", translator: null, failed: [], lastError: "",
     inflight: new Map(), translators: new Map(), detector: null, skippedOther: 0,
     foreignOnly: false, knownForeignOnly: false, checking: 0,
+    aiSent: 0, aiBudget: 0, budgetPaused: false,
     entries: [], queued: new WeakSet(), pending: new Map(), queue: [], running: 0, done: 0,
     io: null, mo: null, barState: null,
   };
@@ -1782,6 +1777,9 @@
   const AI_BATCH_ITEMS = 12;
   const AI_BATCH_CHARS = 2400;
   const AI_CONCURRENCY = 2;
+  // 每一頁用 AI 翻到這麼多字就先暫停，問使用者要不要繼續：
+  // 網頁可以一直塞新內容進來，不能讓它無限制地用你的 API 額度
+  const AI_PAGE_BUDGET = 40000;
 
   // 回傳這一批要送出的文字（不重複）；同樣的文字已經在途中的，就排在那一批後面等結果
   function takeBatch() {
@@ -1796,6 +1794,12 @@
         continue;
       }
       if (texts.length && chars + text.length > AI_BATCH_CHARS) break;
+      // 到了上限就暫停；一批的第一段只要還沒到上限就放行（避免一段很長的文字永遠卡住）
+      if (page.aiSent >= page.aiBudget || (texts.length && page.aiSent + text.length > page.aiBudget)) {
+        page.budgetPaused = true;
+        break;
+      }
+      page.aiSent += text.length;
       page.queue.shift();
       page.inflight.set(text, [next]);
       texts.push(text);
@@ -1818,7 +1822,7 @@
   };
 
   function pumpAI() {
-    while (page.running < AI_CONCURRENCY && page.queue.length) {
+    while (page.running < AI_CONCURRENCY && page.queue.length && !page.budgetPaused) {
       const texts = takeBatch();
       if (!texts.length) continue;
       const token = page.token;
@@ -1850,6 +1854,11 @@
           const translated = String(out?.[i] || "").trim();
           const items = takeWaiting(text);
           if (translated) items.forEach((item) => applyItem(item, { text: translated }));
+          else {
+            // 模型回覆的格式不對、沒翻到的段落：列為失敗，讓使用者可以按「重試」
+            page.failed.push(...items);
+            page.lastError = t("errBatchFormat");
+          }
         });
       })()
         .catch((error) => {
@@ -1865,6 +1874,15 @@
           pump();
         });
     }
+    if (page.budgetPaused && page.queue.length && !page.running) renderBar();
+  }
+
+  function continueAI() {
+    if (!page.active) return;
+    page.aiBudget = page.aiSent + AI_PAGE_BUDGET;
+    page.budgetPaused = false;
+    renderBar();
+    pump();
   }
 
   function retryFailed() {
@@ -1972,7 +1990,10 @@
       const target = targetName();
       const source = page.foreignOnly ? "" : languageName(page.source);
       const showRetry = page.failed.length > 0 && !pageBusy();
-      page.barState = !page.done && showRetry
+      const askMore = page.engine !== "builtin" && page.budgetPaused && page.queue.length > 0 && !page.running;
+      page.barState = askMore
+        ? { kind: "budget", title: t("pageBudgetTitle", [String(Math.round(page.aiSent / 1000))]), sub: t("pageBudgetSub") }
+        : !page.done && showRetry
         ? { kind: "failed", title: t("pageFailedTitle"), sub: `${engineName()}: ${page.lastError}`, retry: true }
         : { kind: "progress", title: page.foreignOnly ? t("pageForeignDirection", [target]) : source ? `${source} → ${target}` : t("directionTo", [target]), sub: progressText(), retry: showRetry };
     }
@@ -1989,6 +2010,10 @@
           <button type="button" data-act="bilingual" aria-pressed="${page.mode === "bilingual"}">${t("viewBilingual")}</button>
         </span>` : ""}
         <button type="button" class="ctx-pb-btn" data-act="restore">${s.kind === "failed" ? t("cancel") : t("restore")}</button>`;
+    } else if (s.kind === "budget") {
+      actions = `
+        <button type="button" class="ctx-pb-btn primary" data-act="continueAI">${t("pageBudgetContinue")}</button>
+        <button type="button" class="ctx-pb-btn" data-act="restore">${t("restore")}</button>`;
     } else if (s.kind === "download" || s.kind === "retry") {
       actions = `<button type="button" class="ctx-pb-btn primary" data-act="download">${s.kind === "retry" ? t("tryAgain") : t("downloadAndTranslate")}</button>`;
     }
@@ -2016,6 +2041,7 @@
     if (act === "close") hideBar();
     else if (act === "restore") restorePage();
     else if (act === "retryFailed") retryFailed();
+    else if (act === "continueAI") continueAI();
     else if (act === "download") startPageTranslation({ gesture: true, source: page.knownSource, foreignOnly: page.knownForeignOnly });
     else if (act === "translated" || act === "bilingual") setMode(act);
   }
@@ -2185,6 +2211,9 @@
     page.source = source;
     page.foreignOnly = foreignOnly;
     page.checking = 0;
+    page.aiSent = 0;
+    page.aiBudget = AI_PAGE_BUDGET;
+    page.budgetPaused = false;
     page.token++;
     page.done = 0;
     page.failed = [];

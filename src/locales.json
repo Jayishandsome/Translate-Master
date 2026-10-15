@@ -811,5 +811,30 @@
   "zh_CN": "Context Translator",
   "en": "隨選翻譯",
   "description": "Small line above the title; shows the other-language name"
+ },
+ "errSelectionTooLong": {
+  "zh_TW": "選取的文字太長了（AI 一次最多 $1 字）。長文章請用右鍵選「全頁翻譯」。",
+  "zh_CN": "选中的文字太长了（AI 一次最多 $1 字）。长文章请右键选「全页翻译」。",
+  "en": "The selection is too long (AI takes up to $1 characters at a time). For long articles, right-click and choose “Translate full page”."
+ },
+ "errBatchFormat": {
+  "zh_TW": "模型回覆的格式不對，有幾段沒有翻好",
+  "zh_CN": "模型回复的格式不对，有几段没有翻好",
+  "en": "The model's reply wasn't in the expected format, so some paragraphs weren't translated"
+ },
+ "pageBudgetTitle": {
+  "zh_TW": "這一頁已經用 AI 翻了約 $1 千字",
+  "zh_CN": "这一页已经用 AI 翻了约 $1 千字",
+  "en": "About $1k characters of this page translated with AI"
+ },
+ "pageBudgetSub": {
+  "zh_TW": "還有內容沒翻。每一批都會用到你的 API 額度，要繼續嗎？",
+  "zh_CN": "还有内容没翻。每一批都会用到你的 API 额度，要继续吗？",
+  "en": "There's more to translate. Each batch uses your API quota — continue?"
+ },
+ "pageBudgetContinue": {
+  "zh_TW": "繼續翻譯",
+  "zh_CN": "继续翻译",
+  "en": "Continue"
  }
 }

@@ -1,25 +1,20 @@
-  function keyedProviders(keys) {
-    return new Set(Object.keys(keys || {}).filter((k) => String(keys[k] || "").trim()));
-  }
-
   function resolveProvider() {
     activeProvider = storedProvider === "builtin" || storedProvider === "free" || providersWithKey.has(storedProvider)
       ? storedProvider
       : "builtin";
   }
 
-  // API 金鑰可能跟著 Chrome 同步（sync），也可能只存在這台電腦（local）
-  let keyArea = "sync";
-
+  // 內容腳本跑在每一個網頁裡，所以不讀、也不接收 API 金鑰本身：
+  // 只讀背景程式算好的「哪些服務商有金鑰」（storage.local 的 keyedProviders）。
+  // 也不註冊 storage.onChanged（那會把金鑰的變動送進每個網頁），改成每次要用時重新讀取。
   async function refreshState() {
     try {
       if (chrome?.storage?.sync) {
-        const s = await chrome.storage.sync.get(["isEnabled", "apiProvider", "apiKeys", "targetLang", "keyStorage"]);
+        const s = await chrome.storage.sync.get(["isEnabled", "apiProvider", "targetLang"]);
+        const { keyedProviders } = await chrome.storage.local.get("keyedProviders");
         isFeatureEnabled = s.isEnabled !== false;
         storedProvider = s.apiProvider || "builtin";
-        keyArea = s.keyStorage === "local" ? "local" : "sync";
-        const keys = keyArea === "local" ? (await chrome.storage.local.get("apiKeys")).apiKeys : s.apiKeys;
-        providersWithKey = keyedProviders(keys);
+        providersWithKey = new Set(Array.isArray(keyedProviders) ? keyedProviders : []);
         resolveProvider();
         activeTargetLanguage = BUILTIN_TARGETS[s.targetLang] ? s.targetLang : "zh-TW";
       }
@@ -28,28 +23,3 @@
     }
   }
   refreshState();
-
-  if (globalThis.chrome?.storage?.onChanged) {
-    chrome.storage.onChanged.addListener((changes, areaName) => {
-      if (changes.apiKeys && areaName === keyArea) {
-        providersWithKey = keyedProviders(changes.apiKeys.newValue);
-        resolveProvider();
-      }
-      if (areaName !== "sync") return;
-      if (changes.keyStorage) { refreshState(); return; }
-      if (changes.apiProvider) storedProvider = changes.apiProvider.newValue || "builtin";
-      if (changes.apiProvider) resolveProvider();
-      if (changes.targetLang) {
-        activeTargetLanguage = BUILTIN_TARGETS[changes.targetLang.newValue]
-          ? changes.targetLang.newValue
-          : "zh-TW";
-      }
-      if (changes.isEnabled) {
-        isFeatureEnabled = changes.isEnabled.newValue !== false;
-      }
-      if (changes.isEnabled && !isFeatureEnabled) {
-        hideButton();
-        hidePopover();
-      }
-    });
-  }

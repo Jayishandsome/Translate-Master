@@ -679,5 +679,30 @@
   "kicker": {
     "message": "Context Translator",
     "description": "Small line above the title; shows the other-language name"
+  },
+  "errSelectionTooLong": {
+    "message": "選取的文字太長了（AI 一次最多 $P1$ 字）。長文章請用右鍵選「全頁翻譯」。",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "errBatchFormat": {
+    "message": "模型回覆的格式不對，有幾段沒有翻好"
+  },
+  "pageBudgetTitle": {
+    "message": "這一頁已經用 AI 翻了約 $P1$ 千字",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "pageBudgetSub": {
+    "message": "還有內容沒翻。每一批都會用到你的 API 額度，要繼續嗎？"
+  },
+  "pageBudgetContinue": {
+    "message": "繼續翻譯"
   }
 }

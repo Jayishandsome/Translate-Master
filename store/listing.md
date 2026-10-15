@@ -123,7 +123,7 @@ Translates text the user selects on a web page, or the whole page when the user 
 
 | 權限 | 填寫內容 |
 |---|---|
-| `storage` | 保存使用者的設定（選字翻譯開關、翻譯引擎、譯文語言、每日翻譯次數）以及使用者自行輸入的 AI 服務商 API 金鑰。資料存在 chrome.storage，不會傳給開發者。使用免費 AI 時，另外在本機保存一組隨機的安裝 ID 和今天剩下的次數。 |
+| `storage` | 保存使用者的設定（選字翻譯開關、翻譯引擎、譯文語言、每日翻譯次數）以及使用者自行輸入的 AI 服務商 API 金鑰。資料存在 chrome.storage，不會傳給開發者。使用免費 AI 時，另外在本機保存一組隨機的安裝 ID 和今天剩下的次數；另外在本機記下「哪些服務商有金鑰」（不含金鑰，讓網頁上的內容腳本不必讀取金鑰）以及金鑰可用的站台。 |
 | `contextMenus` | 在網頁的右鍵選單加入「全頁翻譯」，讓使用者翻譯目前的頁面。 |
 | `activeTab` | 使用者點選右鍵選單的「全頁翻譯」時，如果該分頁是在安裝或更新擴充功能前就開著、還沒有內容腳本，需要暫時取得這個分頁的存取權，才能開始翻譯。只在使用者操作的那一個分頁有效。 |
 | `scripting` | 與 activeTab 搭配，用 chrome.scripting.executeScript 把擴充功能套件內附的 content.js 注入上述分頁。不會注入或執行任何遠端程式碼。 |

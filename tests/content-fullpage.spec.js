@@ -162,3 +162,32 @@ test("免費 AI：全頁翻譯一律用本機翻譯，不消耗次數", async ({
   expect(actions).not.toContain("translateBatch");
   expect(actions).not.toContain("translate");
 });
+
+test("AI：網頁一直塞內容時，每頁翻到約 4 萬字就先暫停，按繼續才再送", async ({ context }) => {
+  const { page } = await openFixture(context, null, "pages/article.html", { provider: "gemini" });
+  // 60 段、每段約 1,000 字，字很小，全部都在畫面裡
+  await page.evaluate(() => {
+    const box = document.createElement("div");
+    box.id = "flood";
+    box.style.cssText = "font-size:1px;line-height:1px";
+    for (let i = 0; i < 60; i++) {
+      const p = document.createElement("p");
+      p.textContent = `Paragraph ${i} ` + "lorem ipsum dolor sit amet ".repeat(37);
+      box.appendChild(p);
+    }
+    document.querySelector("article").prepend(box);
+  });
+  await translatePage(page);
+  const bar = page.locator("#ctx-page-bar");
+  await expect(bar).toHaveAttribute("data-kind", "budget");
+  await expect(bar).toContainText("繼續翻譯");
+  const sentChars = () => page.evaluate(() => window.__stub.sent.filter((m) => m.action === "translateBatch").flatMap((m) => m.texts).join("").length);
+  const first = await sentChars();
+  expect(first).toBeGreaterThan(30000);
+  expect(first).toBeLessThanOrEqual(40000 + 2400);
+  await page.waitForTimeout(300);
+  expect(await sentChars()).toBe(first);
+  await page.click("#ctx-page-bar [data-act=continueAI]");
+  await expect.poll(sentChars).toBeGreaterThan(first + 10000);
+  await expect(page.locator("#flood p ctx-tr")).toHaveCount(60);
+});

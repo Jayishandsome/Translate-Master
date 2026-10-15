@@ -86,6 +86,7 @@
     engine: "builtin", source: "", knownSource: "", target: "", translator: null, failed: [], lastError: "",
     inflight: new Map(), translators: new Map(), detector: null, skippedOther: 0,
     foreignOnly: false, knownForeignOnly: false, checking: 0,
+    aiSent: 0, aiBudget: 0, budgetPaused: false,
     entries: [], queued: new WeakSet(), pending: new Map(), queue: [], running: 0, done: 0,
     io: null, mo: null, barState: null,
   };
@@ -442,6 +443,9 @@
   const AI_BATCH_ITEMS = 12;
   const AI_BATCH_CHARS = 2400;
   const AI_CONCURRENCY = 2;
+  // 每一頁用 AI 翻到這麼多字就先暫停，問使用者要不要繼續：
+  // 網頁可以一直塞新內容進來，不能讓它無限制地用你的 API 額度
+  const AI_PAGE_BUDGET = 40000;
 
   // 回傳這一批要送出的文字（不重複）；同樣的文字已經在途中的，就排在那一批後面等結果
   function takeBatch() {
@@ -456,6 +460,12 @@
         continue;
       }
       if (texts.length && chars + text.length > AI_BATCH_CHARS) break;
+      // 到了上限就暫停；一批的第一段只要還沒到上限就放行（避免一段很長的文字永遠卡住）
+      if (page.aiSent >= page.aiBudget || (texts.length && page.aiSent + text.length > page.aiBudget)) {
+        page.budgetPaused = true;
+        break;
+      }
+      page.aiSent += text.length;
       page.queue.shift();
       page.inflight.set(text, [next]);
       texts.push(text);
@@ -478,7 +488,7 @@
   };
 
   function pumpAI() {
-    while (page.running < AI_CONCURRENCY && page.queue.length) {
+    while (page.running < AI_CONCURRENCY && page.queue.length && !page.budgetPaused) {
       const texts = takeBatch();
       if (!texts.length) continue;
       const token = page.token;
@@ -510,6 +520,11 @@
           const translated = String(out?.[i] || "").trim();
           const items = takeWaiting(text);
           if (translated) items.forEach((item) => applyItem(item, { text: translated }));
+          else {
+            // 模型回覆的格式不對、沒翻到的段落：列為失敗，讓使用者可以按「重試」
+            page.failed.push(...items);
+            page.lastError = t("errBatchFormat");
+          }
         });
       })()
         .catch((error) => {
@@ -525,6 +540,15 @@
           pump();
         });
     }
+    if (page.budgetPaused && page.queue.length && !page.running) renderBar();
+  }
+
+  function continueAI() {
+    if (!page.active) return;
+    page.aiBudget = page.aiSent + AI_PAGE_BUDGET;
+    page.budgetPaused = false;
+    renderBar();
+    pump();
   }
 
   function retryFailed() {
@@ -632,7 +656,10 @@
       const target = targetName();
       const source = page.foreignOnly ? "" : languageName(page.source);
       const showRetry = page.failed.length > 0 && !pageBusy();
-      page.barState = !page.done && showRetry
+      const askMore = page.engine !== "builtin" && page.budgetPaused && page.queue.length > 0 && !page.running;
+      page.barState = askMore
+        ? { kind: "budget", title: t("pageBudgetTitle", [String(Math.round(page.aiSent / 1000))]), sub: t("pageBudgetSub") }
+        : !page.done && showRetry
         ? { kind: "failed", title: t("pageFailedTitle"), sub: `${engineName()}: ${page.lastError}`, retry: true }
         : { kind: "progress", title: page.foreignOnly ? t("pageForeignDirection", [target]) : source ? `${source} → ${target}` : t("directionTo", [target]), sub: progressText(), retry: showRetry };
     }
@@ -649,6 +676,10 @@
           <button type="button" data-act="bilingual" aria-pressed="${page.mode === "bilingual"}">${t("viewBilingual")}</button>
         </span>` : ""}
         <button type="button" class="ctx-pb-btn" data-act="restore">${s.kind === "failed" ? t("cancel") : t("restore")}</button>`;
+    } else if (s.kind === "budget") {
+      actions = `
+        <button type="button" class="ctx-pb-btn primary" data-act="continueAI">${t("pageBudgetContinue")}</button>
+        <button type="button" class="ctx-pb-btn" data-act="restore">${t("restore")}</button>`;
     } else if (s.kind === "download" || s.kind === "retry") {
       actions = `<button type="button" class="ctx-pb-btn primary" data-act="download">${s.kind === "retry" ? t("tryAgain") : t("downloadAndTranslate")}</button>`;
     }
@@ -676,6 +707,7 @@
     if (act === "close") hideBar();
     else if (act === "restore") restorePage();
     else if (act === "retryFailed") retryFailed();
+    else if (act === "continueAI") continueAI();
     else if (act === "download") startPageTranslation({ gesture: true, source: page.knownSource, foreignOnly: page.knownForeignOnly });
     else if (act === "translated" || act === "bilingual") setMode(act);
   }
@@ -845,6 +877,9 @@
     page.source = source;
     page.foreignOnly = foreignOnly;
     page.checking = 0;
+    page.aiSent = 0;
+    page.aiBudget = AI_PAGE_BUDGET;
+    page.budgetPaused = false;
     page.token++;
     page.done = 0;
     page.failed = [];

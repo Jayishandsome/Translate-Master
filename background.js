@@ -77,6 +77,8 @@ const FREE_AI = {
 
 // 選字翻譯的輸出上限；全頁翻譯一批的上限見 BATCH_OPTIONS
 const SINGLE_MAX_TOKENS = 2048;
+// 選字翻譯一次最多送出的字數（太長的請用全頁翻譯）；也限制網頁偷塞超長選取時能用掉多少額度
+const SELECTION_MAX_CHARS = 5000;
 
 const LANGUAGES = {
   "zh-TW": "Traditional Chinese (繁體中文)",
@@ -106,6 +108,22 @@ chrome.runtime.onInstalled.addListener((details) => {
   });
   // 第一次安裝時打開說明頁：教用法，並檢查這台電腦的 Chrome 支不支援本機翻譯
   if (details?.reason === "install") chrome.tabs.create({ url: chrome.runtime.getURL("welcome.html") });
+  syncKeyedProviders().catch(() => {});
+});
+
+chrome.runtime.onStartup.addListener(() => {
+  syncKeyedProviders().catch(() => {});
+});
+
+// 內容腳本跑在每個網頁裡，不讓它讀金鑰：這裡把「哪些服務商有金鑰」算好放在 storage.local 給它看
+async function syncKeyedProviders() {
+  const keys = await readApiKeys();
+  const keyedProviders = Object.keys(keys).filter((id) => String(keys[id] || "").trim());
+  await chrome.storage.local.set({ keyedProviders });
+}
+
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (changes.apiKeys || (areaName === "sync" && changes.keyStorage)) syncKeyedProviders().catch(() => {});
 });
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
@@ -232,6 +250,10 @@ async function handleFreeTranslation(selectedText, context) {
   if (!FREE_AI.endpoint) throw new FreeAIError("unavailable", t("freeFallbackBusy"));
   if (text.length > FREE_AI.maxChars) throw new FreeAIError("too_long", t("freeFallbackLong", [String(FREE_AI.maxChars)]));
 
+  // 今天已經用完就不送出（伺服器也會擋，但文字不必離開這台電腦）
+  const { freeAI } = await chrome.storage.local.get("freeAI");
+  if (freeAI?.day === utcDay() && Number(freeAI.remaining) <= 0) throw new FreeAIError("quota", t("freeFallbackQuota"));
+
   const { targetLang } = await chrome.storage.sync.get("targetLang");
   let res;
   try {
@@ -342,6 +364,9 @@ async function handleTranslation(selectedText, context) {
   if (!String(selectedText || "").trim()) {
     throw new Error(t("errNoText"));
   }
+  if (String(selectedText).length > SELECTION_MAX_CHARS) {
+    throw new Error(t("errSelectionTooLong", [String(SELECTION_MAX_CHARS)]));
+  }
   const settings = await loadAISettings();
   return await callModel(settings, buildPrompt(selectedText, context, settings.targetLang));
 }
@@ -364,15 +389,18 @@ async function handleBatchTranslation(texts, title) {
   return await translateList(settings, items, pageTitle, langLabel);
 }
 
-async function translateList(settings, items, pageTitle, langLabel) {
+// 回覆格式不對時拆成兩半再試，但只拆一層：最多 3 次請求。
+// 網頁內容可能故意讓模型不照格式回答，不能讓一批段落變成一連串請求。拆了還不對的回傳空字串，內容腳本會列為失敗。
+async function translateList(settings, items, pageTitle, langLabel, depth = 0) {
   const raw = await callModel(settings, buildBatchPrompt(items, pageTitle, langLabel), BATCH_OPTIONS);
   const parsed = parseBatchReply(raw, items.length);
   if (parsed) return parsed;
   if (items.length === 1) return [cleanSingleReply(raw)];
+  if (depth >= 1) return items.map(() => "");
   const mid = Math.ceil(items.length / 2);
   const [head, tail] = await Promise.all([
-    translateList(settings, items.slice(0, mid), pageTitle, langLabel),
-    translateList(settings, items.slice(mid), pageTitle, langLabel),
+    translateList(settings, items.slice(0, mid), pageTitle, langLabel, depth + 1),
+    translateList(settings, items.slice(mid), pageTitle, langLabel, depth + 1),
   ]);
   return head.concat(tail);
 }
@@ -590,8 +618,17 @@ async function callGemini(apiKey, prompt, opts = {}) {
   return text;
 }
 
-// 記住每家最後一次成功的站台，下次直接從那裡開始
-const preferredEndpoint = {};
+// 記住每家最後一次成功的站台（存在 storage.local），下次直接從那裡開始：
+// 背景程式閒置時會被 Chrome 關掉，只放記憶體的話，每次重新啟動都會先把文字和金鑰送到另一個站台
+let preferredEndpointCache = null;
+
+async function preferredEndpoints() {
+  if (!preferredEndpointCache) {
+    const { preferredEndpoints: saved } = await chrome.storage.local.get("preferredEndpoints");
+    preferredEndpointCache = saved && typeof saved === "object" ? saved : {};
+  }
+  return preferredEndpointCache;
+}
 
 async function callOpenAICompat(provider, apiKey, prompt, opts = {}) {
   const { name, endpoints, body = {}, maxTokensField, temperature } = PROVIDERS[provider];
@@ -606,7 +643,8 @@ async function callOpenAICompat(provider, apiKey, prompt, opts = {}) {
   // 自訂模型可能不認得「關閉思考」這類參數；被拒時改用最精簡的請求再試一次
   const minimal = JSON.stringify({ model, messages: [{ role: "user", content: prompt }] });
   const UNSUPPORTED = /unsupported|unrecognized|not supported|unknown (field|param)|invalid (param|argument)|extra (fields|inputs)|max_tokens|max_completion_tokens|reasoning|thinking|temperature/i;
-  const start = Math.max(0, endpoints.indexOf(preferredEndpoint[provider]));
+  const preferred = await preferredEndpoints();
+  const start = Math.max(0, endpoints.indexOf(preferred[provider]));
   const order = [...endpoints.slice(start), ...endpoints.slice(0, start)];
 
   let lastError = null;
@@ -659,7 +697,10 @@ async function callOpenAICompat(provider, apiKey, prompt, opts = {}) {
           ""
       );
       if (!text) throw new Error(t("errEmptyReply", [name]));
-      preferredEndpoint[provider] = endpoint;
+      if (preferred[provider] !== endpoint) {
+        preferred[provider] = endpoint;
+        chrome.storage.local.set({ preferredEndpoints: preferred }).catch(() => {});
+      }
       return text.trim();
     }
   }

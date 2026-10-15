@@ -216,3 +216,53 @@ test("免費 AI：送出文字、譯文語言和安裝 ID，記下剩下的次�
   expect(calls).toHaveLength(2);
   await context.close();
 });
+
+test("安全：格式不對的回覆最多只拆一層重送；選字太長不送出", async () => {
+  const { context, sw } = await launch();
+  const calls = await fakeProviders(context, (call) => okReply(call, "not json, just prose"));
+  await sw.evaluate(() => chrome.storage.sync.set({ apiProvider: "gemini", apiKeys: { gemini: "KEY" }, keyStorage: "sync", customModels: {} }));
+  const out = await sw.evaluate(() => handleBatchTranslation(["a1", "a2", "a3", "a4", "a5", "a6", "a7", "a8"], "t"));
+  expect(calls).toHaveLength(3);
+  expect(out).toEqual(["", "", "", "", "", "", "", ""]);
+
+  const long = await sw.evaluate(() => handleTranslation("x".repeat(5001), "").then(() => null, (e) => e.message));
+  expect(long).toContain("5000");
+  expect(calls).toHaveLength(3);
+  await context.close();
+});
+
+test("安全：背景程式只把「哪些服務商有金鑰」給內容腳本看", async () => {
+  const { context, sw } = await launch();
+  await sw.evaluate(() => chrome.storage.sync.set({ keyStorage: "sync", apiKeys: { gemini: "KEY", openai: "" } }));
+  await expect.poll(() => sw.evaluate(async () => (await chrome.storage.local.get("keyedProviders")).keyedProviders)).toEqual(["gemini"]);
+  await sw.evaluate(async () => {
+    await chrome.storage.local.set({ apiKeys: { claude: "LOCAL" } });
+    await chrome.storage.sync.set({ keyStorage: "local" });
+  });
+  await expect.poll(() => sw.evaluate(async () => (await chrome.storage.local.get("keyedProviders")).keyedProviders)).toEqual(["claude"]);
+  await context.close();
+});
+
+test("安全：免費 AI 今天用完就不送出；Kimi 記住能用的站台，重新啟動後直接用", async () => {
+  const { context, sw } = await launch();
+  const free = [];
+  await context.route("https://free.test/**", (route) => { free.push(route.request().url()); return route.abort(); });
+  const left = await sw.evaluate(async () => {
+    FREE_AI.endpoint = "https://free.test";
+    await chrome.storage.local.set({ freeAI: { day: new Date().toISOString().slice(0, 10), remaining: 0 } });
+    return handleFreeTranslation("bank", "x").then(() => null, (e) => e.reason);
+  });
+  expect(left).toBe("quota");
+  expect(free).toHaveLength(0);
+
+  const calls = await fakeProviders(context, (call) => (call.host === "api.moonshot.cn" ? [401, { error: { message: "Invalid Authentication" } }] : okReply(call, "OK")));
+  await sw.evaluate(() => chrome.storage.sync.set({ apiProvider: "kimi", apiKeys: { kimi: "INTL" }, keyStorage: "sync", customModels: {} }));
+  expect(await sw.evaluate(() => handleTranslation("hello world", "hello world"))).toBe("OK");
+  expect(calls.map((c) => c.host)).toEqual(["api.moonshot.cn", "api.moonshot.ai"]);
+  await expect.poll(() => sw.evaluate(async () => (await chrome.storage.local.get("preferredEndpoints")).preferredEndpoints?.kimi)).toBe("https://api.moonshot.ai/v1/chat/completions");
+  // 模擬背景程式被 Chrome 關掉再啟動：記憶體裡的資料不見了
+  await sw.evaluate(() => { preferredEndpointCache = null; });
+  expect(await sw.evaluate(() => handleTranslation("hello again", "hello again"))).toBe("OK");
+  expect(calls.map((c) => c.host)).toEqual(["api.moonshot.cn", "api.moonshot.ai", "api.moonshot.ai"]);
+  await context.close();
+});

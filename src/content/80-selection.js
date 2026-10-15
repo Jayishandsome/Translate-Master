@@ -56,6 +56,7 @@
   const BUTTON_GAP_X = 4;
   const BUTTON_GAP_Y = 6;
   let buttonPointer = null;
+  let buttonSpot = null; // 按鈕應該在的位置（左上角）
 
   function placeButton() {
     const end = selectionEnd(savedRange, buttonPointer);
@@ -71,9 +72,22 @@
     y = Math.max(8, Math.min(y, window.innerHeight - h - 8));
     btn.style.left = `${x}px`;
     btn.style.top = `${y}px`;
+    buttonSpot = { x, y };
     // 選取處捲出畫面時先藏起來，捲回來再出現，不要黏在畫面邊緣
     const offscreen = !end.pointer && (rect.bottom < 0 || rect.top > window.innerHeight || rect.right < 0 || rect.left > window.innerWidth);
     btn.style.visibility = offscreen ? "hidden" : "";
+  }
+
+  const BUTTON_MIN_VISIBLE_MS = 350;
+  const BUTTON_MAX = { w: 220, h: 64 };
+
+  function buttonLooksRight() {
+    if (!buttonSpot || performance.now() - buttonShownAt < BUTTON_MIN_VISIBLE_MS) return false;
+    const style = getComputedStyle(btn);
+    if (style.display === "none" || style.visibility !== "visible" || Number(style.opacity) < 1) return false;
+    const r = btn.getBoundingClientRect();
+    if (r.width > BUTTON_MAX.w || r.height > BUTTON_MAX.h || r.width < 8 || r.height < 8) return false;
+    return Math.abs(r.left - buttonSpot.x) <= 2 && Math.abs(r.top - buttonSpot.y) <= 2;
   }
 
   // 捲動（包括網頁裡可以捲動的區塊）或改變視窗大小時，按鈕跟著選取的文字移動
@@ -96,7 +110,11 @@
     if (target.closest(`#${IDS.btn}`) || target.closest(`#${IDS.pop}`) || target.closest(`#${IDS.bar}`)) return;
 
     await refreshState();
-    if (!isFeatureEnabled) return;
+    if (!isFeatureEnabled) {
+      hideButton();
+      hidePopover();
+      return;
+    }
 
     const sel = window.getSelection();
     const { text, context } = captureSelection(sel);
@@ -135,6 +153,8 @@
     // 只回應使用者真的點擊或按鍵；網頁腳本呼叫 btn.click() 不會觸發翻譯，
     // 避免惡意網頁用你的 API 金鑰大量送出請求。
     if (!e.isTrusted) return;
+    // 防點擊劫持：按鈕在網頁裡，網頁可以改它的樣式。被拉大、變透明、移位，或剛出現就被點，都不算數
+    if (!buttonLooksRight()) return;
 
     const buttonRect = btn.getBoundingClientRect();
     const anchorX = buttonRect.left || e.clientX;

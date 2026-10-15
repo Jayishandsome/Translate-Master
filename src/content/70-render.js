@@ -17,7 +17,11 @@
     btn.style.display = "none";
   }
 
+  // 按鈕出現的時間：太快的點擊不算（防止網頁在你點下去前一刻把按鈕移到滑鼠底下）
+  let buttonShownAt = 0;
+
   function showButton() {
+    buttonShownAt = performance.now();
     btn.style.display = "inline-flex";
     if (prefersReducedMotion() || !btn.animate) return;
     buttonAnimation?.cancel();
