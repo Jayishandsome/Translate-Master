@@ -112,6 +112,21 @@ test("防點擊劫持：網頁動外層容器會被改回來；容器樣式不�
   });
   expect(restored).toEqual({ opacity: "1", cls: null });
 
+  // 網頁把容器搬進自己的透明外框、或整個拿掉：馬上放回 <html> 底下
+  const moved = await page.evaluate(async () => {
+    const host = document.querySelector("ctx-translator-root");
+    const wrap = document.createElement("div");
+    wrap.style.cssText = "opacity:0;transform:translate(200px,200px)";
+    document.body.appendChild(wrap);
+    wrap.appendChild(host);
+    await new Promise((r) => setTimeout(r, 0));
+    const afterMove = host.parentNode === document.documentElement;
+    host.remove();
+    await new Promise((r) => setTimeout(r, 0));
+    return { afterMove, afterRemove: host.parentNode === document.documentElement };
+  });
+  expect(moved).toEqual({ afterMove: true, afterRemove: true });
+
   // 網頁用自己的 CSS 想把容器變透明、放大：容器的 inline !important 樣式優先，點擊照常有效
   await page.addStyleTag({ content: "ctx-translator-root { opacity: 0 !important; transform: scale(40) !important; }" });
   await clickButton();

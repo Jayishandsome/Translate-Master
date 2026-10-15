@@ -40,5 +40,6 @@ GLOBAL_DAILY_LIMIT = "1500"
 NET_DAILY_LIMIT = "150"
 # IP 雜湊用的密鑰不放在這裡，用 Secret 設定（寫入後讀不回來）：
 #   openssl rand -hex 32 | npx wrangler secret put IP_SALT
-# 上架後填 Chrome 線上應用程式商店的擴充功能 ID（逗號分隔），就只接受這些擴充功能；留空表示任何擴充功能都可以
-EXTENSION_IDS = ""
+# 只接受這些擴充功能 ID（逗號分隔）：Chrome 線上應用程式商店上的隨選翻譯。
+# 自己用「載入未封裝項目」測試時 ID 不一樣，要測免費 AI 的話把那個 ID 加在後面（chrome://extensions 看得到）。
+EXTENSION_IDS = "hlampgljkkgcpkgkpolliamhdnbmhcea"

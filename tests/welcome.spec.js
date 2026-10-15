@@ -11,6 +11,10 @@ test("檢查本機翻譯", async ({ context }) => {
 
 test("在說明頁直接試用選字翻譯", async ({ context }) => {
   const { page } = await openFixture(context, null, "ext/welcome.html");
+  // 等「你的 Chrome 準備好了嗎」檢查完：結果文字會改變版面，拖曳到一半版面移動就選不到
+  await expect(page.locator("#check-translator")).not.toHaveAttribute("data-state", "wait");
+  // 試用區在畫面底部附近；捲到中間，按鈕才不會落在畫面外
+  await page.evaluate(() => document.getElementById("try").scrollIntoView({ block: "center" }));
   await selectText(page, "#try p:first-of-type", "someone else");
   await expect(page.locator("#ctx-trans-floating-btn")).toBeVisible();
   await page.waitForTimeout(400);

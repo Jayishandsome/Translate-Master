@@ -138,7 +138,7 @@
       <li><strong>全頁翻譯：</strong>你在右鍵選單選擇「全頁翻譯」後，畫面附近的段落會連同網頁標題分批送出；往下捲動時才會送出後面的段落。網站的選單、導覽列、頁首頁尾與側欄不會送出。</li>
       <li>不會送出網頁網址或 Cookie；全頁翻譯也不會送出輸入框裡的內容。</li>
       <li>資料從你的瀏覽器<strong>直接</strong>傳到服務商，不經過開發者；API 金鑰放在請求標頭中，只傳給對應的服務商。</li>
-      <li>只有你親手操作時才會開始送出：翻譯按鈕、譯文浮窗和全頁翻譯的狀態列放在封閉的 Shadow DOM 裡，網頁上的程式讀不到譯文、改不了這些按鈕，也無法代替你按下去；按鈕剛出現就被點、或外層被網頁動過時，點了也不算。</li>
+      <li>只有你親手操作時才會開始送出：翻譯按鈕、譯文浮窗和全頁翻譯的狀態列放在封閉的 Shadow DOM 裡，網頁上的程式讀不到選字翻譯的譯文、改不了這些按鈕，也無法代替你按下去；按鈕剛出現就被點、或外層容器被網頁改動或搬走時，點了也不算。全頁翻譯的譯文會直接放進網頁裡，所以網頁本身讀得到。</li>
       <li>全頁翻譯開始後，之後載入的段落會接著送出；每一頁用 AI 翻到約 4 萬字時會先暫停，問你要不要繼續。選字翻譯一次最多 5,000 字。</li>
     </ul>
     <p>送出後，資料如何保存與使用，依各服務商的政策而定：</p>
@@ -242,7 +242,7 @@
       <li><strong>Full-page translation:</strong> after you choose “全頁翻譯” (Translate full page) from the right-click menu, paragraphs near the visible area are sent in batches together with the page title; later paragraphs are sent only as you scroll to them. Site menus, navigation bars, site headers and footers, and sidebars are not sent.</li>
       <li>Page URLs and cookies are never sent, and full-page translation skips form fields.</li>
       <li>Requests go <strong>directly</strong> from your browser to the provider, never through the developer. Your API key is sent in a request header, only to the matching provider.</li>
-      <li>Nothing is sent until you act: the Translate button, the translation card and the full-page status bar live in a closed Shadow DOM, so scripts on a web page cannot read the translations, change these buttons, or press them for you. A click does not count if the button has only just appeared or the page has tampered with its container.</li>
+      <li>Nothing is sent until you act: the Translate button, the translation card and the full-page status bar live in a closed Shadow DOM, so scripts on a web page cannot read selection translations, change these buttons, or press them for you. A click does not count if the button has only just appeared or the page has changed or moved its container. Full-page translations are inserted into the page itself, so the page can read those.</li>
       <li>Once full-page translation has started, paragraphs that load later are sent too; after about 40,000 characters on one page, AI translation pauses and asks before continuing. Selection translation sends at most 5,000 characters at a time.</li>
     </ul>
     <p>Once sent, the data is governed by the provider's own policies:</p>

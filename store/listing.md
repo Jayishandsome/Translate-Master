@@ -16,7 +16,7 @@
 
 > 說明文字裡不要列出 AI 服務商的品牌名稱。第一次送審時因為列了六家服務商的名稱，被判定為「關鍵字垃圾內容」（Yellow Argon）而退件。
 >
-> 「免費 AI」的伺服器已部署在 https://translate-master-free.jayjaygooogle.workers.dev（`background.js` 的 `FREE_AI.endpoint`）。上架拿到擴充功能 ID 後，填進 `worker/wrangler.toml` 的 `EXTENSION_IDS` 再部署一次。
+> 「免費 AI」的伺服器已部署在 https://translate-master-free.jayjaygooogle.workers.dev（`background.js` 的 `FREE_AI.endpoint`）。伺服器只接受商店上的擴充功能（ID `hlampgljkkgcpkgkpolliamhdnbmhcea`，設定在 `worker/wrangler.toml` 的 `EXTENSION_IDS`）。
 
 | 欄位 | 內容 |
 |---|---|

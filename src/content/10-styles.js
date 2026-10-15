@@ -33,7 +33,7 @@
   const ui = host.attachShadow({ mode: globalThis.chrome?.runtime?.id === "test-extension" ? "open" : "closed" });
   document.documentElement.appendChild(host);
 
-  // 網頁改了容器的屬性或樣式，就改回來；被移出文件時重新放回去
+  // 網頁改了容器的屬性或樣式，就改回來
   new MutationObserver(() => {
     if (host.style.cssText !== HOST_CSS) host.style.cssText = HOST_STYLE;
     for (const attr of [...host.attributes]) {
@@ -41,8 +41,13 @@
     }
   }).observe(host, { attributes: true });
 
+  // 容器一定要直接放在 <html> 底下：網頁若把它搬進自己的元素（例如一個透明或位移過的外框）、或拿掉，就放回去
+  new MutationObserver(() => {
+    if (host.parentNode !== document.documentElement) document.documentElement.appendChild(host);
+  }).observe(document.documentElement, { childList: true, subtree: true });
+
   function hostLooksRight() {
-    if (!host.isConnected) return false;
+    if (host.parentNode !== document.documentElement) return false;
     const s = getComputedStyle(host);
     return s.display === "block" && s.visibility === "visible" && s.opacity === "1" && s.position === "fixed" &&
       s.transform === "none" && s.translate === "none" && s.scale === "none" && s.rotate === "none" &&
