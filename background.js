@@ -70,7 +70,7 @@ const PROVIDERS = {
 // 請求送到我們自己的 Cloudflare Worker（原始碼在 worker/），由 Workers AI 翻譯；次數由 Worker 計算。
 // endpoint 留空就不提供這個選項（部署 Worker 之後填上它的網址）。
 const FREE_AI = {
-  endpoint: "",
+  endpoint: "https://translate-master-free.jayjaygooogle.workers.dev",
   dailyLimit: 10,
   maxChars: 2000,
 };

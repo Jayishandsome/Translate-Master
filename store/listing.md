@@ -16,7 +16,7 @@
 
 > 說明文字裡不要列出 AI 服務商的品牌名稱。第一次送審時因為列了六家服務商的名稱，被判定為「關鍵字垃圾內容」（Yellow Argon）而退件。
 >
-> 「免費 AI」要先部署 `worker/`（見 `worker/README.md`）並在 `background.js` 的 `FREE_AI.endpoint` 填上網址才會出現。還沒部署就送審的話，把下面說明裡【每天 10 次免費 AI】那一段刪掉，隱私段落改回「開發者沒有伺服器，不收集任何資料」，資料使用表也不用填免費 AI 的部分。
+> 「免費 AI」的伺服器已部署在 https://translate-master-free.jayjaygooogle.workers.dev（`background.js` 的 `FREE_AI.endpoint`）。上架拿到擴充功能 ID 後，填進 `worker/wrangler.toml` 的 `EXTENSION_IDS` 再部署一次。
 
 | 欄位 | 內容 |
 |---|---|
